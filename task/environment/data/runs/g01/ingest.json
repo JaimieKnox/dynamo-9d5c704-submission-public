@@ -1,0 +1,20 @@
+{
+  "admissions": [
+    {
+      "seq_watermark": 96,
+      "step": 0
+    },
+    {
+      "seq_watermark": 192,
+      "step": 5
+    },
+    {
+      "seq_watermark": 287,
+      "step": 10
+    },
+    {
+      "seq_watermark": 383,
+      "step": 15
+    }
+  ]
+}

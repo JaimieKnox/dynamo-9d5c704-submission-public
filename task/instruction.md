@@ -1,17 +1,17 @@
-<!--
-  This file is the PROMPT handed verbatim to the model that will attempt your task.
-  Replace everything in this comment with your task instruction, then delete the comment.
+The replay auditor in `/app/rlaudit` reconstructs what the learner of an asynchronous actor-learner training run did, from that run's recorded actor shards. Its numbers are no longer trusted.
 
-  Guidelines:
-  - Write it yourself, as a domain expert. Do NOT generate it with an LLM.
-  - It's a prompt, not a document — no title, no section headers, no excessive Markdown.
-  - Write it the way you'd brief a skilled colleague.
-  - Use absolute paths (e.g. /app/output.txt), never relative paths.
-  - Be explicit about every expected output file and its exact format/schema.
-  - Include everything the agent needs to solve the task — and nothing more (don't
-    hint at or reveal your solution).
-  - Keep it concise (<= 1500 tokens). State the goal and required outputs; skip
-    backstory, roleplay, and filler.
--->
+Each directory under `/app/runs` is one recorded run bundle. `/app/docs/bundle-format.md`, `/app/docs/learner-contract.md`, `/app/docs/sampler.md` and `/app/docs/output-schema.md` are normative and between them state every rule that decides an audit document.
 
-Replace this file with your task instruction.
+Write one audit document per bundle to `/app/out/<bundle>.json`, using the bundle's directory name. For every bundle directory under `/app/runs`:
+
+1. `/app/out/<bundle>.json` exists, parses as JSON, and carries `bundle`, `steps` and `totals` as described in `/app/docs/output-schema.md`.
+2. `steps` holds one entry per learner step of that bundle, in ascending step order, with every field of the schema present and of the declared type.
+3. `target_epoch` on each step is the target epoch the contract puts in force for that step.
+4. `sampled` on each step is the exact ordered slot sequence of that step's accepted draws, repeats included.
+5. `dropped_nonresident` on each step is the exact number of draws that step rejected.
+6. `mean_vtrace_target`, `mean_pg_advantage`, `mean_is_weight` and `priority_sum_after` on each step are the contract's values, to six decimal places.
+7. `totals` holds the seven run totals the contract defines, the six counts exactly and `priority_sum_final` to six decimal places.
+
+`/app/runs/s01`, `/app/runs/s02` and `/app/runs/s03` each ship an `expected.json`, and the auditor as delivered reconciles against all three. That says nothing about the remaining bundles, which ship no expected document. The contract is the definition of correct, not those three bundles.
+
+You may edit or replace anything under `/app/rlaudit`. Only `/app/out` is graded.

@@ -1,0 +1,13 @@
+wrote /app/out/g01.json
+wrote /app/out/g02.json
+wrote /app/out/g03.json
+wrote /app/out/g04.json
+wrote /app/out/g05.json
+wrote /app/out/g06.json
+wrote /app/out/s01.json
+wrote /app/out/s02.json
+wrote /app/out/s03.json
+s01 OK
+s02 OK
+s03 OK
+reconciled 3 bundle(s), 0 mismatching

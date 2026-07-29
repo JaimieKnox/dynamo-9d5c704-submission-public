@@ -1,0 +1,17 @@
+{
+  "alpha": 0.6,
+  "batch_size": 8,
+  "beta": 0.4,
+  "buffer_capacity": 256,
+  "bundle": "g04",
+  "c_bar": 1.2,
+  "feature_dim": 8,
+  "gamma": 0.97,
+  "learner_steps": 20,
+  "n_actions": 4,
+  "n_step": 4,
+  "priority_eps": 0.01,
+  "rho_bar": 2.0,
+  "sampler_seed": 8100024,
+  "target_refresh_interval": 64
+}

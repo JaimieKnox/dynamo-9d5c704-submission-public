@@ -1,8 +1,14 @@
 #!/bin/bash
-#
-# Your reference (Oracle) solution — it must correctly complete the task, proving the
-# task is solvable. Harbor mounts solution/ at /solution/ and runs this script.
-# Put the real logic in helpers (e.g. solution/solve.py) and call them from here, and
-# write outputs to the absolute paths named in instruction.md (e.g. /app/output.json).
+set -eu
 
-# e.g.: python3 /solution/solve.py
+# The V-trace kernel, the sampler, the epoch selection and the priority expression already
+# follow the contract. The four stateful modules do not, so they are replaced wholesale.
+cp /solution/fixed/ingest.py /app/rlaudit/ingest.py
+cp /solution/fixed/buffer.py /app/rlaudit/buffer.py
+cp /solution/fixed/segments.py /app/rlaudit/segments.py
+cp /solution/fixed/learner.py /app/rlaudit/learner.py
+rm -rf /app/rlaudit/__pycache__
+
+cd /app
+python3 -m rlaudit.cli --runs /app/runs --out /app/out
+python3 -m rlaudit.check --runs /app/runs --out /app/out

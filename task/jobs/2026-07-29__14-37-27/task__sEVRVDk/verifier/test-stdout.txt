@@ -1,0 +1,225 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.12, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 7 items
+
+test_outputs.py FFFFFFF                                                  [100%]
+
+=================================== FAILURES ===================================
+________________________ test_audit_document_per_bundle ________________________
+
+    def test_audit_document_per_bundle():
+        """Criterion 1: every bundle under /app/runs has a parseable audit document with the
+        three top level keys of the output schema."""
+        listed = sorted(
+            name
+            for name in os.listdir(RUNS_DIR)
+            if os.path.isfile(os.path.join(RUNS_DIR, name, "manifest.json"))
+        )
+        assert set(BUNDLES).issubset(set(listed)), (
+            "run bundles missing from %s: %s" % (RUNS_DIR, sorted(set(BUNDLES) - set(listed)))
+        )
+        for bundle in listed:
+>           document = _document(bundle)
+                       ^^^^^^^^^^^^^^^^^
+
+test_outputs.py:91: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_outputs.py:69: in _document
+    DOCUMENTS[bundle] = _load_document(bundle)
+                        ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+bundle = 'g01'
+
+    def _load_document(bundle):
+        path = os.path.join(OUT_DIR, bundle + ".json")
+>       assert os.path.isfile(path), "missing audit document %s" % path
+E       AssertionError: missing audit document /app/out/g01.json
+E       assert False
+E        +  where False = <function isfile at 0x743681fbf240>('/app/out/g01.json')
+E        +    where <function isfile at 0x743681fbf240> = <module 'posixpath' (frozen)>.isfile
+E        +      where <module 'posixpath' (frozen)> = os.path
+
+test_outputs.py:54: AssertionError
+____________________________ test_step_ledger_shape ____________________________
+
+    def test_step_ledger_shape():
+        """Criterion 2: steps covers every learner step of the bundle in ascending order with
+        every schema field present and of the declared type."""
+        for bundle in BUNDLES:
+            manifest_path = os.path.join(INPUTS_DIR, bundle, "manifest.json")
+            with open(manifest_path) as handle:
+                learner_steps = json.load(handle)["learner_steps"]
+>           steps = _document(bundle)["steps"]
+                    ^^^^^^^^^^^^^^^^^
+
+test_outputs.py:109: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_outputs.py:69: in _document
+    DOCUMENTS[bundle] = _load_document(bundle)
+                        ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+bundle = 'g01'
+
+    def _load_document(bundle):
+        path = os.path.join(OUT_DIR, bundle + ".json")
+>       assert os.path.isfile(path), "missing audit document %s" % path
+E       AssertionError: missing audit document /app/out/g01.json
+E       assert False
+E        +  where False = <function isfile at 0x743681fbf240>('/app/out/g01.json')
+E        +    where <function isfile at 0x743681fbf240> = <module 'posixpath' (frozen)>.isfile
+E        +      where <module 'posixpath' (frozen)> = os.path
+
+test_outputs.py:54: AssertionError
+__________________________ test_target_epoch_per_step __________________________
+
+    def test_target_epoch_per_step():
+        """Criterion 3: target_epoch on every step is the target epoch the contract puts in
+        force for that step."""
+        for bundle in BUNDLES:
+>           got = _document(bundle)["steps"]
+                  ^^^^^^^^^^^^^^^^^
+
+test_outputs.py:143: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_outputs.py:69: in _document
+    DOCUMENTS[bundle] = _load_document(bundle)
+                        ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+bundle = 'g01'
+
+    def _load_document(bundle):
+        path = os.path.join(OUT_DIR, bundle + ".json")
+>       assert os.path.isfile(path), "missing audit document %s" % path
+E       AssertionError: missing audit document /app/out/g01.json
+E       assert False
+E        +  where False = <function isfile at 0x743681fbf240>('/app/out/g01.json')
+E        +    where <function isfile at 0x743681fbf240> = <module 'posixpath' (frozen)>.isfile
+E        +      where <module 'posixpath' (frozen)> = os.path
+
+test_outputs.py:54: AssertionError
+______________________ test_accepted_draw_slot_sequences _______________________
+
+    def test_accepted_draw_slot_sequences():
+        """Criterion 4: sampled on every step is the exact ordered slot sequence of that
+        step's accepted draws, repeats included."""
+        for bundle in BUNDLES:
+>           got = _document(bundle)["steps"]
+                  ^^^^^^^^^^^^^^^^^
+
+test_outputs.py:156: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_outputs.py:69: in _document
+    DOCUMENTS[bundle] = _load_document(bundle)
+                        ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+bundle = 'g01'
+
+    def _load_document(bundle):
+        path = os.path.join(OUT_DIR, bundle + ".json")
+>       assert os.path.isfile(path), "missing audit document %s" % path
+E       AssertionError: missing audit document /app/out/g01.json
+E       assert False
+E        +  where False = <function isfile at 0x743681fbf240>('/app/out/g01.json')
+E        +    where <function isfile at 0x743681fbf240> = <module 'posixpath' (frozen)>.isfile
+E        +      where <module 'posixpath' (frozen)> = os.path
+
+test_outputs.py:54: AssertionError
+__________________________ test_rejected_draw_counts ___________________________
+
+    def test_rejected_draw_counts():
+        """Criterion 5: dropped_nonresident on every step is the exact number of draws that
+        step rejected."""
+        for bundle in BUNDLES:
+>           got = _document(bundle)["steps"]
+                  ^^^^^^^^^^^^^^^^^
+
+test_outputs.py:170: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_outputs.py:69: in _document
+    DOCUMENTS[bundle] = _load_document(bundle)
+                        ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+bundle = 'g01'
+
+    def _load_document(bundle):
+        path = os.path.join(OUT_DIR, bundle + ".json")
+>       assert os.path.isfile(path), "missing audit document %s" % path
+E       AssertionError: missing audit document /app/out/g01.json
+E       assert False
+E        +  where False = <function isfile at 0x743681fbf240>('/app/out/g01.json')
+E        +    where <function isfile at 0x743681fbf240> = <module 'posixpath' (frozen)>.isfile
+E        +      where <module 'posixpath' (frozen)> = os.path
+
+test_outputs.py:54: AssertionError
+_____________________________ test_step_aggregates _____________________________
+
+    def test_step_aggregates():
+        """Criterion 6: the four per step aggregates match the contract to six decimal
+        places."""
+        for bundle in BUNDLES:
+>           got = _document(bundle)["steps"]
+                  ^^^^^^^^^^^^^^^^^
+
+test_outputs.py:188: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_outputs.py:69: in _document
+    DOCUMENTS[bundle] = _load_document(bundle)
+                        ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+bundle = 'g01'
+
+    def _load_document(bundle):
+        path = os.path.join(OUT_DIR, bundle + ".json")
+>       assert os.path.isfile(path), "missing audit document %s" % path
+E       AssertionError: missing audit document /app/out/g01.json
+E       assert False
+E        +  where False = <function isfile at 0x743681fbf240>('/app/out/g01.json')
+E        +    where <function isfile at 0x743681fbf240> = <module 'posixpath' (frozen)>.isfile
+E        +      where <module 'posixpath' (frozen)> = os.path
+
+test_outputs.py:54: AssertionError
+_______________________________ test_run_totals ________________________________
+
+    def test_run_totals():
+        """Criterion 7: totals holds the seven run totals, the six counts exactly and
+        priority_sum_final to six decimal places."""
+        for bundle in BUNDLES:
+>           got = _document(bundle)["totals"]
+                  ^^^^^^^^^^^^^^^^^
+
+test_outputs.py:202: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+test_outputs.py:69: in _document
+    DOCUMENTS[bundle] = _load_document(bundle)
+                        ^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+bundle = 'g01'
+
+    def _load_document(bundle):
+        path = os.path.join(OUT_DIR, bundle + ".json")
+>       assert os.path.isfile(path), "missing audit document %s" % path
+E       AssertionError: missing audit document /app/out/g01.json
+E       assert False
+E        +  where False = <function isfile at 0x743681fbf240>('/app/out/g01.json')
+E        +    where <function isfile at 0x743681fbf240> = <module 'posixpath' (frozen)>.isfile
+E        +      where <module 'posixpath' (frozen)> = os.path
+
+test_outputs.py:54: AssertionError
+=========================== short test summary info ============================
+FAILED test_outputs.py::test_audit_document_per_bundle - AssertionError: miss...
+FAILED test_outputs.py::test_step_ledger_shape - AssertionError: missing audi...
+FAILED test_outputs.py::test_target_epoch_per_step - AssertionError: missing ...
+FAILED test_outputs.py::test_accepted_draw_slot_sequences - AssertionError: m...
+FAILED test_outputs.py::test_rejected_draw_counts - AssertionError: missing a...
+FAILED test_outputs.py::test_step_aggregates - AssertionError: missing audit ...
+FAILED test_outputs.py::test_run_totals - AssertionError: missing audit docum...
+============================== 7 failed in 0.24s ===============================

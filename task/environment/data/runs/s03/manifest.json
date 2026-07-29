@@ -1,0 +1,17 @@
+{
+  "alpha": 0.6,
+  "batch_size": 8,
+  "beta": 0.4,
+  "buffer_capacity": 320,
+  "bundle": "s03",
+  "c_bar": 1.2,
+  "feature_dim": 8,
+  "gamma": 0.99,
+  "learner_steps": 10,
+  "n_actions": 4,
+  "n_step": 3,
+  "priority_eps": 0.01,
+  "rho_bar": 2.0,
+  "sampler_seed": 8100013,
+  "target_refresh_interval": 32
+}

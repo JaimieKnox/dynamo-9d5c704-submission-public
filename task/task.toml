@@ -1,38 +1,140 @@
-artifacts = []  # paths the verifier reads from the agent (e.g. ["/app/output.json"]) — must be above the first [section]
+artifacts = [
+  "/app/out/s01.json",
+  "/app/out/s02.json",
+  "/app/out/s03.json",
+  "/app/out/g01.json",
+  "/app/out/g02.json",
+  "/app/out/g03.json",
+  "/app/out/g04.json",
+  "/app/out/g05.json",
+  "/app/out/g06.json",
+]
 
 [task]
-name = "dynamo/your-task-name"  # required format: org/name (Harbor needs the slash); name part lowercase kebab-case, <=3 words
-description = ""                 # one-line summary of the task
+name = "dynamo/audit-replay-learner"
+description = "Repair a replay auditor so recorded actor-learner runs reproduce the learner's prioritized replay accounting"
 
 [metadata]
-# --- Pre-seeded for you when this repo was created — DO NOT EDIT ---
-category = "Model Training and ML Infrastructure"                      # diversity category, assigned to your task by the Dynamo team
-subcategory = "Reinforcement learning"                   # diversity subcategory, assigned by the Dynamo team
-# --- Fixed for this dataset — LEAVE AS-IS ---
-model_tested = "Opus-4.8"           # difficulty-benchmarking model (do not change)
-agent_tested = "Terminus-2"        # difficulty-benchmarking agent (do not change)
-# --- You fill these in ---
-# task_objective / artifact_type: pick from .dynamo/diversity-taxonomy.toml (lowercase snake_case).
-task_objective = []                # e.g. ["implement", "debug"]
-artifact_type = []                 # e.g. ["codebase", "configuration_file"]
-expert_time_estimate_hours = 0     # best-case hours for a focused domain expert with the intended insight
-difficulty_explanation = ""        # why this task is hard for agents and humans
-solution_explanation = ""          # high-level approach and key insights
-verification_explanation = ""      # how the tests verify correctness
+# Pre-seeded when this repo was created. DO NOT EDIT.
+category = "Model Training and ML Infrastructure"
+subcategory = "Reinforcement learning"
+# Fixed for this dataset. LEAVE AS-IS.
+model_tested = "Opus-4.8"
+agent_tested = "Terminus-2"
+task_objective = ["fix", "debug"]
+artifact_type = ["codebase", "generated_output_artifact"]
+expert_time_estimate_hours = 6
+difficulty_explanation = """
+The task ships a deterministic replay auditor for an asynchronous actor-learner reinforcement
+learning trainer together with recorded run bundles, and asks for the auditor to reproduce the
+learner's own prioritized replay and off-policy correction accounting on bundles it has never
+been reconciled against. The recorded material is what an RL infrastructure engineer inherits
+after a training incident: per-actor trajectory shards carrying behavior log probabilities,
+rewards, environment terminations and time limit truncations, an ingest log describing when
+each shard batch became visible to the learner, and one snapshot of value head and policy head
+parameters per target network refresh epoch. Reproducing the learner means driving a stateful
+machine forward over tens of learner steps: merge shard transitions into one global admission
+order, admit only what the ingest log says was visible at that step, form n-step segments
+inside episode boundaries, decide which segments are still resident once the circular buffer
+has wrapped, seed insert priorities, draw a priority proportional batch, compute clipped
+importance ratios against the parameters in force for that step, compute truncated importance
+weighted value targets and policy gradient advantages, then write priorities back so the next
+draw differs.
+
+The expertise required is off-policy RL training infrastructure: n-step credit assignment
+inside episode boundaries, the distinction between environment termination and a time limit
+cut for bootstrapping, truncated importance sampling with separate trace cutting and policy
+gradient clip bounds, prioritized replay with an importance sampling correction, and
+actor-to-learner staleness. The conceptual traps are that the shipped arithmetic kernel and
+the shipped sampler are already contract faithful, so rewriting the obvious numerical module
+accomplishes nothing, and that the real deviations sit in the stateful layers, where they
+produce entirely plausible ledgers with no error path. Because each batch is drawn in
+proportion to priorities the previous step wrote, one wrong residency, ordering or staleness
+decision reroutes every later draw, so closing most of the semantic gaps still yields a ledger
+that is wrong from that point onward and looks no different from a correct one.
+
+The bundles are synthetic, produced by a reference simulator of an asynchronous run, and they
+are realistically challenging because the conditions that expose the gaps, namely staggered
+shard visibility, buffer wraparound, target refreshes part way through a run and time limit
+truncation, are exactly the conditions that make real asynchronous trainers hard to audit. In
+the real world this is the work of engineers who own asynchronous RL training infrastructure
+and have to establish whether a learner metric regression was a learning problem or a replay
+accounting problem.
+"""
+solution_explanation = """
+Treat the auditor as a state machine specification problem rather than a numerical one. The
+normative documents under /app/docs fix every rule, so the work is reading them against the
+implementation and finding where the implementation quietly assumes the easy case. The key
+insight is that the whole ledger is a function of which segments the buffer considers resident
+and drawable at each learner step, and the shipped code answers that using the state it had at
+ingest time rather than the state at the step.
+
+Four planes have to be reconstructed. The ordering plane: every shard line from every shard
+file merges into one ascending admission sequence keyed on the global seq field, rather than
+shard file order, and each learner step admits only transitions at or below that step's ingest
+watermark instead of preloading the whole run at step zero. The residency plane: a ledger
+entry is drawable only while its first transition still owns its slot, which is the comparison
+n minus i at most buffer_capacity, and a draw landing on a non-resident entry is rejected and
+counted rather than served from whatever now occupies those slots. This also fixes segment
+materialisation, which must read the episode's own transitions rather than a run of adjacent
+buffer slots, since the global admission order interleaves the actors. The priority plane: a
+newly registered segment is seeded from the largest priority currently held by a resident
+registered entry, not the largest held by any entry, which diverges the moment eviction
+removes the holder of that maximum. The staleness plane: values and importance ratios are
+recomputed for every drawn segment under the target epoch in force at the drawing step rather
+than cached at registration, and the bootstrap for a time limit cut is the value of the
+recorded cut observation under that same epoch rather than zero, which is only correct for an
+environment termination.
+
+With those four planes right, the shipped V-trace kernel, the sampler, the epoch selection and
+the priority expression need no changes at all. The reference solution therefore replaces four
+modules of the auditor, ingest, buffer, segments and learner, and runs the existing command
+line entry point over every bundle, so every reported number is derived from the recorded
+inputs at run time.
+"""
+verification_explanation = """
+The agent writes one audit document per run bundle to /app/out/<bundle>.json in the schema
+fixed by /app/docs/output-schema.md. The verifier loads those documents and compares them
+against expectations recomputed at verify time by an independent single file implementation of
+the contract, tests/reference.py, which reads its inputs from tests/inputs, a copy of the
+bundle inputs that ships with the verifier. Reading the inputs from the verifier's own copy
+rather than from /app/runs means the expectations cannot be moved by editing the agent visible
+inputs.
+
+There is one test per numbered success criterion of instruction.md. The first checks that a
+parseable document with the three top level keys exists for every bundle directory under
+/app/runs. The second checks the steps array covers every learner step in ascending order with
+every schema field present and of the declared type. The third compares target_epoch per step,
+the fourth compares the ordered accepted draw slot sequences, the fifth compares the rejected
+draw counts, the sixth compares the four per step aggregates and the seventh compares the
+totals object.
+
+Integer and identifier fields are compared exactly with no tolerance at all: the drawn slot
+sequences, the rejected draw counts, the target epochs and the six run counts. The four per
+step aggregates and priority_sum_final are compared with an absolute tolerance of 1e-6. That
+band is set by the schema, which mandates rounding to six decimal places, and by float64
+summation order, which is the only legitimate source of variation between two correct
+implementations of the same backward recursion over values of order one, so the band admits any
+valid method including different accumulation strategies or vectorised reductions while being
+far tighter than any semantic difference. The band cannot launder a wrong method, because any
+difference in admission ordering, residency, priority seeding, cut handling or epoch staleness
+changes which ledger entries are drawn, and those slot sequences are graded as exact integers,
+so a wrong method fails on exact fields before the tolerance is consulted. The band was checked
+against mutations of each documented rule, including the residency comparison at its exact
+boundary, and every mutation changes at least one graded bundle's exact fields.
+"""
 
 [verifier]
-timeout_sec = 120.0                # increase based on your test suite's runtime demands
-# Canonical TB2: the verifier runs in the environment image (no separate tests/Dockerfile).
-# Harbor overlays tests/ at verify time; leave environment_mode unset for this shared model.
+timeout_sec = 900.0
 
 [agent]
-timeout_sec = 120.0                # raise for hard tasks — agents may run for many minutes or hours
+timeout_sec = 3600.0
 
 [environment]
-build_timeout_sec = 600.0          # max seconds for the Docker build
-cpus = 1                           # increase for parallel/compute-heavy workloads
-memory_mb = 2048                   # increase for large datasets or in-memory processing
-storage_mb = 10240                 # increase for tasks with large files or build artifacts
-gpus = 0                           # max 1, expect H100
-allow_internet = true              # open internet is available to the agent
-mcp_servers = []                   # optional MCP servers to expose to the agent
+build_timeout_sec = 900.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+allow_internet = true
+mcp_servers = []

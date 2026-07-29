@@ -1,0 +1,636 @@
+{
+  "bundle": "g05",
+  "steps": [
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 1.0,
+      "mean_pg_advantage": 0.421952,
+      "mean_vtrace_target": 0.189268,
+      "priority_sum_after": 54.499212,
+      "sampled": [
+        27,
+        31,
+        27,
+        13,
+        2,
+        22,
+        8,
+        1,
+        24,
+        13
+      ],
+      "step": 0,
+      "target_epoch": 0
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.966041,
+      "mean_pg_advantage": 0.297384,
+      "mean_vtrace_target": 0.184772,
+      "priority_sum_after": 54.822438,
+      "sampled": [
+        51,
+        33,
+        27,
+        4,
+        24,
+        12,
+        51,
+        27,
+        47,
+        50
+      ],
+      "step": 1,
+      "target_epoch": 0
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.959813,
+      "mean_pg_advantage": 1.085845,
+      "mean_vtrace_target": 0.943543,
+      "priority_sum_after": 60.800767,
+      "sampled": [
+        41,
+        19,
+        12,
+        44,
+        40,
+        2,
+        39,
+        40,
+        0,
+        19
+      ],
+      "step": 2,
+      "target_epoch": 0
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.820828,
+      "mean_pg_advantage": 2.186774,
+      "mean_vtrace_target": 1.584164,
+      "priority_sum_after": 62.442472,
+      "sampled": [
+        39,
+        9,
+        22,
+        27,
+        36,
+        44,
+        39,
+        7,
+        39,
+        9
+      ],
+      "step": 3,
+      "target_epoch": 0
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.647468,
+      "mean_pg_advantage": -0.568501,
+      "mean_vtrace_target": -0.98665,
+      "priority_sum_after": 259.329777,
+      "sampled": [
+        87,
+        32,
+        64,
+        48,
+        69,
+        88,
+        13,
+        77,
+        92,
+        97
+      ],
+      "step": 4,
+      "target_epoch": 0
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.581613,
+      "mean_pg_advantage": 1.922884,
+      "mean_vtrace_target": 1.522069,
+      "priority_sum_after": 235.802343,
+      "sampled": [
+        105,
+        52,
+        109,
+        84,
+        39,
+        102,
+        81,
+        58,
+        92,
+        63
+      ],
+      "step": 5,
+      "target_epoch": 1
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.621111,
+      "mean_pg_advantage": 0.464585,
+      "mean_vtrace_target": 0.180949,
+      "priority_sum_after": 221.223776,
+      "sampled": [
+        9,
+        86,
+        16,
+        74,
+        82,
+        57,
+        76,
+        14,
+        32,
+        102
+      ],
+      "step": 6,
+      "target_epoch": 1
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.64653,
+      "mean_pg_advantage": -0.070913,
+      "mean_vtrace_target": -0.021523,
+      "priority_sum_after": 205.537483,
+      "sampled": [
+        22,
+        54,
+        41,
+        59,
+        41,
+        61,
+        101,
+        79,
+        29,
+        67
+      ],
+      "step": 7,
+      "target_epoch": 1
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.987649,
+      "mean_pg_advantage": 0.678245,
+      "mean_vtrace_target": 0.079594,
+      "priority_sum_after": 422.699398,
+      "sampled": [
+        99,
+        60,
+        55,
+        56,
+        158,
+        147,
+        141,
+        80,
+        110,
+        139
+      ],
+      "step": 8,
+      "target_epoch": 1
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.716967,
+      "mean_pg_advantage": 0.409808,
+      "mean_vtrace_target": 0.279231,
+      "priority_sum_after": 405.635803,
+      "sampled": [
+        112,
+        118,
+        11,
+        95,
+        131,
+        144,
+        67,
+        38,
+        6,
+        150
+      ],
+      "step": 9,
+      "target_epoch": 1
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.651258,
+      "mean_pg_advantage": -0.620327,
+      "mean_vtrace_target": -1.044702,
+      "priority_sum_after": 380.876105,
+      "sampled": [
+        3,
+        68,
+        107,
+        43,
+        94,
+        90,
+        123,
+        72,
+        159,
+        46
+      ],
+      "step": 10,
+      "target_epoch": 2
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.652054,
+      "mean_pg_advantage": -0.960808,
+      "mean_vtrace_target": -0.876879,
+      "priority_sum_after": 363.337306,
+      "sampled": [
+        129,
+        62,
+        41,
+        127,
+        2,
+        135,
+        88,
+        114,
+        145,
+        15
+      ],
+      "step": 11,
+      "target_epoch": 2
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.673957,
+      "mean_pg_advantage": -0.011206,
+      "mean_vtrace_target": -0.595966,
+      "priority_sum_after": 345.511436,
+      "sampled": [
+        134,
+        134,
+        17,
+        149,
+        130,
+        148,
+        55,
+        136,
+        27,
+        151
+      ],
+      "step": 12,
+      "target_epoch": 2
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.709975,
+      "mean_pg_advantage": -1.139722,
+      "mean_vtrace_target": -1.144726,
+      "priority_sum_after": 561.085105,
+      "sampled": [
+        119,
+        96,
+        78,
+        180,
+        205,
+        153,
+        67,
+        142,
+        154,
+        206
+      ],
+      "step": 13,
+      "target_epoch": 2
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.703643,
+      "mean_pg_advantage": 0.551476,
+      "mean_vtrace_target": -0.188539,
+      "priority_sum_after": 543.157371,
+      "sampled": [
+        143,
+        217,
+        0,
+        134,
+        130,
+        4,
+        193,
+        71,
+        169,
+        39
+      ],
+      "step": 14,
+      "target_epoch": 2
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.690786,
+      "mean_pg_advantage": 0.416225,
+      "mean_vtrace_target": 0.891298,
+      "priority_sum_after": 520.187949,
+      "sampled": [
+        138,
+        122,
+        222,
+        202,
+        122,
+        177,
+        22,
+        182,
+        175,
+        40
+      ],
+      "step": 15,
+      "target_epoch": 3
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.644655,
+      "mean_pg_advantage": -0.549535,
+      "mean_vtrace_target": -0.35891,
+      "priority_sum_after": 500.367961,
+      "sampled": [
+        22,
+        6,
+        120,
+        92,
+        83,
+        98,
+        204,
+        181,
+        101,
+        190
+      ],
+      "step": 16,
+      "target_epoch": 3
+    },
+    {
+      "dropped_nonresident": 1,
+      "mean_is_weight": 0.975522,
+      "mean_pg_advantage": 2.101948,
+      "mean_vtrace_target": 1.58426,
+      "priority_sum_after": 715.696591,
+      "sampled": [
+        39,
+        195,
+        214,
+        21,
+        12,
+        4,
+        70,
+        160,
+        232
+      ],
+      "step": 17,
+      "target_epoch": 3
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.639078,
+      "mean_pg_advantage": -0.424746,
+      "mean_vtrace_target": -0.768426,
+      "priority_sum_after": 693.665738,
+      "sampled": [
+        7,
+        223,
+        6,
+        8,
+        4,
+        73,
+        93,
+        197,
+        46,
+        47
+      ],
+      "step": 18,
+      "target_epoch": 3
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.977768,
+      "mean_pg_advantage": -0.131657,
+      "mean_vtrace_target": -0.340038,
+      "priority_sum_after": 661.179433,
+      "sampled": [
+        132,
+        198,
+        66,
+        116,
+        20,
+        18,
+        11,
+        168,
+        236,
+        203
+      ],
+      "step": 19,
+      "target_epoch": 3
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.641316,
+      "mean_pg_advantage": -1.426556,
+      "mean_vtrace_target": -0.972708,
+      "priority_sum_after": 641.070311,
+      "sampled": [
+        178,
+        102,
+        0,
+        215,
+        141,
+        128,
+        218,
+        137,
+        230,
+        183
+      ],
+      "step": 20,
+      "target_epoch": 4
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.924222,
+      "mean_pg_advantage": -0.824444,
+      "mean_vtrace_target": -0.960672,
+      "priority_sum_after": 877.804826,
+      "sampled": [
+        133,
+        36,
+        247,
+        93,
+        240,
+        38,
+        176,
+        27,
+        188,
+        85
+      ],
+      "step": 21,
+      "target_epoch": 4
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.673902,
+      "mean_pg_advantage": -0.267094,
+      "mean_vtrace_target": -0.589354,
+      "priority_sum_after": 850.022236,
+      "sampled": [
+        170,
+        225,
+        238,
+        242,
+        245,
+        70,
+        168,
+        102,
+        81,
+        100
+      ],
+      "step": 22,
+      "target_epoch": 4
+    },
+    {
+      "dropped_nonresident": 2,
+      "mean_is_weight": 0.607285,
+      "mean_pg_advantage": 0.354816,
+      "mean_vtrace_target": 0.041149,
+      "priority_sum_after": 831.714473,
+      "sampled": [
+        220,
+        182,
+        73,
+        77,
+        103,
+        205,
+        113,
+        227
+      ],
+      "step": 23,
+      "target_epoch": 4
+    },
+    {
+      "dropped_nonresident": 1,
+      "mean_is_weight": 0.741242,
+      "mean_pg_advantage": -0.853037,
+      "mean_vtrace_target": -0.427752,
+      "priority_sum_after": 807.639174,
+      "sampled": [
+        24,
+        166,
+        155,
+        104,
+        236,
+        9,
+        126,
+        216,
+        1
+      ],
+      "step": 24,
+      "target_epoch": 4
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.479115,
+      "mean_pg_advantage": -0.568449,
+      "mean_vtrace_target": -0.730589,
+      "priority_sum_after": 779.158336,
+      "sampled": [
+        162,
+        108,
+        213,
+        35,
+        40,
+        228,
+        11,
+        210,
+        23,
+        57
+      ],
+      "step": 25,
+      "target_epoch": 5
+    },
+    {
+      "dropped_nonresident": 2,
+      "mean_is_weight": 0.610516,
+      "mean_pg_advantage": -1.295658,
+      "mean_vtrace_target": -0.990931,
+      "priority_sum_after": 762.824765,
+      "sampled": [
+        29,
+        158,
+        231,
+        49,
+        64,
+        230,
+        14,
+        230
+      ],
+      "step": 26,
+      "target_epoch": 5
+    },
+    {
+      "dropped_nonresident": 0,
+      "mean_is_weight": 0.627896,
+      "mean_pg_advantage": 0.614709,
+      "mean_vtrace_target": 0.24645,
+      "priority_sum_after": 741.981525,
+      "sampled": [
+        201,
+        34,
+        5,
+        232,
+        243,
+        127,
+        34,
+        163,
+        37,
+        233
+      ],
+      "step": 27,
+      "target_epoch": 5
+    },
+    {
+      "dropped_nonresident": 1,
+      "mean_is_weight": 0.482664,
+      "mean_pg_advantage": 0.369771,
+      "mean_vtrace_target": -0.048883,
+      "priority_sum_after": 718.603212,
+      "sampled": [
+        190,
+        48,
+        161,
+        74,
+        66,
+        209,
+        165,
+        43,
+        62
+      ],
+      "step": 28,
+      "target_epoch": 5
+    },
+    {
+      "dropped_nonresident": 1,
+      "mean_is_weight": 0.625472,
+      "mean_pg_advantage": 0.13549,
+      "mean_vtrace_target": -0.064274,
+      "priority_sum_after": 697.960799,
+      "sampled": [
+        59,
+        160,
+        173,
+        164,
+        122,
+        39,
+        235,
+        152,
+        199
+      ],
+      "step": 29,
+      "target_epoch": 5
+    }
+  ],
+  "totals": {
+    "draws": 300,
+    "draws_accepted": 292,
+    "priority_sum_final": 697.960799,
+    "segments_evicted": 82,
+    "segments_registered": 334,
+    "transitions_enqueued": 334,
+    "unique_segments_drawn": 224
+  }
+}

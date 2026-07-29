@@ -32,8 +32,9 @@ the current step. A transition admitted at index `i` is **resident** when
 
     n - i <= buffer_capacity
 
-Residency is evaluated once per learner step, after that step's admission phase, and the
-same value is used for the whole step.
+A segment is resident exactly when its first transition is resident, that being the one of
+its transitions with the lowest admission index. Residency is evaluated once per learner
+step, after that step's admission phase, and the same value is used for the whole step.
 
 ## 4. Segments
 

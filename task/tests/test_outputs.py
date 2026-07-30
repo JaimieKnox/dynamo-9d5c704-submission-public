@@ -56,10 +56,6 @@ def _load_document(bundle):
         return json.load(handle)
 
 
-def _expected(bundle):
-    return reference.audit(os.path.join(INPUTS_DIR, bundle))
-
-
 DOCUMENTS = {}
 EXPECTED = {}
 
@@ -72,13 +68,13 @@ def _document(bundle):
 
 def _expectation(bundle):
     if bundle not in EXPECTED:
-        EXPECTED[bundle] = _expected(bundle)
+        EXPECTED[bundle] = reference.expected(os.path.join(INPUTS_DIR, bundle))
     return EXPECTED[bundle]
 
 
 def test_audit_document_per_bundle():
     """Criterion 1: every bundle under /app/runs has a parseable audit document with the
-    three top level keys of the output schema."""
+    four top level keys of the output schema."""
     listed = sorted(
         name
         for name in os.listdir(RUNS_DIR)
@@ -90,13 +86,16 @@ def test_audit_document_per_bundle():
     for bundle in listed:
         document = _document(bundle)
         assert isinstance(document, dict), "%s: audit document is not a JSON object" % bundle
-        for key in ("bundle", "steps", "totals"):
+        for key in ("bundle", "steps", "totals", "diagnosis"):
             assert key in document, "%s: audit document has no %r key" % (bundle, key)
         assert document["bundle"] == bundle, (
             "%s: bundle field is %r" % (bundle, document["bundle"])
         )
         assert isinstance(document["steps"], list), "%s: steps is not an array" % bundle
         assert isinstance(document["totals"], dict), "%s: totals is not an object" % bundle
+        assert isinstance(document["diagnosis"], dict), (
+            "%s: diagnosis is not an object" % bundle
+        )
 
 
 def test_step_ledger_shape():
@@ -212,4 +211,39 @@ def test_run_totals():
         ), (
             "%s: totals.priority_sum_final is %r, expected %r"
             % (bundle, got["priority_sum_final"], want["priority_sum_final"])
+        )
+
+
+def test_first_divergent_step():
+    """Criterion 8: diagnosis.first_divergent_step is the first learner step whose
+    recorded digest differs from the contract's, or -1 when none differs."""
+    for bundle in BUNDLES:
+        got = _document(bundle)["diagnosis"]
+        want = _expectation(bundle)["diagnosis"]
+        assert "first_divergent_step" in got, (
+            "%s: diagnosis has no first_divergent_step key" % bundle
+        )
+        value = got["first_divergent_step"]
+        assert _is_int(value), (
+            "%s: first_divergent_step is %r, expected an integer" % (bundle, value)
+        )
+        assert int(value) == want["first_divergent_step"], (
+            "%s: first_divergent_step is %r, expected %d"
+            % (bundle, value, want["first_divergent_step"])
+        )
+
+
+def test_recorded_defect_mode():
+    """Criterion 9: diagnosis.defect is the mode /app/docs/defect-modes.md selects for the
+    bundle."""
+    for bundle in BUNDLES:
+        got = _document(bundle)["diagnosis"]
+        want = _expectation(bundle)["diagnosis"]
+        assert "defect" in got, "%s: diagnosis has no defect key" % bundle
+        assert want["defect"] in reference.MODES, (
+            "%s: reference selected %r, which is not a documented mode"
+            % (bundle, want["defect"])
+        )
+        assert got["defect"] == want["defect"], (
+            "%s: defect is %r, expected %r" % (bundle, got["defect"], want["defect"])
         )

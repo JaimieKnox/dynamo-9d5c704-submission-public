@@ -1,8 +1,10 @@
 # Learner replay contract (normative)
 
 This document fixes every rule that decides an audit document. It applies to every bundle
-under `/app/runs`, whether or not that bundle ships an `expected.json`. Where an inequality
-appears it is the exact comparison the contract uses.
+under `/app/runs`. It describes the replay the learner was supposed to perform, which is what
+an audit document reports. What the production learner actually recorded is a separate matter
+and `/app/docs/defect-modes.md` is normative for it. Where an inequality appears it is the
+exact comparison the contract uses.
 
 ## 1. Global admission order
 
@@ -28,8 +30,12 @@ receives admission index `k` and occupies slot `k mod buffer_capacity`. Admissio
 whatever occupied that slot before, and nothing else ever clears or moves a slot.
 
 A segment is **resident**, meaning still drawable, only while the buffer holds every
-transition the segment covers. Whether that holds is settled once per learner step, after
-that step's admission phase, and the same answer is used for the whole of that step.
+transition the segment covers. A transition admitted at index `k` still occupies its slot
+exactly while `admitted_so_far - k <= buffer_capacity`, where `admitted_so_far` is the number
+of transitions admitted by the end of the step's admission phase. Because the ring
+overwrites oldest first, a segment is resident exactly while its earliest admitted transition
+still occupies its slot. Whether that holds is settled once per learner step, after that
+step's admission phase, and the same answer is used for the whole of that step.
 
 ## 4. Segments
 

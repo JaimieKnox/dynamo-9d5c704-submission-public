@@ -168,13 +168,7 @@ def audit(bundle_dir):
             arriving.sort(key=lambda seg: (seg["done"], seg["start"]))
             waiting = [seg for seg in unregistered if seg["done"] >= admitted]
             for seg in arriving:
-                seed_priority = None
-                for pos, known in enumerate(ledger):
-                    if admitted - known["start"] <= capacity:
-                        if seed_priority is None or priority[pos] > seed_priority:
-                            seed_priority = priority[pos]
-                if seed_priority is None:
-                    seed_priority = 1.0
+                seed_priority = max(priority) if priority else 1.0
                 seg["position"] = len(ledger)
                 ledger.append(seg)
                 priority.append(seed_priority)

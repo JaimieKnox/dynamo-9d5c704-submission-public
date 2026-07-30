@@ -61,6 +61,9 @@ A segment is seeded with the largest priority the ledger currently holds, counti
 entry whether or not it is resident. When the ledger is empty, the seed is `1.0`. A segment
 registered earlier in the same step is eligible to supply that maximum.
 
+Registration for a step is complete before that step draws, so a segment registered in a step
+can be drawn in that same step.
+
 ## 6. Target epoch
 
 The target epoch in force for learner step `s` is
@@ -115,8 +118,9 @@ evaluated for `k` from `L - 1` down to `0`. Note that `delta[k]` uses the raw sn
 
 ## 9. Replay correction weight
 
-For an accepted draw on ledger position `p`, using the priority `P_p` that entry held at the
-start of the step and the same `N` and `P` the sampler used,
+For an accepted draw on ledger position `p`, using the priority `P_p` the entry carried when
+this step's draws began, which for an entry registered in this step is its seed, and the same
+`N` and `P` the sampler used,
 
     w_raw = (N * (P_p / P)) ** (-beta)
 
@@ -131,7 +135,8 @@ For each accepted draw the new priority of the segment is
 
 with the mean taken over the segment's own transitions. All priority write backs of a step
 are applied after every draw of that step has been resolved, so the priorities the sampler
-and the weights use are the values held at the start of the step. When an entry is drawn
+and the weights use are the values the entries carried when the step's draws began. When an
+entry is drawn
 more than once in a step, the value written is the same and is written once.
 
 ## 11. Step aggregates

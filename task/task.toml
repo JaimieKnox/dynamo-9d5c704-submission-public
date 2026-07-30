@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "dynamo/audit-replay-learner"
-description = "Repair a replay auditor so recorded actor-learner runs reproduce the learner's prioritized replay accounting"
+description = "Rebuild the replay orchestration of an auditor so recorded actor-learner runs reproduce the learner's prioritized replay accounting"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -21,14 +21,17 @@ subcategory = "Reinforcement learning"
 # Fixed for this dataset. LEAVE AS-IS.
 model_tested = "Opus-4.8"
 agent_tested = "Terminus-2"
-task_objective = ["fix", "debug"]
+task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
-expert_time_estimate_hours = 6
+expert_time_estimate_hours = 8
 difficulty_explanation = """
 The task ships a deterministic replay auditor for an asynchronous actor-learner reinforcement
-learning trainer together with recorded run bundles, and asks for the auditor to reproduce the
-learner's own prioritized replay and off-policy correction accounting on bundles it has never
-been reconciled against. The recorded material is what an RL infrastructure engineer inherits
+learning trainer together with recorded run bundles, but the auditor arrives without its replay
+orchestration, and asks for the learner's own prioritized replay and off-policy correction
+accounting to be reproduced exactly on bundles that carry no expected output at all. The
+arithmetic kernel, the sampler, the ring buffer and the parameter snapshots all survived, so
+there is no numerical work left, only the stateful accounting that sat on top of them. The
+recorded material is what an RL infrastructure engineer inherits
 after a training incident: per-actor trajectory shards carrying behavior log probabilities,
 rewards, environment terminations and time limit truncations, an ingest log describing when
 each shard batch became visible to the learner, and one snapshot of value head and policy head
@@ -45,18 +48,20 @@ The expertise required is off-policy RL training infrastructure: n-step credit a
 inside episode boundaries, the distinction between environment termination and a time limit
 cut for bootstrapping, truncated importance sampling with separate trace cutting and policy
 gradient clip bounds, prioritized replay with an importance sampling correction, and
-actor-to-learner staleness. The conceptual traps are that the shipped arithmetic kernel and
-the shipped sampler are already contract faithful, so rewriting the obvious numerical module
-accomplishes nothing, and that the real deviations sit in the stateful layers, where they
-produce entirely plausible ledgers with no error path. The contract states those stateful
-rules as constraints on the asynchronous system rather than as formulas, so isolating a
-deviation takes reasoning about actor to learner staleness, ring buffer eviction and target
-network refresh rather than comparing prose against code line by line, while the arbitrary
-choices no expert could be expected to infer, the sampler, the registration tie break, the
-priority expression and the output schema, are spelled out exactly. Because each batch is drawn in
-proportion to priorities the previous step wrote, one wrong residency, ordering or staleness
-decision reroutes every later draw, so closing most of the semantic gaps still yields a ledger
-that is wrong from that point onward and looks no different from a correct one.
+actor-to-learner staleness. The difficulty is that a dozen interacting stateful rules have to
+be right simultaneously with almost no feedback. The contract states the stateful rules as
+constraints on the asynchronous system rather than as formulas, so turning them into index
+arithmetic takes reasoning about ring buffer eviction, actor to learner visibility and target
+network refresh, while the arbitrary choices no expert could be expected to infer, the sampler,
+the registration tie break, the priority expression and the output schema, are spelled out
+exactly. Two of the surviving helper modules also disagree with the contract, quietly and only
+under conditions the reconcilable runs never reach, so code that arrives looking intact cannot
+be trusted either. Because each batch is drawn in proportion to priorities the previous step
+wrote, one wrong residency, ordering or staleness decision reroutes every later draw, so an
+implementation that is right about almost everything still yields a ledger that is wrong from
+that point onward and looks no different from a correct one. The three runs that ship an
+expected output are short, single epoch, never fill their buffer and contain no time limit cut,
+so reconciling against them says nothing about the six that are graded.
 
 The bundles are synthetic, produced by a reference simulator of an asynchronous run, and they
 are realistically challenging because the conditions that expose the gaps, namely staggered
@@ -68,32 +73,40 @@ accounting problem.
 """
 solution_explanation = """
 Treat the auditor as a state machine specification problem rather than a numerical one. The
-normative documents under /app/docs fix every rule, so the work is reading them against the
-implementation and finding where the implementation quietly assumes the easy case. The key
-insight is that the whole ledger is a function of which segments the buffer considers resident
-and drawable at each learner step, and the shipped code answers that using the state it had at
-ingest time rather than the state at the step.
+normative documents under /app/docs fix every rule, and the key insight is that the whole ledger
+is a function of which segments the buffer still holds at each learner step and of the target
+snapshot in force when a segment is drawn, so the two questions worth answering before writing
+any code are what the learner could see at a step and what it had already overwritten.
 
-Three planes have to be reconstructed, and each deviation is a plausible reading of the data
-that happens to be wrong. The ordering plane: the shard merge sorts by actor and then by
-sequence number, which coincides with the global admission order only while the actors'
-sequence ranges do not interleave, and the ingest watermark takes the last admission entry at
-or below the step in file order rather than the largest, which coincides only while the ingest
-log happens to be written in ascending order. Both must key on the global sequence number and
-on a maximum. The residency plane: segment residency is anchored on the segment's newest
-transition rather than its oldest, so entries stay drawable well past the point where the ring
-overwrote their first transition, and the comparison itself is the oldest transition's age
-against the capacity. The staleness plane: values and importance ratios are evaluated once at
-registration and reused for the rest of the run, so they go stale at the first target refresh
-and must be recomputed for every drawn segment under the epoch in force at the drawing step,
-and the bootstrap for a time limit cut is taken from the observation the cut transition was
-acted from rather than from the recorded cut observation that follows it.
+The work is to rebuild the replay orchestration from the contract and to stop trusting two of
+the modules that survived. The orchestration is one loop over learner steps, and every phase of
+it has to be derived rather than looked up. Admission: merge every shard line into the one
+stream the sequence numbers define, and at each step admit exactly what the cumulative ingest
+watermark has made visible, which is the largest watermark of every entry in force rather than
+the newest one, since the ingest log is not promised to be sorted. Slots and residency: the
+k-th admitted transition owns slot k modulo capacity, so a segment is drawable only while its
+oldest transition has not yet been overwritten, which is that transition's age against the
+capacity and is settled once per step. Registration: a segment enters the append only ledger at
+the first step by which all its transitions are admitted, ordered on its completing transition
+with the documented tie break, seeded from the largest priority the ledger holds. Sampling: the
+ledger is never cleaned, so draws that land on evicted entries are rejected and counted rather
+than replaced. Evaluation: values and importance ratios are recomputed for every accepted draw
+under the epoch in force at the drawing step, never carried over from an earlier step, and the
+importance sampling weight is normalised against the accepted draws of that step alone. Write
+back: every priority written by a step is applied only after all of that step's draws are
+resolved.
 
-With those three planes right, the shipped V-trace kernel, the sampler, the buffer, the epoch
-selection and the priority expression need no changes at all. The reference solution therefore
-replaces three modules of the auditor, ingest, segments and learner, and runs the existing
-command line entry point over every bundle, so every reported number is derived from the
-recorded inputs at run time.
+Two surviving modules also disagree with the contract in ways the reconcilable runs never
+reveal. The shard merge keys on actor and then sequence number, which matches the stream order
+only while the actors' sequence ranges do not interleave. The bootstrap for a time limit cut is
+taken from the observation the cut transition was acted from rather than from the cut
+observation the environment recorded, which is the standard autoreset hazard and is invisible in
+a run with no truncation.
+
+The V-trace kernel, the sampler, the ring buffer, the parameter snapshots and the priority
+expression all need no changes. The reference solution supplies three modules, ingest, segments
+and learner, and runs the existing command line entry point over every bundle, so every reported
+number is derived from the recorded inputs at run time.
 """
 verification_explanation = """
 The agent writes one audit document per run bundle to /app/out/<bundle>.json in the schema

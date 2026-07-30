@@ -6,35 +6,30 @@ appears it is the exact comparison the contract uses.
 
 ## 1. Global admission order
 
-The bundle's transitions form one sequence, all shard lines from all shard files ordered by
-ascending `seq`. Shard file order carries no meaning. This single ascending sequence is the
-only order in which transitions may enter the buffer.
+Every shard line of the bundle belongs to one single stream of transitions. The `seq` field
+is a transition's position in that stream and is unique across the bundle. The shard files
+are only per actor views of that one stream, so shard file order carries no meaning. The
+learner admitted transitions in stream order and in no other order.
 
-## 2. Visibility watermark
+## 2. Visibility
 
-For learner step `s`, the watermark is
+The ingest log records when recorded material became visible to the learner. Each entry
+states that from its `step` onward the learner could see every transition up to and including
+its `seq_watermark`. An entry recorded at a step is already in force at that step. Visibility
+is cumulative and only ever grows as the run proceeds. Entries are not required to be sorted
+and more than one entry may share a step. Before any entry is in force the learner sees
+nothing at all.
 
-    W(s) = max({a.seq_watermark for a in admissions if a.step <= s} union {0})
+## 3. Buffer admission and residency
 
-The comparison is `a.step <= s`, so an admission recorded at step `s` is already visible at
-step `s`. When no admission satisfies `a.step <= s` the watermark is `0`. A transition is
-visible at step `s` when `seq <= W(s)`.
+At the start of every learner step, in stream order, every visible transition that has not
+yet been admitted is admitted. The `k`-th transition ever admitted, counting from `0`,
+receives admission index `k` and occupies slot `k mod buffer_capacity`. Admission overwrites
+whatever occupied that slot before, and nothing else ever clears or moves a slot.
 
-## 3. Buffer admission
-
-At the start of every learner step, in ascending `seq` order, every visible transition that
-has not yet been admitted is admitted. The `k`-th transition ever admitted, counting from
-`0`, receives admission index `k` and occupies slot `k mod buffer_capacity`. Admission
-overwrites whatever occupied that slot before.
-
-Let `n` be the number of transitions admitted so far, measured after the admission phase of
-the current step. A transition admitted at index `i` is **resident** when
-
-    n - i <= buffer_capacity
-
-A segment is resident exactly when its first transition is resident, that being the one of
-its transitions with the lowest admission index. Residency is evaluated once per learner
-step, after that step's admission phase, and the same value is used for the whole step.
+A segment is **resident**, meaning still drawable, only while the buffer holds every
+transition the segment covers. Whether that holds is settled once per learner step, after
+that step's admission phase, and the same answer is used for the whole of that step.
 
 ## 4. Segments
 
@@ -74,7 +69,7 @@ The target epoch in force for learner step `s` is
 
 using integer floor division, where `n_epochs` is the number of epoch files the bundle
 ships. Every value and every current policy log probability used at step `s` is evaluated
-under the epoch `e(s)` snapshot. Nothing evaluated at an earlier step is carried forward.
+under the epoch `e(s)` snapshot.
 
 ## 7. Sampling
 
@@ -101,10 +96,12 @@ For an accepted draw on a segment of length `L`, with transitions indexed `k` fr
 
 The bootstrap value `v[L]` depends only on the cut kind:
 
-- `terminated`: `0.0`
-- `truncated`: the value of `cut_obs_id` of the stopping transition
-- `window`: the value of the observation of the next transition in the episode, whether or
-  not that transition is currently admitted or resident
+- `terminated`: the episode ended in the environment, so there is no continuation to value
+- `truncated`: the episode was cut by a time limit while it was still live, so the bootstrap
+  is the value of the observation the environment recorded at the cut
+- `window`: the segment ended part way through a live episode, so the bootstrap is the value
+  of the observation of the next transition in that episode, whether or not that transition
+  is currently admitted or resident
 
 Value targets and advantages are
 

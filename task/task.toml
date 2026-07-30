@@ -48,7 +48,12 @@ gradient clip bounds, prioritized replay with an importance sampling correction,
 actor-to-learner staleness. The conceptual traps are that the shipped arithmetic kernel and
 the shipped sampler are already contract faithful, so rewriting the obvious numerical module
 accomplishes nothing, and that the real deviations sit in the stateful layers, where they
-produce entirely plausible ledgers with no error path. Because each batch is drawn in
+produce entirely plausible ledgers with no error path. The contract states those stateful
+rules as constraints on the asynchronous system rather than as formulas, so isolating a
+deviation takes reasoning about actor to learner staleness, ring buffer eviction and target
+network refresh rather than comparing prose against code line by line, while the arbitrary
+choices no expert could be expected to infer, the sampler, the registration tie break, the
+priority expression and the output schema, are spelled out exactly. Because each batch is drawn in
 proportion to priorities the previous step wrote, one wrong residency, ordering or staleness
 decision reroutes every later draw, so closing most of the semantic gaps still yields a ledger
 that is wrong from that point onward and looks no different from a correct one.

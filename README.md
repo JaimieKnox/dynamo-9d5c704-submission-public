@@ -46,6 +46,18 @@ reroutes every later draw. The shipped auditor's graded output stays plausible r
 visibly broken: it admits every transition, registers every segment and evicts about the right
 number, and only the drawn sequences and the priority sums are wrong.
 
+## What the contract does and does not spell out
+
+The stateful rules the five deviations touch, stream ordering, cumulative visibility,
+residency of a segment's transitions, which epoch snapshot a step evaluates under, and the
+bootstrap for each cut kind, are stated as constraints on the asynchronous system. A solver
+has to turn them into index arithmetic using ring buffer and target network reasoning, which
+is the expertise the task claims to test. Everything an expert could not be expected to infer
+is spelled out exactly instead: the sampler and its stream, the V-trace recursion, the
+importance sampling weight and its normalisation, the priority expression, the registration
+tie break, the write back timing, the aggregate definitions, the run totals, and the output
+schema with its rounding.
+
 ## Environment
 
 `python:3.13-slim-bookworm` pinned by digest, pure standard library at run time, `pytest` and

@@ -16,6 +16,8 @@ def load_shards(bundle_dir):
                 line = line.strip()
                 if line:
                     rows.append(json.loads(line))
+    # Keep each actor's stream together and ascending, which is how the actors emitted it.
+    rows.sort(key=lambda row: (row["actor_id"], row["seq"]))
     return rows
 
 
@@ -28,6 +30,6 @@ def visible_seq(admissions, step):
     """Highest admission sequence number the learner can see at `step`."""
     best = 0
     for entry in admissions:
-        if entry["seq_watermark"] > best:
+        if entry["step"] <= step:
             best = entry["seq_watermark"]
     return best

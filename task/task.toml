@@ -69,28 +69,26 @@ insight is that the whole ledger is a function of which segments the buffer cons
 and drawable at each learner step, and the shipped code answers that using the state it had at
 ingest time rather than the state at the step.
 
-Four planes have to be reconstructed. The ordering plane: every shard line from every shard
-file merges into one ascending admission sequence keyed on the global seq field, rather than
-shard file order, and each learner step admits only transitions at or below that step's ingest
-watermark instead of preloading the whole run at step zero. The residency plane: a ledger
-entry is drawable only while its first transition still owns its slot, which is the comparison
-n minus i at most buffer_capacity, and a draw landing on a non-resident entry is rejected and
-counted rather than served from whatever now occupies those slots. This also fixes segment
-materialisation, which must read the episode's own transitions rather than a run of adjacent
-buffer slots, since the global admission order interleaves the actors. The priority plane: a
-newly registered segment is seeded from the largest priority currently held by a resident
-registered entry, not the largest held by any entry, which diverges the moment eviction
-removes the holder of that maximum. The staleness plane: values and importance ratios are
-recomputed for every drawn segment under the target epoch in force at the drawing step rather
-than cached at registration, and the bootstrap for a time limit cut is the value of the
-recorded cut observation under that same epoch rather than zero, which is only correct for an
-environment termination.
+Three planes have to be reconstructed, and each deviation is a plausible reading of the data
+that happens to be wrong. The ordering plane: the shard merge sorts by actor and then by
+sequence number, which coincides with the global admission order only while the actors'
+sequence ranges do not interleave, and the ingest watermark takes the last admission entry at
+or below the step in file order rather than the largest, which coincides only while the ingest
+log happens to be written in ascending order. Both must key on the global sequence number and
+on a maximum. The residency plane: segment residency is anchored on the segment's newest
+transition rather than its oldest, so entries stay drawable well past the point where the ring
+overwrote their first transition, and the comparison itself is the oldest transition's age
+against the capacity. The staleness plane: values and importance ratios are evaluated once at
+registration and reused for the rest of the run, so they go stale at the first target refresh
+and must be recomputed for every drawn segment under the epoch in force at the drawing step,
+and the bootstrap for a time limit cut is taken from the observation the cut transition was
+acted from rather than from the recorded cut observation that follows it.
 
-With those four planes right, the shipped V-trace kernel, the sampler, the epoch selection and
-the priority expression need no changes at all. The reference solution therefore replaces four
-modules of the auditor, ingest, buffer, segments and learner, and runs the existing command
-line entry point over every bundle, so every reported number is derived from the recorded
-inputs at run time.
+With those three planes right, the shipped V-trace kernel, the sampler, the buffer, the epoch
+selection and the priority expression need no changes at all. The reference solution therefore
+replaces three modules of the auditor, ingest, segments and learner, and runs the existing
+command line entry point over every bundle, so every reported number is derived from the
+recorded inputs at run time.
 """
 verification_explanation = """
 The agent writes one audit document per run bundle to /app/out/<bundle>.json in the schema
@@ -121,7 +119,8 @@ difference in admission ordering, residency, priority seeding, cut handling or e
 changes which ledger entries are drawn, and those slot sequences are graded as exact integers,
 so a wrong method fails on exact fields before the tolerance is consulted. The band was checked
 against mutations of each documented rule, including the residency comparison at its exact
-boundary, and every mutation changes at least one graded bundle's exact fields.
+boundary and the choice of which transition anchors it, and every mutation changes at least one
+graded bundle's exact fields.
 """
 
 [verifier]

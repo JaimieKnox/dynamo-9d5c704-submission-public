@@ -11,7 +11,11 @@ class Segment:
         self.boot_obs_id = boot_obs_id
         self.start_index = None
         self.complete_index = None
-        self.cache = None
+
+    @property
+    def residency_index(self):
+        """Admission index that decides whether the segment is still drawable."""
+        return self.start_index
 
 
 def group_episodes(rows):
@@ -54,8 +58,3 @@ def build_segments(episodes, n_step):
                 boot = rows[last + 1]["obs_id"]
             out.append(Segment(episode_id, t0, rows[t0:last + 1], cut, boot))
     return out
-
-
-def materialize(segment, buffer):
-    """The transitions the segment covers, in episode order."""
-    return segment.rows

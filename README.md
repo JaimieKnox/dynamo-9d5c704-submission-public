@@ -13,21 +13,28 @@ run totals.
 
 The auditor as delivered reconciles perfectly against the three bundles that ship an
 `expected.json`, so the environment never signals wrongness. It deviates from the contract in
-five places, all in the stateful layers rather than in the arithmetic:
+five places, all in the stateful layers rather than in the arithmetic, and every one of them
+is a plausible reading of the data rather than visibly broken code:
 
-1. `ingest.load_shards` concatenates shard files instead of merging on the global `seq`.
-2. `ingest.visible_seq` ignores the admission step, so the whole run is admitted at step 0.
-3. `buffer.TransitionBuffer.is_resident` never expires a slot, so no draw is ever rejected
-   and evicted segments are served from whatever now occupies their slots.
-4. `segments.materialize` reads a run of adjacent buffer slots rather than the episode's own
-   transitions, which only coincides while the actors are not interleaved.
-5. `learner.run_bundle` caches per segment values and importance ratios at registration and
-   reuses them after a target refresh, and treats a time limit cut as an environment
-   termination when choosing the bootstrap.
+1. `ingest.load_shards` sorts by `(actor_id, seq)`, keeping each actor's stream contiguous.
+   That equals the global admission order only while the actors' sequence ranges do not
+   interleave.
+2. `ingest.visible_seq` takes the last admission entry at or below the step in file order
+   instead of the largest watermark among them. That agrees only while the ingest log is
+   written in ascending order, which the bundle format explicitly does not promise.
+3. `segments.Segment.residency_index` returns the segment's newest admission index rather
+   than its oldest, so entries remain drawable past the point where the ring overwrote their
+   first transition. Invisible until the buffer wraps.
+4. `learner.run_bundle` evaluates each segment's values and importance ratios once at
+   registration and reuses them, so they go stale at the first target refresh. Invisible in a
+   single epoch run.
+5. `segments.build_segments` bootstraps a time limit cut from the observation the cut
+   transition was acted from rather than from the recorded `cut_obs_id`. Invisible without
+   truncations.
 
-The V-trace kernel (`vtrace.py`), the sampler (`sampler.py`), the epoch selection
-(`params.py`) and the priority expression are already contract faithful, so rewriting the
-obvious numerical module changes nothing.
+The V-trace kernel (`vtrace.py`), the sampler (`sampler.py`), the buffer (`buffer.py`), the
+epoch selection (`params.py`) and the priority expression are already contract faithful, so
+rewriting the obvious numerical module changes nothing.
 
 ## Why the sample bundles stay green
 
@@ -35,7 +42,9 @@ obvious numerical module changes nothing.
 admission at step 0, fewer transitions than buffer slots, and no time limit truncation. Every
 one of the five deviations is dormant under those conditions. The six graded bundles each
 activate several of them, and because sampling is priority proportional, one wrong decision
-reroutes every later draw.
+reroutes every later draw. The shipped auditor's graded output stays plausible rather than
+visibly broken: it admits every transition, registers every segment and evicts about the right
+number, and only the drawn sequences and the priority sums are wrong.
 
 ## Environment
 

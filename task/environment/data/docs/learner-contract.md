@@ -62,10 +62,9 @@ The learner's priority ledger is append only. A registered segment keeps its led
 position for the rest of the run and is never removed, even after its transitions leave the
 buffer. Ledger positions are assigned in registration order starting at `0`.
 
-A segment is seeded with the largest priority currently held by a **resident** registered
-segment, using the residency of the current step. When no registered segment is resident,
-the seed is `1.0`. A segment registered earlier in the same step is eligible to supply that
-maximum.
+A segment is seeded with the largest priority the ledger currently holds, counting every
+entry whether or not it is resident. When the ledger is empty, the seed is `1.0`. A segment
+registered earlier in the same step is eligible to supply that maximum.
 
 ## 6. Target epoch
 

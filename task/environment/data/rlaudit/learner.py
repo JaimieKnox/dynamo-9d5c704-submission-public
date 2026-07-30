@@ -21,21 +21,20 @@ def _round6(value):
     return round(value, 6)
 
 
-def segment_stats(segment, buffer, feats, ep_params, gamma, rho_bar, c_bar):
+def segment_stats(segment, feats, ep_params, gamma, rho_bar, c_bar):
     """Value targets and advantages for one segment under one target epoch snapshot."""
-    rows = segmod.materialize(segment, buffer)
     rewards = []
     values = []
     rhos = []
     cs = []
-    for row in rows:
+    for row in segment.rows:
         feat = feats[row["obs_id"]]
         values.append(ep_params.value(feat))
         ratio = math.exp(ep_params.logp(feat, row["action"]) - row["behavior_logp"])
         rhos.append(min(rho_bar, ratio))
         cs.append(min(c_bar, ratio))
         rewards.append(row["reward"])
-    if segment.cut == "terminated" or segment.cut == "truncated":
+    if segment.cut == "terminated":
         boot = 0.0
     else:
         boot = ep_params.value(feats[segment.boot_obs_id])
@@ -60,9 +59,9 @@ def run_bundle(bundle_dir):
 
     buffer = TransitionBuffer(manifest["buffer_capacity"])
     registry = PriorityRegistry()
-    pending = rows
     cursor = 0
     unregistered = segmod.build_segments(episodes, manifest["n_step"])
+    stats = {}
 
     step_records = []
     total_draws = 0
@@ -71,8 +70,8 @@ def run_bundle(bundle_dir):
 
     for step in range(manifest["learner_steps"]):
         watermark = ingest.visible_seq(admissions, step)
-        while cursor < len(pending) and pending[cursor]["seq"] <= watermark:
-            buffer.enqueue(pending[cursor])
+        while cursor < len(rows) and rows[cursor]["seq"] <= watermark:
+            buffer.enqueue(rows[cursor])
             cursor += 1
 
         epoch = params.epoch_for_step(step, manifest["target_refresh_interval"], len(epochs))
@@ -89,10 +88,9 @@ def run_bundle(bundle_dir):
                 still_waiting.append(segment)
         ready.sort(key=lambda seg: (seg.complete_index, seg.start_index))
         for segment in ready:
-            registry.insert(segment, buffer)
-            segment.cache = segment_stats(
-                segment, buffer, feats, ep_params, gamma, rho_bar, c_bar
-            )
+            position = registry.insert(segment)
+            # Values and ratios are a property of the segment, so evaluate them once.
+            stats[position] = segment_stats(segment, feats, ep_params, gamma, rho_bar, c_bar)
         unregistered = still_waiting
 
         size = len(registry.segments)
@@ -112,10 +110,10 @@ def run_bundle(bundle_dir):
             total_draws += len(picks)
             for position in picks:
                 segment = registry.segments[position]
-                if not buffer.is_resident(segment.start_index):
+                if not buffer.is_resident(segment.residency_index):
                     dropped += 1
                     continue
-                targets, advantages = segment.cache
+                targets, advantages = stats[position]
                 sampled.append(segment.rows[0]["_slot"])
                 target_pool.extend(targets)
                 advantage_pool.extend(advantages)
@@ -154,7 +152,7 @@ def run_bundle(bundle_dir):
 
     evicted = 0
     for segment in registry.segments:
-        if not buffer.is_resident(segment.start_index):
+        if not buffer.is_resident(segment.residency_index):
             evicted += 1
 
     return {

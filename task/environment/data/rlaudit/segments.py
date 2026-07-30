@@ -11,7 +11,11 @@ class Segment:
         self.boot_obs_id = boot_obs_id
         self.start_index = None
         self.complete_index = None
-        self.cache = None
+
+    @property
+    def residency_index(self):
+        """Admission index that decides whether the segment is still drawable."""
+        return self.complete_index
 
 
 def group_episodes(rows):
@@ -47,22 +51,10 @@ def build_segments(episodes, n_step):
             if cut == "terminated":
                 boot = None
             elif cut == "truncated":
-                boot = rows[last]["cut_obs_id"]
+                boot = rows[last]["obs_id"]
             else:
                 if last + 1 >= count:
                     continue
                 boot = rows[last + 1]["obs_id"]
             out.append(Segment(episode_id, t0, rows[t0:last + 1], cut, boot))
     return out
-
-
-def materialize(segment, buffer):
-    """The transitions the segment covers, read back out of the buffer."""
-    first = segment.rows[0]["_slot"]
-    rows = []
-    for offset in range(segment.length):
-        row = buffer.row_at_slot(first + offset)
-        if row is None:
-            row = segment.rows[offset]
-        rows.append(row)
-    return rows

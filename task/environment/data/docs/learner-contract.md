@@ -3,7 +3,7 @@
 This document fixes every rule that decides an audit document. It applies to every bundle
 under `/app/runs`. Where an inequality appears it is the exact comparison the contract uses.
 
-## 1. Global admission order
+## 1. Global admission orde
 
 Every shard line of the bundle belongs to one single stream of transitions. The `seq` field
 is a transition's position in that stream and is unique across the bundle. The shard files
@@ -28,15 +28,14 @@ receives admission index `k` and occupies slot `k mod buffer_capacity`. Admissio
 whatever occupied that slot before, and nothing else ever clears or moves a slot.
 
 A segment is **resident**, meaning still drawable, only while the buffer still holds every
-transition the segment covers. A transition admitted at index `k` remains in the buffer
-exactly while `admitted_so_far - k <= buffer_capacity`, where `admitted_so_far` is the number
+transition the segment covers. A transition admitted at index `k` remains in the buffe
+exactly while `admitted_so_far - k <= buffer_capacity`, where `admitted_so_far` is the numbe
 of transitions admitted by the end of the step's admission phase. Because the ring
 overwrites oldest first, a segment is resident exactly while its earliest admitted transition
 still occupies its slot. Whether that holds is settled once per learner step, after that
 step's admission phase, and the same answer is used for the whole of that step. Admission
 for a step is complete before that step decides residency, and residency is settled before
-that step draws. Admission for a step is complete before
-that step decides residency, and residency is settled before that step draws.
+that step draws.
 
 ## 4. Segments
 
@@ -50,7 +49,7 @@ transitions by `t`, and stopping at the first of these conditions:
 
 Cut kind is drawn from exactly that closed set of three values. The segment covers the
 transitions from `t0` up to and including the stopping transition. A `window` segment whose
-stopping transition is the last transition of its episode is never formed and never
+stopping transition is the last transition of its episode is never formed and neve
 registered. Segment transitions are always the episode's own transitions at those offsets.
 
 ## 5. Registration
@@ -60,13 +59,14 @@ of its transitions has been admitted. All segments that become registrable in th
 are registered in ascending order of the admission index of their last transition, breaking
 ties by ascending admission index of their first transition.
 
-The learner's priority ledger is append only. A registered segment keeps its ledger
+The learner's priority ledger is append only. A registered segment keeps its ledge
 position for the rest of the run and is never removed, even after its transitions leave the
 buffer. Ledger positions are assigned in registration order starting at `0`.
 
 A segment is seeded with the largest priority the ledger currently holds. Every ledger entry
-counts toward that maximum, whether or not it is still resident. When the ledger is empty, the seed is `1.0`. A segment
-registered earlier in the same step is eligible to supply that maximum.
+counts toward that maximum, whether or not it is still resident. When the ledger is empty,
+the seed is `1.0`. A segment registered earlier in the same step is eligible to supply that
+maximum.
 
 Registration for a step is complete before that step draws, so a segment registered in a step
 can be drawn in that same step.
@@ -96,36 +96,24 @@ than once in one step, and every accepted draw counts separately.
 
 ## 8. Per segment quantities
 
-For an accepted draw on a segment of length `L`, with transitions indexed `k` from `0` to
-`L - 1` in episode order, under the epoch `e(s)` snapshot:
+For an accepted draw, evaluate values and current-policy log probabilities under the epoch
+`e(s)` snapshot. Clip the importance ratio of each transition with the bundle's `rho_bar`
+and `c_bar` as the two separate clip bounds. Choose the bootstrap from the cut kind alone:
 
-    v[k]     = value of the transition's own observation
-    ratio[k] = exp(current policy log probability of the recorded action - behavior_logp)
-    rho[k]   = min(rho_bar, ratio[k])
-    c[k]     = min(c_bar, ratio[k])
+- `terminated`: there is no continuation to value
+- `truncated`: bootstrap from the observation the environment recorded at the cut
+- `window`: bootstrap from the observation of the next transition in that episode, whethe
+  or not that transition is currently admitted or resident
 
-The bootstrap value `v[L]` depends only on the cut kind:
-
-- `terminated`: the episode ended in the environment, so there is no continuation to value
-- `truncated`: the episode was cut by a time limit while it was still live, so the bootstrap
-  is the value of the observation the environment recorded at the cut
-- `window`: the segment ended part way through a live episode, so the bootstrap is the value
-  of the observation of the next transition in that episode, whether or not that transition
-  is currently admitted or resident
-
-Value targets and advantages are
-
-    target[L]   = v[L]
-    delta[k]    = rho[k] * (reward[k] + gamma * v[k+1] - v[k])
-    target[k]   = v[k] + delta[k] + gamma * c[k] * (target[k+1] - v[k+1])
-    advantage[k] = rho[k] * (reward[k] + gamma * target[k+1] - v[k])
-
-computed from `k = L - 1` down to `k = 0`.
+Value targets and policy-gradient advantages are exactly the truncated importance-weighted
+returns produced by `/app/rlaudit/vtrace.py` for that segment's rewards, values, bootstrap,
+clipped ratios and the bundle's `gamma`. Do not re-derive a different recursion.
 
 ## 9. Importance sampling weight
 
 For an accepted draw whose ledger priority before the step's write back is `p`, with `N` and
-`P` as in section 7 and with the bundle's `beta`,
+`P` taken once at the start of sampling for that step (before any write back) and with the
+bundle's `beta`,
 
     w_raw = (N * (p / P)) ** (-beta)
 
@@ -142,17 +130,18 @@ to
 
 using the bundle's `alpha` and `priority_eps`. When the same entry is accepted more than once
 in one step, the last rewrite of that step wins. Rejected draws leave their entry untouched.
-Write backs from one step are not visible to that same step's draws.
+Write backs from one step are not visible to that same step's draws, and they must not change
+`N`, `P` or any `w_raw` used while the step is still drawing.
 
 ## 11. Per step aggregates
 
 After write back, the step reports:
 
 - `target_epoch`: `e(s)`
-- `sampled`: the buffer slot of the first transition of each accepted draw, in draw order
+- `sampled`: the buffer slot of the first transition of each accepted draw, in draw orde
 - `dropped_nonresident`: the number of rejected draws
-- `mean_vtrace_target`: the mean of every `target[k]` produced by accepted draws, or `0.0`
-- `mean_pg_advantage`: the mean of every `advantage[k]` produced by accepted draws, or `0.0`
+- `mean_vtrace_target`: the mean of every value target produced by accepted draws, or `0.0`
+- `mean_pg_advantage`: the mean of every advantage produced by accepted draws, or `0.0`
 - `mean_is_weight`: the weight of section 9
 - `priority_sum_after`: the sum of every ledger priority after write back
 
@@ -163,7 +152,7 @@ The four floating aggregates are rounded to six decimal places.
 At the end of the run the document reports:
 
 - `transitions_enqueued`: how many transitions were admitted
-- `segments_registered`: how many segments entered the ledger
+- `segments_registered`: how many segments entered the ledge
 - `segments_evicted`: how many ledger entries are not resident after the final step
 - `draws`: how many draws were attempted across the run
 - `draws_accepted`: how many of those were accepted

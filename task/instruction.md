@@ -1,6 +1,6 @@
 The replay auditor in `/app/rlaudit` reconstructs what the learner of an asynchronous actor-learner training run did, from that run's recorded actor shards. The package needs to produce correct audit documents for every recorded run.
 
-Each directory under `/app/runs` is one recorded run bundle. `/app/docs/bundle-format.md`, `/app/docs/learner-contract.md`, `/app/docs/sampler.md` and `/app/docs/output-schema.md` are normative and between them state every rule that decides an audit document.
+Each directory under `/app/runs` is one recorded run bundle. `/app/docs/bundle-format.md`, `/app/docs/learner-contract.md`, `/app/docs/sampler.md` and `/app/docs/output-schema.md` are normative and between them state every rule that decides an audit document. The arithmetic kernel in `/app/rlaudit/vtrace.py`, the sampler, the ring buffer, the parameter snapshots and the shard/segment helpers survived. The learner step loop that drives them did not.
 
 Write one audit document per bundle to `/app/out/<bundle>.json`, using the bundle's directory name. For every bundle directory under `/app/runs`:
 

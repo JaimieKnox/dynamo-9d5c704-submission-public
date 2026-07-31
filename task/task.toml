@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "dynamo/audit-replay-learner"
-description = "Repair a near-correct asynchronous actor-learner replay auditor so graded run ledgers match the contract"
+description = "Rebuild the missing learner step loop of an asynchronous actor-learner replay auditor so recorded runs reproduce the contract ledger"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -25,61 +25,51 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-The task ships a near-complete deterministic replay auditor for an asynchronous actor-learner
-reinforcement learning trainer together with recorded run bundles, and asks for the learner's
-prioritized replay and off-policy correction accounting to be reproduced exactly on every
-bundle. The arithmetic kernel, the sampler and the parameter snapshots are contract faithful,
-and the shipped orchestration looks intact on short runs that never wrap the ring buffer and
-that make only one draw per step, so several shared-state defects stay inert on the sample
-bundles. Graded runs wrap the ring early, draw larger batches and force residency checks,
-priority seeding and write-back timing to interact across steps. Reproducing the learner means
-driving a stateful machine forward over tens of learner steps: merge shard transitions into one
-global admission order, admit only what the ingest log says was visible at that step, form
-n-step segments inside episode boundaries, decide which segments are still resident once the
-circular buffer has wrapped, seed insert priorities from the whole ledger, draw a priority
-proportional batch, compute clipped importance ratios against the parameters in force for that
-step, compute truncated importance weighted value targets and policy gradient advantages, then
-write priorities back only after every draw of the step has resolved.
+The task ships a deterministic replay auditor for an asynchronous actor-learner reinforcement
+learning trainer together with recorded run bundles, but the learner step loop that admits
+visible transitions, registers segments, draws a priority proportional batch, scores accepted
+draws and writes priorities back did not survive. The arithmetic kernel, the sampler, the ring
+buffer and most shard helpers look intact, and short sample runs never wrap their buffer, neve
+hit a time-limit cut and never cross a target refresh, so an orchestration that trusts the
+surviving helpers without checking them against the contract can look locally consistent while
+still being wrong on the graded runs. No bundle ships an expected audit document, so there is
+no iterate-and-match oracle. Reproducing the learner means synthesizing the full step loop and
+also noticing the silent helper disagreements that only appear once refresh boundaries and
+time-limit truncations start interacting with residency and write-back timing.
 
 The expertise required is off-policy RL training infrastructure: n-step credit assignment
 inside episode boundaries, the distinction between environment termination and a time limit
-cut for bootstrapping, truncated importance sampling with separate trace cutting and policy
-gradient clip bounds, prioritized replay with an importance sampling correction, and
-actor-to-learner staleness. The difficulty is that interacting stateful rules have to be right
-simultaneously with almost no feedback. No bundle ships an expected audit document, so there is
-no iterate-and-match oracle, and short sample runs that appear healthy under the shipped code
-do not exercise the wraparound and multi-draw interactions that decide the graded ledgers.
-Because each batch is drawn in proportion to priorities the previous step wrote, one wrong
-residency, seeding or write-back decision reroutes every later draw, so an implementation that
-is right about almost everything still yields a ledger that is wrong from that point onward.
+cut for bootstrapping, truncated importance sampling with separate clip bounds, prioritized
+replay with an importance sampling correction, and actor-to-learner staleness. The contract
+points the value-target recursion at the surviving V-trace kernel rather than restating it, so
+turning the constraints into a correct step loop takes reasoning about ring-buffer eviction,
+visibility and refresh timing rather than transcription of a finished program. One wrong
+residency, bootstrap, refresh or write-back decision reroutes every later draw on the graded
+bundles that wrap early and draw larger batches.
 
 The bundles are synthetic, produced by a reference simulator of an asynchronous run, and they
-are realistically challenging because the conditions that expose the gaps, namely staggered
-shard visibility, buffer wraparound, target refreshes part way through a run and time limit
-truncation, are exactly the conditions that make real asynchronous trainers hard to audit. In
-the real world this is the work of engineers who own asynchronous RL training infrastructure
-and have to establish whether a learner metric regression was a learning problem or a replay
-accounting problem.
+are realistically challenging because the conditions that expose gaps are exactly the
+conditions that make real asynchronous trainers hard to audit. In the real world this is the
+work of engineers who own asynchronous RL training infrastructure and have to establish
+whether a learner metric regression was a learning problem or a replay accounting problem.
 """
 solution_explanation = """
-Treat the auditor as a shared-state compliance problem rather than a missing-module problem.
-The normative documents under /app/docs fix every rule. The shipped package already runs end to
-end, so the work is to find where residency, priority seeding and write-back timing disagree
-with the contract once the ring buffer wraps and a step accepts more than one draw. The key
-insight is that the whole ledger is a function of which segments the buffer still holds at each
-learner step and of when priority updates become visible to later draws, so the questions worth
-answering before trusting the shipped code are what still owns a slot after wraparound, what
-seeds a newly registered entry and whether write-backs from one step can affect that same
-step's later draws.
+Treat the auditor as a state-machine specification problem with untrusted surviving helpers.
+Rebuild the learner step loop from the normative documents, using the V-trace kernel fo
+per-segment targets, and verify the helpers that look intact against the contract before
+trusting them: target-epoch selection must follow the floor-division rule exactly, and a
+time-limit cut must bootstrap from the observation recorded at the cut rather than the
+transition's own observation. Defer priority write-back until every draw of the step has
+resolved, settle residency after admission, and report the schema aggregates.
 """
 verification_explanation = """
 Verifier tests recompute the expected audit document for every bundle from a verifier-owned
 copy of the recorded inputs under tests/inputs, using an independent reference implementation
-that does not import /app. One test function covers each numbered success criterion. Integer
+that does not import /app. One test function covers each numbered success criterion. Intege
 ledger fields must match exactly. Floating aggregates must match within 1e-6 absolute after the
-contract's six-decimal rounding. The oracle copies the contract-faithful buffer/registry and
-learner orchestration into /app/rlaudit and runs the CLI. A nop agent leaves the shipped
-near-correct package in place and fails on the graded wraparound and multi-draw bundles.
+contract's six-decimal rounding. The oracle copies the contract-faithful learner orchestration
+and the corrected helper modules into /app/rlaudit and runs the CLI. A nop agent leaves the
+missing orchestration in place and produces no audit documents.
 """
 
 [verifier]

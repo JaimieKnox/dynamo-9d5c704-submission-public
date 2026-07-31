@@ -1,4 +1,4 @@
-# dynamo/audit-replay-learne
+# dynamo/audit-replay-learner
 
 Development notes for reviewers. The agent never sees this file.
 

@@ -3,7 +3,7 @@
 This document fixes every rule that decides an audit document. It applies to every bundle
 under `/app/runs`. Where an inequality appears it is the exact comparison the contract uses.
 
-## 1. Global admission orde
+## 1. Global admission order
 
 Every shard line of the bundle belongs to one single stream of transitions. The `seq` field
 is a transition's position in that stream and is unique across the bundle. The shard files
@@ -50,7 +50,7 @@ transitions by `t`, and stopping at the first of these conditions:
 
 Cut kind is drawn from exactly that closed set of three values. The segment covers the
 transitions from `t0` up to and including the stopping transition. A `window` segment whose
-stopping transition is the last transition of its episode is never formed and neve
+stopping transition is the last transition of its episode is never formed and never
 registered. Segment transitions are always the episode's own transitions at those offsets.
 
 ## 5. Registration
@@ -60,7 +60,7 @@ of its transitions has been admitted. All segments that become registrable in th
 are registered in ascending order of the admission index of their last transition, breaking
 ties by ascending admission index of their first transition.
 
-The learner's priority ledger is append only. A registered segment keeps its ledge
+The learner's priority ledger is append only. A registered segment keeps its ledger
 position for the rest of the run and is never removed, even after its transitions leave the
 buffer. Ledger positions are assigned in registration order starting at `0`.
 
@@ -149,7 +149,7 @@ Write backs from one step are not visible to that same step's draws.
 After write back, the step reports:
 
 - `target_epoch`: `e(s)`
-- `sampled`: the buffer slot of the first transition of each accepted draw, in draw orde
+- `sampled`: the buffer slot of the first transition of each accepted draw, in draw order
 - `dropped_nonresident`: the number of rejected draws
 - `mean_vtrace_target`: the mean of every `target[k]` produced by accepted draws, or `0.0`
 - `mean_pg_advantage`: the mean of every `advantage[k]` produced by accepted draws, or `0.0`
@@ -163,7 +163,7 @@ The four floating aggregates are rounded to six decimal places.
 At the end of the run the document reports:
 
 - `transitions_enqueued`: how many transitions were admitted
-- `segments_registered`: how many segments entered the ledge
+- `segments_registered`: how many segments entered the ledger
 - `segments_evicted`: how many ledger entries are not resident after the final step
 - `draws`: how many draws were attempted across the run
 - `draws_accepted`: how many of those were accepted

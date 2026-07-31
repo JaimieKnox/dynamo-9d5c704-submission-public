@@ -25,7 +25,7 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-The task ships a near-complete deterministic replay auditor for an asynchronous actor-learne
+The task ships a near-complete deterministic replay auditor for an asynchronous actor-learner
 reinforcement learning trainer together with recorded run bundles, and asks for the learner's
 prioritized replay and off-policy correction accounting to be reproduced exactly on every
 bundle. The arithmetic kernel, the sampler and the parameter snapshots are contract faithful,
@@ -75,7 +75,7 @@ step's later draws.
 verification_explanation = """
 Verifier tests recompute the expected audit document for every bundle from a verifier-owned
 copy of the recorded inputs under tests/inputs, using an independent reference implementation
-that does not import /app. One test function covers each numbered success criterion. Intege
+that does not import /app. One test function covers each numbered success criterion. Integer
 ledger fields must match exactly. Floating aggregates must match within 1e-6 absolute after the
 contract's six-decimal rounding. The oracle copies the contract-faithful buffer/registry and
 learner orchestration into /app/rlaudit and runs the CLI. A nop agent leaves the shipped

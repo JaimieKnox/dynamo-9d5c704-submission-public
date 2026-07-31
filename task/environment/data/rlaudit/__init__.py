@@ -2,6 +2,7 @@
 
 __all__ = [
     "buffer",
+    "check",
     "cli",
     "ingest",
     "learner",

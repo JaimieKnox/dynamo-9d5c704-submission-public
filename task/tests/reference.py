@@ -1,31 +1,19 @@
 """Independent reference implementation of the learner replay contract.
 
-Written directly from /app/docs/learner-contract.md, /app/docs/defect-modes.md and
-/app/docs/output-schema.md, and deliberately structured differently from the auditor under
-repair: admission indices are assigned by walking an explicit per step admission plan,
-watermarks are folded ahead of the replay, epoch evaluations are memoised tables, the sampler
-stream is a generator, and segments are plain dicts keyed on their member admission indices.
-It shares no code with the task environment.
+Written directly from /app/docs/learner-contract.md and deliberately structured
+differently from the auditor under repair: admission indices come from the rank of a
+transition in the globally sorted sequence, watermarks are resolved by bisection, epoch
+evaluations are memoised tables, and the sampler stream is a generator. It shares no code
+with the task environment.
 """
 
-import hashlib
+import bisect
 import json
 import math
 import os
 
 _M64 = (1 << 64) - 1
 _GOLD = 0x9E3779B97F4A7C15
-
-# Candidate order of /app/docs/defect-modes.md.
-MODES = (
-    "none",
-    "shard_local_order",
-    "watermark_last_entry",
-    "residency_by_last_transition",
-    "truncated_bootstrap_acting_obs",
-    "seed_constant_one",
-    "weight_norm_over_all_draws",
-)
 
 
 def _unit_stream(seed):
@@ -53,94 +41,7 @@ def _read_lines(path):
     return out
 
 
-def _micros(value):
-    return int(round(value * 1000000))
-
-
-def _digest(text):
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
-
-
-def step_digest(record):
-    """Digest of one step ledger entry, per /app/docs/output-schema.md."""
-    fields = [
-        str(int(record["step"])),
-        str(int(record["target_epoch"])),
-        ",".join(str(int(slot)) for slot in record["sampled"]),
-        str(int(record["dropped_nonresident"])),
-        str(_micros(record["mean_vtrace_target"])),
-        str(_micros(record["mean_pg_advantage"])),
-        str(_micros(record["mean_is_weight"])),
-        str(_micros(record["priority_sum_after"])),
-    ]
-    return _digest("|".join(fields))
-
-
-def totals_digest(totals):
-    """Digest of the run totals object, per /app/docs/output-schema.md."""
-    fields = [
-        str(int(totals["transitions_enqueued"])),
-        str(int(totals["segments_registered"])),
-        str(int(totals["segments_evicted"])),
-        str(int(totals["draws"])),
-        str(int(totals["draws_accepted"])),
-        str(int(totals["unique_segments_drawn"])),
-        str(_micros(totals["priority_sum_final"])),
-    ]
-    return _digest("|".join(fields))
-
-
-def ledger_digests(document):
-    return {
-        "step_digests": [step_digest(record) for record in document["steps"]],
-        "totals_digest": totals_digest(document["totals"]),
-    }
-
-
-def _visible_marks(admissions, steps, mode):
-    """Highest sequence number in force at each learner step."""
-    marks = []
-    for step in range(steps):
-        mark = 0
-        if mode == "watermark_last_entry":
-            for entry in admissions:
-                if entry["step"] <= step:
-                    mark = entry["seq_watermark"]
-        else:
-            for entry in admissions:
-                if entry["step"] <= step and entry["seq_watermark"] > mark:
-                    mark = entry["seq_watermark"]
-        marks.append(mark)
-    return marks
-
-
-def _admission_plan(rows, marks, mode):
-    """Admission index of every transition ever admitted, and the count held per step."""
-    if mode == "shard_local_order":
-        order = sorted(rows, key=lambda row: (row["actor_id"], row["seq"]))
-    else:
-        order = sorted(rows, key=lambda row: row["seq"])
-
-    index_of = {}
-    per_step = []
-    reach = 0
-    waiting = order
-    for mark in marks:
-        if mark > reach:
-            reach = mark
-        held_back = []
-        for row in waiting:
-            if row["seq"] <= reach:
-                index_of[row["seq"]] = len(index_of)
-            else:
-                held_back.append(row)
-        waiting = held_back
-        per_step.append(len(index_of))
-    return index_of, per_step
-
-
-def audit(bundle_dir, mode="none"):
-    """Replay one bundle under the contract, or under one documented deviation."""
+def audit(bundle_dir):
     manifest = _read_json(os.path.join(bundle_dir, "manifest.json"))
     feats = _read_json(os.path.join(bundle_dir, "features.json"))
     admissions = _read_json(os.path.join(bundle_dir, "ingest.json"))["admissions"]
@@ -184,10 +85,9 @@ def audit(bundle_dir, mode="none"):
     for name in sorted(os.listdir(sdir)):
         if name.endswith(".jsonl"):
             rows.extend(_read_lines(os.path.join(sdir, name)))
-
-    steps_count = manifest["learner_steps"]
-    marks = _visible_marks(admissions, steps_count, mode)
-    index_of, held_per_step = _admission_plan(rows, marks, mode)
+    rows.sort(key=lambda row: row["seq"])
+    seqs = [row["seq"] for row in rows]
+    rank = {row["seq"]: index for index, row in enumerate(rows)}
 
     chains = {}
     for row in rows:
@@ -226,29 +126,30 @@ def audit(bundle_dir, mode="none"):
             if kind == "terminated":
                 boot = None
             elif kind == "truncated":
-                if mode == "truncated_bootstrap_acting_obs":
-                    boot = chain[stop]["obs_id"]
-                else:
-                    boot = chain[stop]["cut_obs_id"]
+                boot = chain[stop]["cut_obs_id"]
             else:
                 if stop + 1 >= span:
                     continue
                 boot = chain[stop + 1]["obs_id"]
             member = chain[t0:stop + 1]
-            if any(row["seq"] not in index_of for row in member):
-                continue
-            indices = [index_of[row["seq"]] for row in member]
+            indices = [rank[row["seq"]] for row in member]
             segments.append(
                 {
                     "rows": member,
                     "kind": kind,
                     "boot": boot,
-                    "first": indices[0],
-                    "last": indices[-1],
-                    "earliest": min(indices),
-                    "latest": max(indices),
+                    "start": indices[0],
+                    "done": max(indices),
+                    "position": None,
                 }
             )
+
+    def admitted_at(step):
+        watermark = 0
+        for entry in admissions:
+            if entry["step"] <= step and entry["seq_watermark"] > watermark:
+                watermark = entry["seq_watermark"]
+        return bisect.bisect_right(seqs, watermark)
 
     ledger = []
     priority = []
@@ -257,27 +158,21 @@ def audit(bundle_dir, mode="none"):
     draws_total = 0
     accepted_total = 0
     touched = set()
-    held = 0
+    admitted = 0
 
-    def anchor(seg):
-        if mode == "residency_by_last_transition":
-            return seg["latest"]
-        return seg["earliest"]
+    for step in range(manifest["learner_steps"]):
+        admitted = admitted_at(step)
 
-    for step in range(steps_count):
-        held = held_per_step[step]
-
-        arriving = [seg for seg in unregistered if seg["latest"] < held]
+        arriving = [seg for seg in unregistered if seg["done"] < admitted]
         if arriving:
-            arriving.sort(key=lambda seg: (seg["last"], seg["first"]))
-            unregistered = [seg for seg in unregistered if seg["latest"] >= held]
+            arriving.sort(key=lambda seg: (seg["done"], seg["start"]))
+            waiting = [seg for seg in unregistered if seg["done"] >= admitted]
             for seg in arriving:
-                if mode == "seed_constant_one":
-                    seed = 1.0
-                else:
-                    seed = max(priority) if priority else 1.0
+                seed_priority = max(priority) if priority else 1.0
+                seg["position"] = len(ledger)
                 ledger.append(seg)
-                priority.append(seed)
+                priority.append(seed_priority)
+            unregistered = waiting
 
         size = len(ledger)
         epoch = min(step // manifest["target_refresh_interval"], len(epochs) - 1)
@@ -287,8 +182,7 @@ def audit(bundle_dir, mode="none"):
         rejected = 0
         targets_pool = []
         advantage_pool = []
-        accepted_weights = []
-        every_weight = []
+        raw_weights = []
         pending = {}
 
         if size > 0 and total > 0.0:
@@ -304,9 +198,7 @@ def audit(bundle_dir, mode="none"):
                         break
                 draws_total += 1
                 seg = ledger[choice]
-                raw_weight = (size * (priority[choice] / total)) ** (-beta)
-                every_weight.append(raw_weight)
-                if held - anchor(seg) > capacity:
+                if admitted - seg["start"] > capacity:
                     rejected += 1
                     continue
 
@@ -339,22 +231,19 @@ def audit(bundle_dir, mode="none"):
                     for k in range(span)
                 ]
 
-                sampled.append(seg["first"] % capacity)
+                sampled.append(seg["start"] % capacity)
                 targets_pool.extend(corrected[:span])
                 advantage_pool.extend(advantages)
-                accepted_weights.append(raw_weight)
+                raw_weights.append((size * (priority[choice] / total)) ** (-beta))
                 pending[choice] = (
                     sum(abs(a) for a in advantages) / span + eps
                 ) ** alpha
                 accepted_total += 1
                 touched.add(choice)
 
-        if accepted_weights:
-            if mode == "weight_norm_over_all_draws":
-                top = max(every_weight)
-            else:
-                top = max(accepted_weights)
-            mean_weight = sum(w / top for w in accepted_weights) / len(accepted_weights)
+        if raw_weights:
+            top = max(raw_weights)
+            mean_weight = sum(w / top for w in raw_weights) / len(raw_weights)
         else:
             mean_weight = 0.0
         mean_target = sum(targets_pool) / len(targets_pool) if targets_pool else 0.0
@@ -378,13 +267,13 @@ def audit(bundle_dir, mode="none"):
             }
         )
 
-    evicted = sum(1 for seg in ledger if held - anchor(seg) > capacity)
+    evicted = sum(1 for seg in ledger if admitted - seg["start"] > capacity)
 
     return {
         "bundle": manifest["bundle"],
         "steps": step_records,
         "totals": {
-            "transitions_enqueued": held,
+            "transitions_enqueued": admitted,
             "segments_registered": len(ledger),
             "segments_evicted": evicted,
             "draws": draws_total,
@@ -393,37 +282,3 @@ def audit(bundle_dir, mode="none"):
             "priority_sum_final": round(sum(priority), 6),
         },
     }
-
-
-def diagnosis(bundle_dir, faithful=None):
-    """The diagnosis object /app/docs/defect-modes.md selects for one bundle."""
-    recorded = _read_json(os.path.join(bundle_dir, "production", "ledger-digest.json"))
-    if faithful is None:
-        faithful = audit(bundle_dir, "none")
-    produced = ledger_digests(faithful)
-
-    first_divergent = -1
-    for index, digest in enumerate(produced["step_digests"]):
-        recorded_steps = recorded["step_digests"]
-        if index >= len(recorded_steps) or digest != recorded_steps[index]:
-            first_divergent = index
-            break
-
-    defect = None
-    for mode in MODES:
-        candidate = produced if mode == "none" else ledger_digests(audit(bundle_dir, mode))
-        if (
-            candidate["step_digests"] == recorded["step_digests"]
-            and candidate["totals_digest"] == recorded["totals_digest"]
-        ):
-            defect = mode
-            break
-
-    return {"first_divergent_step": first_divergent, "defect": defect}
-
-
-def expected(bundle_dir):
-    """The full audit document the contract produces for one bundle."""
-    document = audit(bundle_dir, "none")
-    document["diagnosis"] = diagnosis(bundle_dir, document)
-    return document

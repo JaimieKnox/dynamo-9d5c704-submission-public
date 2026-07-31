@@ -1,12 +1,9 @@
 # Learner replay contract (normative)
 
 This document fixes every rule that decides an audit document. It applies to every bundle
-under `/app/runs`. It describes the replay the learner was supposed to perform, which is what
-an audit document reports. What the production learner actually recorded is a separate matter
-and `/app/docs/defect-modes.md` is normative for it. Where an inequality appears it is the
-exact comparison the contract uses.
+under `/app/runs`. Where an inequality appears it is the exact comparison the contract uses.
 
-## 1. Global admission order
+## 1. Global admission orde
 
 Every shard line of the bundle belongs to one single stream of transitions. The `seq` field
 is a transition's position in that stream and is unique across the bundle. The shard files
@@ -18,9 +15,10 @@ learner admitted transitions in stream order and in no other order.
 The ingest log records when recorded material became visible to the learner. Each entry
 states that from its `step` onward the learner could see every transition up to and including
 its `seq_watermark`. An entry recorded at a step is already in force at that step. Visibility
-is cumulative and only ever grows as the run proceeds. Entries are not required to be sorted
-and more than one entry may share a step. Before any entry is in force the learner sees
-nothing at all.
+is cumulative and only ever grows as the run proceeds. When more than one entry is in force,
+the learner sees as far as the furthest watermark any of them grants. Entries are not
+required to be sorted and more than one entry may share a step. Before any entry is in force
+the learner sees nothing at all.
 
 ## 3. Buffer admission and residency
 
@@ -29,13 +27,11 @@ yet been admitted is admitted. The `k`-th transition ever admitted, counting fro
 receives admission index `k` and occupies slot `k mod buffer_capacity`. Admission overwrites
 whatever occupied that slot before, and nothing else ever clears or moves a slot.
 
-A segment is **resident**, meaning still drawable, only while the buffer holds every
-transition the segment covers. A transition admitted at index `k` still occupies its slot
-exactly while `admitted_so_far - k <= buffer_capacity`, where `admitted_so_far` is the number
-of transitions admitted by the end of the step's admission phase. Because the ring
-overwrites oldest first, a segment is resident exactly while its earliest admitted transition
-still occupies its slot. Whether that holds is settled once per learner step, after that
-step's admission phase, and the same answer is used for the whole of that step.
+A segment is **resident**, meaning still drawable, only while the buffer still holds every
+transition the segment covers. The ring overwrites oldest first, so residency turns on whethe
+the segment's earliest admitted transition still owns its slot after that step's admissions.
+Whether that holds is settled once per learner step, after that step's admission phase, and
+the same answer is used for the whole of that step.
 
 ## 4. Segments
 
@@ -49,7 +45,7 @@ transitions by `t`, and stopping at the first of these conditions:
 
 Cut kind is drawn from exactly that closed set of three values. The segment covers the
 transitions from `t0` up to and including the stopping transition. A `window` segment whose
-stopping transition is the last transition of its episode is never formed and never
+stopping transition is the last transition of its episode is never formed and neve
 registered. Segment transitions are always the episode's own transitions at those offsets.
 
 ## 5. Registration
@@ -59,7 +55,7 @@ of its transitions has been admitted. All segments that become registrable in th
 are registered in ascending order of the admission index of their last transition, breaking
 ties by ascending admission index of their first transition.
 
-The learner's priority ledger is append only. A registered segment keeps its ledger
+The learner's priority ledger is append only. A registered segment keeps its ledge
 position for the rest of the run and is never removed, even after its transitions leave the
 buffer. Ledger positions are assigned in registration order starting at `0`.
 
@@ -88,7 +84,7 @@ makes no draws. Otherwise the step makes exactly `batch_size` draws using the sa
 `/app/docs/sampler.md`.
 
 Each draw is resolved in draw order. A draw landing on a ledger entry whose segment is not
-resident at this step is rejected. Rejected draws are counted, are not replaced by another
+resident at this step is rejected. Rejected draws are counted, are not replaced by anothe
 draw, contribute nothing to the step's aggregates, and leave that entry's priority
 untouched. A draw landing on a resident entry is accepted. The same entry may be drawn more
 than once in one step, and every accepted draw counts separately.
@@ -119,54 +115,53 @@ Value targets and advantages are
     target[k]   = v[k] + delta[k] + gamma * c[k] * (target[k+1] - v[k+1])
     advantage[k] = rho[k] * (reward[k] + gamma * target[k+1] - v[k])
 
-evaluated for `k` from `L - 1` down to `0`. Note that `delta[k]` uses the raw snapshot value
-`v[k+1]` while `advantage[k]` uses the corrected `target[k+1]`.
+computed from `k = L - 1` down to `k = 0`.
 
-## 9. Replay correction weight
+## 9. Importance sampling weight
 
-For an accepted draw on ledger position `p`, using the priority `P_p` the entry carried when
-this step's draws began, which for an entry registered in this step is its seed, and the same
-`N` and `P` the sampler used,
+For an accepted draw whose ledger priority before the step's write back is `p`, with `N` and
+`P` as in section 7 and with the bundle's `beta`,
 
-    w_raw = (N * (P_p / P)) ** (-beta)
+    w_raw = (N * (p / P)) ** (-beta)
 
-The reported weight is `w_raw` divided by the largest `w_raw` among the accepted draws of
-that same step. Rejected draws take no part in that maximum.
+The reported weight for a step is the mean of `w_raw / w_max` over that step's accepted
+draws, where `w_max` is the largest raw weight among the draws that step accepted. When the
+step accepted no draw the reported weight is `0.0`. Rejected draws contribute nothing.
 
 ## 10. Priority write back
 
-For each accepted draw the new priority of the segment is
+After every draw of a step has been resolved, each accepted draw's ledger entry is rewritten
+to
 
-    p_new = (mean(|advantage[k]|) + priority_eps) ** alpha
+    (|mean of its advantages| + priority_eps) ** alpha
 
-with the mean taken over the segment's own transitions. All priority write backs of a step
-are applied after every draw of that step has been resolved, so the priorities the sampler
-and the weights use are the values the entries carried when the step's draws began. When an
-entry is drawn
-more than once in a step, the value written is the same and is written once.
+using the bundle's `alpha` and `priority_eps`. When the same entry is accepted more than once
+in one step, the last rewrite of that step wins. Rejected draws leave their entry untouched.
+Write backs from one step are not visible to that same step's draws.
 
-## 11. Step aggregates
+## 11. Per step aggregates
 
-- `mean_vtrace_target` is the mean of `target[k]` pooled over every accepted draw of the
-  step and every `k` in the drawn segment, counting repeated draws separately.
-- `mean_pg_advantage` is the mean of `advantage[k]` pooled the same way.
-- `mean_is_weight` is the mean of the normalised weight of section 9 over the accepted draws
-  of the step, counting repeated draws separately.
-- `priority_sum_after` is the sum of the priorities of all `N` ledger entries after the
-  step's write backs.
+After write back, the step reports:
 
-When a step makes no accepted draw, `mean_vtrace_target`, `mean_pg_advantage` and
-`mean_is_weight` are all `0.0`. When a step makes no draw at all, the count of rejected
-draws is `0` and `priority_sum_after` is the ledger sum, which is `0.0` while the ledger is
-empty.
+- `target_epoch`: `e(s)`
+- `sampled`: the buffer slot of the first transition of each accepted draw, in draw orde
+- `dropped_nonresident`: the number of rejected draws
+- `mean_vtrace_target`: the mean of every `target[k]` produced by accepted draws, or `0.0`
+- `mean_pg_advantage`: the mean of every `advantage[k]` produced by accepted draws, or `0.0`
+- `mean_is_weight`: the weight of section 9
+- `priority_sum_after`: the sum of every ledger priority after write back
 
-## 12. Run totals
+The four floating aggregates are rounded to six decimal places.
 
-- `transitions_enqueued`: transitions admitted to the buffer over the whole run.
-- `segments_registered`: ledger entries created over the whole run.
-- `segments_evicted`: ledger entries whose segment is not resident at the end of the final
-  learner step, using the residency rule of section 3 with the final admitted count.
-- `draws`: draws attempted over the whole run, accepted and rejected together.
-- `draws_accepted`: draws accepted over the whole run.
-- `unique_segments_drawn`: distinct ledger positions accepted at least once over the run.
-- `priority_sum_final`: ledger priority sum after the final learner step.
+## 12. Totals
+
+At the end of the run the document reports:
+
+- `transitions_enqueued`: how many transitions were admitted
+- `segments_registered`: how many segments entered the ledge
+- `segments_evicted`: how many ledger entries are not resident after the final step
+- `draws`: how many draws were attempted across the run
+- `draws_accepted`: how many of those were accepted
+- `unique_segments_drawn`: how many distinct ledger positions were accepted at least once
+- `priority_sum_final`: the sum of every ledger priority after the final step, rounded to six
+  decimal places

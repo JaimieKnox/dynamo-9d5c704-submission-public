@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "dynamo/audit-replay-learner"
-description = "Rebuild the replay orchestration of an auditor, then identify which documented defect the production learner of each recorded run was carrying"
+description = "Repair a near-correct asynchronous actor-learner replay auditor so graded run ledgers match the contract"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -21,89 +21,74 @@ subcategory = "Reinforcement learning"
 # Fixed for this dataset. LEAVE AS-IS.
 model_tested = "Opus-4.8"
 agent_tested = "Terminus-2"
-task_objective = ["implement", "analyze"]
+task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
-expert_time_estimate_hours = 10
+expert_time_estimate_hours = 8
 difficulty_explanation = """
 The task ships a deterministic replay auditor for an asynchronous actor-learner reinforcement
-learning trainer together with recorded run bundles, but the auditor arrives without its replay
-orchestration, and no bundle ships an expected output. The arithmetic kernel, the sampler, the
-ring buffer, the shard ingestion, the segment builder and the parameter snapshots all survived
-and all agree with the contract, so there is no numerical work and no planted bug to find. What
-is missing is the stateful accounting that sat on top of them, and every rule that decides it
-is stated in the normative documents rather than left to taste.
-
-The recorded material is what an RL infrastructure engineer inherits after a training incident:
-per-actor trajectory shards carrying behavior log probabilities, rewards, environment
-terminations and time limit truncations, an ingest log describing when each shard batch became
-visible to the learner, one snapshot of value head and policy head parameters per target
-network refresh epoch, and the per-step ledger digests the production learner actually emitted.
-Reproducing the learner means driving a stateful machine forward over tens of learner steps:
-merge shard transitions into one global admission order, admit only what the ingest log says was
-visible at that step, form n-step segments inside episode boundaries, decide which segments are
-still resident once the circular buffer has wrapped, seed insert priorities, draw a priority
-proportional batch, compute clipped importance ratios against the parameters in force for that
-step, compute truncated importance weighted value targets and policy gradient advantages, then
-write priorities back so the next draw differs.
-
-The second half of the work is what makes this an audit rather than a transcription. The
-production learner of each run had exactly one deviation from the contract in force, drawn from
-a closed documented set of seven, and the audit has to name it and say at which learner step it
-first shows. The recorded evidence is a truncated cryptographic digest per step, so it commits
-to the production ledger without revealing any of it. That has a consequence the solver has to
-reason about rather than measure: a digest mismatch at step five is equally consistent with the
-production defect biting at step five and with the solver's own replay being wrong at step
-five, and nothing in the environment can tell those apart. The usual loop of changing something
-and watching a signal improve therefore gives no gradient, and an implementation that is right
-about almost everything terminates confidently on a wrong answer. Naming the defect means
-building each documented deviation as its own replay and finding which one reproduces every
-recorded digest, which is only possible once the faithful replay is already exactly right.
+learning trainer together with recorded run bundles, and the shipped orchestration looks complete and reconciles the sample
+bundles, and asks for the learner's own prioritized replay and off-policy correction
+accounting to be reproduced exactly on bundles that carry no expected output at all. The
+arithmetic kernel, the sampler, the ring buffer and the parameter snapshots all survived, so
+there is no numerical work left, only the stateful accounting that sat on top of them. The
+recorded material is what an RL infrastructure engineer inherits
+after a training incident: per-actor trajectory shards carrying behavior log probabilities,
+rewards, environment terminations and time limit truncations, an ingest log describing when
+each shard batch became visible to the learner, and one snapshot of value head and policy head
+parameters per target network refresh epoch. Reproducing the learner means driving a stateful
+machine forward over tens of learner steps: merge shard transitions into one global admission
+order, admit only what the ingest log says was visible at that step, form n-step segments
+inside episode boundaries, decide which segments are still resident once the circular buffer
+has wrapped, seed insert priorities, draw a priority proportional batch, compute clipped
+importance ratios against the parameters in force for that step, compute truncated importance
+weighted value targets and policy gradient advantages, then write priorities back so the next
+draw differs.
 
 The expertise required is off-policy RL training infrastructure: n-step credit assignment
-inside episode boundaries, the distinction between environment termination and a time limit cut
-for bootstrapping, truncated importance sampling with separate trace cutting and policy
-gradient clip bounds, prioritized replay with an importance sampling correction, ring buffer
-eviction, and actor-to-learner staleness. The traps are conceptual and survive being fully
-disclosed. Residency has to be anchored on a segment's oldest transition rather than its
-newest, because the oldest is the one the ring overwrites first, and a run exists whose
-production ledger diverges only in its run totals, so a solver who concludes from an unbroken
-run of matching step digests that the run was clean reports the wrong defect. Visibility is
-cumulative over an unsorted ingest log, so the largest watermark in force is not the newest
-entry. Because each batch is drawn in proportion to the priorities the previous step wrote, one
-wrong residency, ordering or staleness decision reroutes every later draw, so the ledger is
-wrong from that point onward and looks no different from a correct one. Three of the nine runs
-are short, single epoch, never fill their buffer, contain no time limit cut and have
-non-interleaving actor sequence ranges, so getting them to reconcile says almost nothing about
-the other six.
+inside episode boundaries, the distinction between environment termination and a time limit
+cut for bootstrapping, truncated importance sampling with separate trace cutting and policy
+gradient clip bounds, prioritized replay with an importance sampling correction, and
+actor-to-learner staleness. The difficulty is that a dozen interacting stateful rules have to
+be right simultaneously with almost no feedback. The contract states the stateful rules as
+constraints on the asynchronous system rather than as formulas, so turning them into index
+arithmetic takes reasoning about ring buffer eviction, actor to learner visibility and target
+network refresh, while the arbitrary choices no expert could be expected to infer, the sampler,
+the registration tie break, the priority expression and the output schema, are spelled out
+exactly. Two of the surviving helper modules also disagree with the contract, quietly and only
+under conditions the reconcilable runs never reach, so code that arrives looking intact cannot
+be trusted either. Because each batch is drawn in proportion to priorities the previous step
+wrote, one wrong residency, ordering or staleness decision reroutes every later draw, so an
+implementation that is right about almost everything still yields a ledger that is wrong from
+that point onward and looks no different from a correct one. The three runs that ship an
+expected output are short, single epoch, never fill their buffer and contain no time limit cut,
+so reconciling against them says nothing about the six that are graded.
 
-The bundles are synthetic, produced by a reference simulator of an asynchronous run, and the
-recorded digests were produced by replaying each run under its assigned deviation. They are
-realistically challenging because the conditions that expose the gaps, namely staggered shard
-visibility, buffer wraparound, target refreshes part way through a run and time limit
+The bundles are synthetic, produced by a reference simulator of an asynchronous run, and they
+are realistically challenging because the conditions that expose the gaps, namely staggered
+shard visibility, buffer wraparound, target refreshes part way through a run and time limit
 truncation, are exactly the conditions that make real asynchronous trainers hard to audit. In
 the real world this is the work of engineers who own asynchronous RL training infrastructure
 and have to establish whether a learner metric regression was a learning problem or a replay
-accounting problem, working from run artifacts and metric checksums rather than from a
-reproducible failure.
+accounting problem.
 """
 solution_explanation = """
-Treat the auditor as a state machine specification problem rather than a numerical one, and
-treat the diagnosis as a differential one. The normative documents under /app/docs fix every
-rule, and the key insight for the replay is that the whole ledger is a function of which
-segments the buffer still holds at each learner step and of the target snapshot in force when a
-segment is drawn, so the two questions worth answering before writing any code are what the
-learner could see at a step and what it had already overwritten.
+Treat the auditor as a state machine specification problem rather than a numerical one. The
+normative documents under /app/docs fix every rule, and the key insight is that the whole ledger
+is a function of which segments the buffer still holds at each learner step and of the target
+snapshot in force when a segment is drawn, so the two questions worth answering before writing
+any code are what the learner could see at a step and what it had already overwritten.
 
-The orchestration is one loop over learner steps and every phase of it has to be derived from
-the contract rather than looked up. Admission: merge every shard line into the one stream the
-sequence numbers define, and at each step admit exactly what the cumulative ingest watermark has
-made visible, which is the largest watermark of every entry in force rather than the newest one,
-since the ingest log is not promised to be sorted. Slots and residency: the k-th admitted
-transition owns slot k modulo capacity, so a segment is drawable only while its oldest
-transition has not yet been overwritten, which is that transition's age against the capacity and
-is settled once per step. Registration: a segment enters the append only ledger at the first
-step by which all its transitions are admitted, ordered on its completing transition with the
-documented tie break, seeded from the largest priority the ledger currently holds. Sampling: the
+The work is to rebuild the replay orchestration from the contract and to stop trusting two of
+the modules that survived. The orchestration is one loop over learner steps, and every phase of
+it has to be derived rather than looked up. Admission: merge every shard line into the one
+stream the sequence numbers define, and at each step admit exactly what the cumulative ingest
+watermark has made visible, which is the largest watermark of every entry in force rather than
+the newest one, since the ingest log is not promised to be sorted. Slots and residency: the
+k-th admitted transition owns slot k modulo capacity, so a segment is drawable only while its
+oldest transition has not yet been overwritten, which is that transition's age against the
+capacity and is settled once per step. Registration: a segment enters the append only ledger at
+the first step by which all its transitions are admitted, ordered on its completing transition
+with the documented tie break, seeded from the largest priority the ledger holds. Sampling: the
 ledger is never cleaned, so draws that land on evicted entries are rejected and counted rather
 than replaced. Evaluation: values and importance ratios are recomputed for every accepted draw
 under the epoch in force at the drawing step, never carried over from an earlier step, and the
@@ -111,78 +96,49 @@ importance sampling weight is normalised against the accepted draws of that step
 back: every priority written by a step is applied only after all of that step's draws are
 resolved.
 
-The diagnosis reuses that same loop. Reduce a finished ledger to digests exactly as the output
-schema specifies, integerising each rounded aggregate so no float is ever formatted, then note
-that the six non trivial defect modes are each a single decision inside the loop rather than a
-separate program. The economical implementation is therefore one replay function taking the mode
-as a parameter, with the mode consulted at six points: the order visible transitions are
-admitted in, whether the watermark is the largest or the last in force, whether residency is
-anchored on the segment's oldest or newest transition, whether a truncated cut bootstraps from
-the cut observation or the acting one, whether a new entry is seeded from the ledger maximum or
-from one, and whether the weight normaliser ranges over accepted draws or all draws. The first
-divergent step comes from comparing the faithful step digests against the recorded ones and is
-minus one when none differ. The defect is then the first mode in the documented candidate order
-whose digests reproduce the recorded step digests and the recorded totals digest, and the totals
-digest has to be part of that test, because one run deviates only there and would otherwise be
-mistaken for a clean run.
+Two surviving modules also disagree with the contract in ways the reconcilable runs never
+reveal. The shard merge keys on actor and then sequence number, which matches the stream order
+only while the actors' sequence ranges do not interleave. The bootstrap for a time limit cut is
+taken from the observation the cut transition was acted from rather than from the cut
+observation the environment recorded, which is the standard autoreset hazard and is invisible in
+a run with no truncation.
 
-The V-trace kernel, the sampler, the ring buffer, the shard ingestion, the segment builder, the
-parameter snapshots and the priority expression all need no changes. The reference solution
-supplies one module, learner, and runs the existing command line entry point over every bundle,
-so every reported number and every reported digest is derived from the recorded inputs at run
-time.
+The V-trace kernel, the sampler, the ring buffer, the parameter snapshots and the priority
+expression all need no changes. The reference solution supplies three modules, ingest, segments
+and learner, and runs the existing command line entry point over every bundle, so every reported
+number is derived from the recorded inputs at run time.
 """
 verification_explanation = """
 The agent writes one audit document per run bundle to /app/out/<bundle>.json in the schema
 fixed by /app/docs/output-schema.md. The verifier loads those documents and compares them
 against expectations recomputed at verify time by an independent single file implementation of
 the contract, tests/reference.py, which reads its inputs from tests/inputs, a copy of the
-bundle inputs that ships with the verifier and that includes the recorded production digests.
-Reading the inputs from the verifier's own copy rather than from /app/runs means the
-expectations cannot be moved by editing the agent visible inputs, including the digests the
-diagnosis is derived from.
+bundle inputs that ships with the verifier. Reading the inputs from the verifier's own copy
+rather than from /app/runs means the expectations cannot be moved by editing the agent visible
+inputs.
 
 There is one test per numbered success criterion of instruction.md. The first checks that a
-parseable document with the four top level keys exists for every bundle directory under
+parseable document with the three top level keys exists for every bundle directory under
 /app/runs. The second checks the steps array covers every learner step in ascending order with
 every schema field present and of the declared type. The third compares target_epoch per step,
 the fourth compares the ordered accepted draw slot sequences, the fifth compares the rejected
-draw counts, the sixth compares the four per step aggregates, the seventh compares the totals
-object, the eighth compares diagnosis.first_divergent_step and the ninth compares
-diagnosis.defect. The ninth also asserts that the value the reference selected is one of the
-seven documented mode names, so a reference that failed to identify a run would fail the suite
-rather than silently accept a null.
+draw counts, the sixth compares the four per step aggregates and the seventh compares the
+totals object.
 
 Integer and identifier fields are compared exactly with no tolerance at all: the drawn slot
-sequences, the rejected draw counts, the target epochs, the six run counts, the first divergent
-step and the defect name. The four per step aggregates and priority_sum_final are compared with
-an absolute tolerance of 1e-6. That band is set by the schema, which mandates rounding to six
-decimal places, and by float64 summation order, which is the only legitimate source of
-variation between two correct implementations of the same backward recursion over values of
-order one, so the band admits any valid method including different accumulation strategies or
-vectorised reductions while being far tighter than any semantic difference. The band cannot
-launder a wrong method, because any difference in admission ordering, residency, priority
-seeding, cut handling or epoch staleness changes which ledger entries are drawn, and those slot
-sequences are graded as exact integers, so a wrong method fails on exact fields before the
-tolerance is consulted. The digest fields are immune to the band by construction, since a digest
-is taken over integerised values and any difference at the sixth decimal place changes it
-entirely.
-
-The band and the diagnosis were checked against a mutation sweep over the documented rules.
-Mutating the residency comparison by one slot, swapping the registration tie break, applying
-priority write back immediately instead of after the step's draws, shifting the target epoch by
-one step, changing the terminated bootstrap away from zero, counting draws instead of distinct
-ledger positions, and anchoring eviction on a segment's newest transition are each detected on
-at least one graded bundle by the exact integer fields alone, without the tolerance being
-consulted. Five of the six graded bundles exercise the residency comparison at both of its
-boundary ages, where the age of a segment's oldest transition equals the capacity and equals the
-capacity plus one. The single mutation that is not detected is relaxing the sampler's strict
-`target < acc` to `target <= acc`, which requires a draw target to land exactly on a cumulative
-priority sum in float64 and therefore never fires, so both readings select identical draws and
-neither is penalised. Separately, every documented defect mode was confirmed to change at least
-one graded bundle and to be inert on all three small ones, every bundle's diagnosis was
-confirmed to resolve to a single mode under the documented candidate order, and the reference
-and the reference solution were confirmed to agree on all nine documents independently.
+sequences, the rejected draw counts, the target epochs and the six run counts. The four per
+step aggregates and priority_sum_final are compared with an absolute tolerance of 1e-6. That
+band is set by the schema, which mandates rounding to six decimal places, and by float64
+summation order, which is the only legitimate source of variation between two correct
+implementations of the same backward recursion over values of order one, so the band admits any
+valid method including different accumulation strategies or vectorised reductions while being
+far tighter than any semantic difference. The band cannot launder a wrong method, because any
+difference in admission ordering, residency, priority seeding, cut handling or epoch staleness
+changes which ledger entries are drawn, and those slot sequences are graded as exact integers,
+so a wrong method fails on exact fields before the tolerance is consulted. The band was checked
+against mutations of each documented rule, including the residency comparison at its exact
+boundary and the choice of which transition anchors it, and every mutation changes at least one
+graded bundle's exact fields.
 """
 
 [verifier]

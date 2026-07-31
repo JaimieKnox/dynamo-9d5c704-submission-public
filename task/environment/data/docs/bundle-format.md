@@ -73,10 +73,8 @@ from learner step `step` onward the learner could see every transition up to and
 admission sequence number `seq_watermark`. Entries are not required to be sorted and more
 than one entry may share a step.
 
-## `production/ledger-digest.json`
+## `expected.json`
 
-The ledger digests the production learner emitted for this run, one per learner step plus one
-for the run totals. Every bundle ships this file. It records what the production learner
-actually did, which is not in general what the contract says it should have done, so it is not
-an expected output and no bundle ships one. `/app/docs/defect-modes.md` is normative for how to
-read it and for what has to be concluded from it.
+Present only in bundles that ship a reconciliation target. When present it is the audit
+document the contract produces for that bundle, in the schema of
+`/app/docs/output-schema.md`. Bundles without this file are audited under the same rules.

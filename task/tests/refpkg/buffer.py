@@ -24,7 +24,7 @@ class TransitionBuffer:
 
     def is_resident(self, index):
         """True while the transition admitted at `index` still owns its slot."""
-        return self.write_index - index < self.capacity
+        return self.write_index - index <= self.capacity
 
 
 class PriorityRegistry:
@@ -34,18 +34,11 @@ class PriorityRegistry:
         self.segments = []
         self.priorities = []
 
-    def insert(self, segment, buffer=None):
-        """Append an entry seeded from the largest priority among currently resident entries."""
+    def insert(self, segment):
+        """Append an entry seeded from the largest priority the ledger currently holds."""
         best = 1.0
         if self.priorities:
-            if buffer is None:
-                best = max(self.priorities)
-            else:
-                vals = []
-                for seg, pri in zip(self.segments, self.priorities):
-                    if buffer.is_resident(seg.residency_index):
-                        vals.append(pri)
-                best = max(vals) if vals else 1.0
+            best = max(self.priorities)
         self.segments.append(segment)
         self.priorities.append(best)
         return len(self.segments) - 1

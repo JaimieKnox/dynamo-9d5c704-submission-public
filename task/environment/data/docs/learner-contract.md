@@ -28,10 +28,15 @@ receives admission index `k` and occupies slot `k mod buffer_capacity`. Admissio
 whatever occupied that slot before, and nothing else ever clears or moves a slot.
 
 A segment is **resident**, meaning still drawable, only while the buffer still holds every
-transition the segment covers. The ring overwrites oldest first, so residency turns on whethe
-the segment's earliest admitted transition still owns its slot after that step's admissions.
-Whether that holds is settled once per learner step, after that step's admission phase, and
-the same answer is used for the whole of that step.
+transition the segment covers. A transition admitted at index `k` remains in the buffer
+exactly while `admitted_so_far - k <= buffer_capacity`, where `admitted_so_far` is the number
+of transitions admitted by the end of the step's admission phase. Because the ring
+overwrites oldest first, a segment is resident exactly while its earliest admitted transition
+still occupies its slot. Whether that holds is settled once per learner step, after that
+step's admission phase, and the same answer is used for the whole of that step. Admission
+for a step is complete before that step decides residency, and residency is settled before
+that step draws. Admission for a step is complete before
+that step decides residency, and residency is settled before that step draws.
 
 ## 4. Segments
 
@@ -59,8 +64,8 @@ The learner's priority ledger is append only. A registered segment keeps its led
 position for the rest of the run and is never removed, even after its transitions leave the
 buffer. Ledger positions are assigned in registration order starting at `0`.
 
-A segment is seeded with the largest priority the ledger currently holds, counting every
-entry whether or not it is resident. When the ledger is empty, the seed is `1.0`. A segment
+A segment is seeded with the largest priority the ledger currently holds. Every ledger entry
+counts toward that maximum, whether or not it is still resident. When the ledger is empty, the seed is `1.0`. A segment
 registered earlier in the same step is eligible to supply that maximum.
 
 Registration for a step is complete before that step draws, so a segment registered in a step
@@ -133,7 +138,7 @@ step accepted no draw the reported weight is `0.0`. Rejected draws contribute no
 After every draw of a step has been resolved, each accepted draw's ledger entry is rewritten
 to
 
-    (|mean of its advantages| + priority_eps) ** alpha
+    (mean of the absolute values of its advantages + priority_eps) ** alpha
 
 using the bundle's `alpha` and `priority_eps`. When the same entry is accepted more than once
 in one step, the last rewrite of that step wins. Rejected draws leave their entry untouched.

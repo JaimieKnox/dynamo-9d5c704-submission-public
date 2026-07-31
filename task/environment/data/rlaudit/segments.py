@@ -15,7 +15,7 @@ class Segment:
     @property
     def residency_index(self):
         """Admission index that decides whether the segment is still drawable."""
-        return self.complete_index
+        return self.start_index
 
 
 def group_episodes(rows):
@@ -51,11 +51,11 @@ def build_segments(episodes, n_step):
             if cut == "terminated":
                 boot = None
             elif cut == "truncated":
-                # Use the observation the cut transition acted from.
-                boot = rows[last]["obs_id"]
+                boot = rows[last]["cut_obs_id"]
             else:
                 if last + 1 >= count:
                     continue
                 boot = rows[last + 1]["obs_id"]
             out.append(Segment(episode_id, t0, rows[t0:last + 1], cut, boot))
     return out
+

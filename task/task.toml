@@ -25,43 +25,33 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-The task ships a deterministic replay auditor for an asynchronous actor-learner reinforcement
-learning trainer together with recorded run bundles, and the shipped orchestration looks complete and reconciles the sample
-bundles, and asks for the learner's own prioritized replay and off-policy correction
-accounting to be reproduced exactly on bundles that carry no expected output at all. The
-arithmetic kernel, the sampler, the ring buffer and the parameter snapshots all survived, so
-there is no numerical work left, only the stateful accounting that sat on top of them. The
-recorded material is what an RL infrastructure engineer inherits
-after a training incident: per-actor trajectory shards carrying behavior log probabilities,
-rewards, environment terminations and time limit truncations, an ingest log describing when
-each shard batch became visible to the learner, and one snapshot of value head and policy head
-parameters per target network refresh epoch. Reproducing the learner means driving a stateful
-machine forward over tens of learner steps: merge shard transitions into one global admission
-order, admit only what the ingest log says was visible at that step, form n-step segments
-inside episode boundaries, decide which segments are still resident once the circular buffer
-has wrapped, seed insert priorities, draw a priority proportional batch, compute clipped
-importance ratios against the parameters in force for that step, compute truncated importance
-weighted value targets and policy gradient advantages, then write priorities back so the next
-draw differs.
+The task ships a near-complete deterministic replay auditor for an asynchronous actor-learne
+reinforcement learning trainer together with recorded run bundles, and asks for the learner's
+prioritized replay and off-policy correction accounting to be reproduced exactly on every
+bundle. The arithmetic kernel, the sampler and the parameter snapshots are contract faithful,
+and the shipped orchestration looks intact on short runs that never wrap the ring buffer and
+that make only one draw per step, so several shared-state defects stay inert on the sample
+bundles. Graded runs wrap the ring early, draw larger batches and force residency checks,
+priority seeding and write-back timing to interact across steps. Reproducing the learner means
+driving a stateful machine forward over tens of learner steps: merge shard transitions into one
+global admission order, admit only what the ingest log says was visible at that step, form
+n-step segments inside episode boundaries, decide which segments are still resident once the
+circular buffer has wrapped, seed insert priorities from the whole ledger, draw a priority
+proportional batch, compute clipped importance ratios against the parameters in force for that
+step, compute truncated importance weighted value targets and policy gradient advantages, then
+write priorities back only after every draw of the step has resolved.
 
 The expertise required is off-policy RL training infrastructure: n-step credit assignment
 inside episode boundaries, the distinction between environment termination and a time limit
 cut for bootstrapping, truncated importance sampling with separate trace cutting and policy
 gradient clip bounds, prioritized replay with an importance sampling correction, and
-actor-to-learner staleness. The difficulty is that a dozen interacting stateful rules have to
-be right simultaneously with almost no feedback. The contract states the stateful rules as
-constraints on the asynchronous system rather than as formulas, so turning them into index
-arithmetic takes reasoning about ring buffer eviction, actor to learner visibility and target
-network refresh, while the arbitrary choices no expert could be expected to infer, the sampler,
-the registration tie break, the priority expression and the output schema, are spelled out
-exactly. Two of the surviving helper modules also disagree with the contract, quietly and only
-under conditions the reconcilable runs never reach, so code that arrives looking intact cannot
-be trusted either. Because each batch is drawn in proportion to priorities the previous step
-wrote, one wrong residency, ordering or staleness decision reroutes every later draw, so an
-implementation that is right about almost everything still yields a ledger that is wrong from
-that point onward and looks no different from a correct one. The three runs that ship an
-expected output are short, single epoch, never fill their buffer and contain no time limit cut,
-so reconciling against them says nothing about the six that are graded.
+actor-to-learner staleness. The difficulty is that interacting stateful rules have to be right
+simultaneously with almost no feedback. No bundle ships an expected audit document, so there is
+no iterate-and-match oracle, and short sample runs that appear healthy under the shipped code
+do not exercise the wraparound and multi-draw interactions that decide the graded ledgers.
+Because each batch is drawn in proportion to priorities the previous step wrote, one wrong
+residency, seeding or write-back decision reroutes every later draw, so an implementation that
+is right about almost everything still yields a ledger that is wrong from that point onward.
 
 The bundles are synthetic, produced by a reference simulator of an asynchronous run, and they
 are realistically challenging because the conditions that expose the gaps, namely staggered
@@ -72,73 +62,24 @@ and have to establish whether a learner metric regression was a learning problem
 accounting problem.
 """
 solution_explanation = """
-Treat the auditor as a state machine specification problem rather than a numerical one. The
-normative documents under /app/docs fix every rule, and the key insight is that the whole ledger
-is a function of which segments the buffer still holds at each learner step and of the target
-snapshot in force when a segment is drawn, so the two questions worth answering before writing
-any code are what the learner could see at a step and what it had already overwritten.
-
-The work is to rebuild the replay orchestration from the contract and to stop trusting two of
-the modules that survived. The orchestration is one loop over learner steps, and every phase of
-it has to be derived rather than looked up. Admission: merge every shard line into the one
-stream the sequence numbers define, and at each step admit exactly what the cumulative ingest
-watermark has made visible, which is the largest watermark of every entry in force rather than
-the newest one, since the ingest log is not promised to be sorted. Slots and residency: the
-k-th admitted transition owns slot k modulo capacity, so a segment is drawable only while its
-oldest transition has not yet been overwritten, which is that transition's age against the
-capacity and is settled once per step. Registration: a segment enters the append only ledger at
-the first step by which all its transitions are admitted, ordered on its completing transition
-with the documented tie break, seeded from the largest priority the ledger holds. Sampling: the
-ledger is never cleaned, so draws that land on evicted entries are rejected and counted rather
-than replaced. Evaluation: values and importance ratios are recomputed for every accepted draw
-under the epoch in force at the drawing step, never carried over from an earlier step, and the
-importance sampling weight is normalised against the accepted draws of that step alone. Write
-back: every priority written by a step is applied only after all of that step's draws are
-resolved.
-
-Two surviving modules also disagree with the contract in ways the reconcilable runs never
-reveal. The shard merge keys on actor and then sequence number, which matches the stream order
-only while the actors' sequence ranges do not interleave. The bootstrap for a time limit cut is
-taken from the observation the cut transition was acted from rather than from the cut
-observation the environment recorded, which is the standard autoreset hazard and is invisible in
-a run with no truncation.
-
-The V-trace kernel, the sampler, the ring buffer, the parameter snapshots and the priority
-expression all need no changes. The reference solution supplies three modules, ingest, segments
-and learner, and runs the existing command line entry point over every bundle, so every reported
-number is derived from the recorded inputs at run time.
+Treat the auditor as a shared-state compliance problem rather than a missing-module problem.
+The normative documents under /app/docs fix every rule. The shipped package already runs end to
+end, so the work is to find where residency, priority seeding and write-back timing disagree
+with the contract once the ring buffer wraps and a step accepts more than one draw. The key
+insight is that the whole ledger is a function of which segments the buffer still holds at each
+learner step and of when priority updates become visible to later draws, so the questions worth
+answering before trusting the shipped code are what still owns a slot after wraparound, what
+seeds a newly registered entry and whether write-backs from one step can affect that same
+step's later draws.
 """
 verification_explanation = """
-The agent writes one audit document per run bundle to /app/out/<bundle>.json in the schema
-fixed by /app/docs/output-schema.md. The verifier loads those documents and compares them
-against expectations recomputed at verify time by an independent single file implementation of
-the contract, tests/reference.py, which reads its inputs from tests/inputs, a copy of the
-bundle inputs that ships with the verifier. Reading the inputs from the verifier's own copy
-rather than from /app/runs means the expectations cannot be moved by editing the agent visible
-inputs.
-
-There is one test per numbered success criterion of instruction.md. The first checks that a
-parseable document with the three top level keys exists for every bundle directory under
-/app/runs. The second checks the steps array covers every learner step in ascending order with
-every schema field present and of the declared type. The third compares target_epoch per step,
-the fourth compares the ordered accepted draw slot sequences, the fifth compares the rejected
-draw counts, the sixth compares the four per step aggregates and the seventh compares the
-totals object.
-
-Integer and identifier fields are compared exactly with no tolerance at all: the drawn slot
-sequences, the rejected draw counts, the target epochs and the six run counts. The four per
-step aggregates and priority_sum_final are compared with an absolute tolerance of 1e-6. That
-band is set by the schema, which mandates rounding to six decimal places, and by float64
-summation order, which is the only legitimate source of variation between two correct
-implementations of the same backward recursion over values of order one, so the band admits any
-valid method including different accumulation strategies or vectorised reductions while being
-far tighter than any semantic difference. The band cannot launder a wrong method, because any
-difference in admission ordering, residency, priority seeding, cut handling or epoch staleness
-changes which ledger entries are drawn, and those slot sequences are graded as exact integers,
-so a wrong method fails on exact fields before the tolerance is consulted. The band was checked
-against mutations of each documented rule, including the residency comparison at its exact
-boundary and the choice of which transition anchors it, and every mutation changes at least one
-graded bundle's exact fields.
+Verifier tests recompute the expected audit document for every bundle from a verifier-owned
+copy of the recorded inputs under tests/inputs, using an independent reference implementation
+that does not import /app. One test function covers each numbered success criterion. Intege
+ledger fields must match exactly. Floating aggregates must match within 1e-6 absolute after the
+contract's six-decimal rounding. The oracle copies the contract-faithful buffer/registry and
+learner orchestration into /app/rlaudit and runs the CLI. A nop agent leaves the shipped
+near-correct package in place and fails on the graded wraparound and multi-draw bundles.
 """
 
 [verifier]

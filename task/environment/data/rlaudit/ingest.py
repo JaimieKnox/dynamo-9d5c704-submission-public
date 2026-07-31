@@ -16,8 +16,7 @@ def load_shards(bundle_dir):
                 line = line.strip()
                 if line:
                     rows.append(json.loads(line))
-    # Keep each actor's stream together and ascending, which is how the actors emitted it.
-    rows.sort(key=lambda row: (row["actor_id"], row["seq"]))
+    rows.sort(key=lambda row: row["seq"])
     return rows
 
 
@@ -30,7 +29,7 @@ def visible_seq(admissions, step):
     """Highest admission sequence number the learner can see at `step`."""
     best = 0
     for entry in admissions:
-        if entry["step"] <= step:
-            # Walk the log in file order and keep the watermark of the last entry still in force.
+        if entry["step"] <= step and entry["seq_watermark"] > best:
             best = entry["seq_watermark"]
     return best
+

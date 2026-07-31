@@ -1,8 +1,4 @@
-"""Learner replay orchestration.
-
-Drives per-step buffer admission, segment registration, priority proportional sampling,
-evaluation of drawn segments and priority write back for a recorded actor-learner run.
-"""
+"""Learner replay orchestration."""
 
 import json
 import math
@@ -46,38 +42,29 @@ def segment_stats(segment, feats, ep_params, gamma, rho_bar, c_bar):
 
 
 def run_bundle(bundle_dir):
-    """Audit one run bundle.
-
-    Returns the bundle's audit document as a dict in the schema of
-    /app/docs/output-schema.md.
-    """
+    """Audit one run bundle."""
     with open(os.path.join(bundle_dir, "manifest.json")) as handle:
         manifest = json.load(handle)
     feats = _load_features(bundle_dir)
     epochs = params.load_epochs(bundle_dir)
     rows = ingest.load_shards(bundle_dir)
     admissions = ingest.load_admissions(bundle_dir)
-
     episodes = segmod.group_episodes(rows)
     all_segments = segmod.build_segments(episodes, manifest["n_step"])
-
     gamma = manifest["gamma"]
     rho_bar = manifest["rho_bar"]
     c_bar = manifest["c_bar"]
     alpha = manifest["alpha"]
     beta = manifest["beta"]
     priority_eps = manifest["priority_eps"]
-
     buffer = TransitionBuffer(manifest["buffer_capacity"])
     registry = PriorityRegistry()
     pending = rows
     unregistered = all_segments
-
     step_records = []
     total_draws = 0
     total_accepted = 0
     drawn = set()
-
     for step in range(manifest["learner_steps"]):
         watermark = ingest.visible_seq(admissions, step)
         held_back = []
@@ -99,23 +86,18 @@ def run_bundle(bundle_dir):
                 still_waiting.append(segment)
         ready.sort(key=lambda seg: (seg.complete_index, seg.start_index))
         for segment in ready:
-            registry.segments.append(segment)
-            registry.priorities.append(1.0)
+            registry.insert(segment, buffer)
         unregistered = still_waiting
 
         size = len(registry.segments)
         total = registry.total()
         epoch = params.epoch_for_step(step, manifest["target_refresh_interval"], len(epochs))
         ep_params = epochs[epoch]
-
         sampled = []
         dropped = 0
         target_pool = []
         advantage_pool = []
         weights = []
-        norm_pool = []
-        updates = {}
-
         if size > 0 and total > 0.0:
             picks = sampler.draw(
                 manifest["sampler_seed"], step, manifest["batch_size"], registry.priorities, total
@@ -124,8 +106,7 @@ def run_bundle(bundle_dir):
             for position in picks:
                 segment = registry.segments[position]
                 raw_weight = (size * (registry.priorities[position] / total)) ** (-beta)
-                norm_pool.append(raw_weight)
-                if not buffer.is_resident(segment.residency_index):
+                if not buffer.is_resident(segment.complete_index):
                     dropped += 1
                     continue
                 targets, advantages = segment_stats(
@@ -138,21 +119,18 @@ def run_bundle(bundle_dir):
                 magnitude = 0.0
                 for value in advantages:
                     magnitude += abs(value)
-                updates[position] = (magnitude / len(advantages) + priority_eps) ** alpha
+                registry.priorities[position] = (magnitude / len(advantages) + priority_eps) ** alpha
+                total = registry.total()
                 total_accepted += 1
                 drawn.add(position)
 
         if weights:
-            top = max(norm_pool)
+            top = max(weights)
             mean_weight = sum(w / top for w in weights) / len(weights)
         else:
             mean_weight = 0.0
         mean_target = sum(target_pool) / len(target_pool) if target_pool else 0.0
         mean_advantage = sum(advantage_pool) / len(advantage_pool) if advantage_pool else 0.0
-
-        for position, priority in updates.items():
-            registry.priorities[position] = priority
-
         step_records.append(
             {
                 "step": step,
@@ -165,12 +143,10 @@ def run_bundle(bundle_dir):
                 "priority_sum_after": _round6(registry.total()),
             }
         )
-
     evicted = 0
     for segment in registry.segments:
         if not buffer.is_resident(segment.residency_index):
             evicted += 1
-
     return {
         "bundle": manifest["bundle"],
         "steps": step_records,

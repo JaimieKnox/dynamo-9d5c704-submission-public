@@ -10,18 +10,8 @@ faithful audit document at `/app/out/<bundle>.json`.
 
 ## Approach
 
-The shipped `/app/rlaudit` package looks complete and reconciles the three sample bundles
-that ship `expected.json`. Silent boundary defects remain in ingest ordering, watermark
-aggregation, residency anchoring, truncated bootstrap observation choice, insert priority
-seeding and importance weight normalisation. Those defects are inert on the sample bundles
-and active on the six graded ones.
-
-## Environment
-
-Python 3.13 slim image with pytest baked in. Inputs under `/app/runs`, docs unde
-`/app/docs`, package under `/app/rlaudit`.
-
-## Verification
-
-Oracle and an independent `tests/refpkg` reference derive expectations from `tests/inputs`.
-Exact match on slots and counts, 1e-6 on the four aggregates and `priority_sum_final`.
+The shipped package looks complete. Short sample runs never wrap the replay buffer and
+use a single draw per step, so several shared-state defects stay inert there. Graded
+runs wrap the ring early, draw larger batches, and force residency, priority seeding and
+write-back timing to interact. The oracle replaces the ring-buffer / priority registry
+and the learner orchestration with contract-faithful versions, then runs the CLI.

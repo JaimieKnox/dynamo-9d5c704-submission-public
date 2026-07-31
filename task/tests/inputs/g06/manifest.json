@@ -2,7 +2,7 @@
   "alpha": 0.6,
   "batch_size": 12,
   "beta": 0.4,
-  "buffer_capacity": 464,
+  "buffer_capacity": 220,
   "bundle": "g06",
   "c_bar": 1.2,
   "feature_dim": 8,

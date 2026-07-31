@@ -73,8 +73,3 @@ from learner step `step` onward the learner could see every transition up to and
 admission sequence number `seq_watermark`. Entries are not required to be sorted and more
 than one entry may share a step.
 
-## `expected.json`
-
-Present only in bundles that ship a reconciliation target. When present it is the audit
-document the contract produces for that bundle, in the schema of
-`/app/docs/output-schema.md`. Bundles without this file are audited under the same rules.

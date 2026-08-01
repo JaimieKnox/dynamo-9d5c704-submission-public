@@ -32,6 +32,10 @@ batches together early: residency depends on the earliest transition covered, wh
 writes cannot affect unresolved draws from the same step. Violating either invariant silently
 changes subsequent selections and importance weights.
 
+The supplied recordings are synthetic fixtures generated to isolate these boundary cases.
+An RL-infrastructure engineer would perform this reconstruction when validating reproducibility
+or diagnosing silent learner drift in an asynchronous training pipeline.
+
 Solving the task requires tracing asynchronous admission, segment registration, exact `<=`
 ring residency, epoch floor division, priority-proportional sampling, V-trace scoring and
 deferred write-back as one ordered transaction. The work is both implementation and debugging:

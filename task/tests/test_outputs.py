@@ -1,7 +1,7 @@
-"""Checks generated replay ledgers against verifier-owned source recordings.
+"""Black-box acceptance checks for the ledgers left in the output mount.
 
-The application tree is never used to derive answers.  A separate implementation consumes
-the fixtures beside this file, and the emitted JSON is inspected independently by concern.
+Answers come from replaying the sealed fixture copies through ``reference``.  The candidate
+package therefore contributes observations only, never the values used as the oracle.
 """
 
 import json
@@ -11,20 +11,20 @@ import pytest
 
 import reference
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-FIXTURE_ROOT = os.path.join(HERE, "inputs")
-GENERATED_ROOT = "/app/out"
-MOUNTED_RUNS = "/app/runs"
-SIX_PLACES = 1e-6
+BASE = os.path.dirname(os.path.abspath(__file__))
+SEALED_INPUTS = os.path.join(BASE, "inputs")
+OUTPUT_MOUNT = "/app/out"
+RUN_MOUNT = "/app/runs"
+ROUNDING_ERROR = 1e-6
 
-WHOLE_STEP_VALUES = ("step", "target_epoch", "dropped_nonresident")
-STEP_MEASUREMENTS = (
+ROW_INTEGERS = ("step", "target_epoch", "dropped_nonresident")
+ROW_DECIMALS = (
     "mean_vtrace_target",
     "mean_pg_advantage",
     "mean_is_weight",
     "priority_sum_after",
 )
-RUN_COUNTERS = (
+FINAL_COUNTS = (
     "transitions_enqueued",
     "segments_registered",
     "segments_evicted",
@@ -34,199 +34,219 @@ RUN_COUNTERS = (
 )
 
 
-def _bundle_names(root):
-    return sorted(
-        entry
-        for entry in os.listdir(root)
-        if os.path.isfile(os.path.join(root, entry, "manifest.json"))
-    )
+def _recording_directories(parent):
+    names = []
+    for candidate in os.listdir(parent):
+        marker = os.path.join(parent, candidate, "manifest.json")
+        if os.path.isfile(marker):
+            names.append(candidate)
+    return sorted(names)
 
 
-FIXTURE_BUNDLES = _bundle_names(FIXTURE_ROOT)
-_actual_cache = {}
-_reference_cache = {}
+def _decode(filename):
+    with open(filename) as source:
+        return json.load(source)
 
 
-def _integer_like(item):
-    return (
-        not isinstance(item, bool)
-        and isinstance(item, (int, float))
-        and float(item).is_integer()
-    )
+def _looks_integral(value):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    return float(value).is_integer()
 
 
-def _read_json(path):
-    with open(path) as stream:
-        return json.load(stream)
+_outputs = {}
 
 
-def _actual(bundle):
-    if bundle not in _actual_cache:
-        filename = os.path.join(GENERATED_ROOT, bundle + ".json")
-        assert os.path.isfile(filename), "%s was not generated" % filename
-        _actual_cache[bundle] = _read_json(filename)
-    return _actual_cache[bundle]
+def _emitted(name):
+    if name not in _outputs:
+        target = os.path.join(OUTPUT_MOUNT, "%s.json" % name)
+        assert os.path.isfile(target), "expected output file is absent: %s" % target
+        _outputs[name] = _decode(target)
+    return _outputs[name]
 
 
-def _truth(bundle):
-    if bundle not in _reference_cache:
-        fixture = os.path.join(FIXTURE_ROOT, bundle)
-        _reference_cache[bundle] = reference.audit(fixture)
-    return _reference_cache[bundle]
+class ReplayCase:
+    """Lazy access to one candidate ledger and its independently reconstructed peer."""
+
+    def __init__(self, name):
+        self.name = name
+        self.input_dir = os.path.join(SEALED_INPUTS, name)
+        self._model = None
+
+    @property
+    def output(self):
+        return _emitted(self.name)
+
+    @property
+    def model(self):
+        if self._model is None:
+            self._model = reference.expected(self.input_dir)
+        return self._model
+
+    @property
+    def declared_steps(self):
+        return _decode(os.path.join(self.input_dir, "manifest.json"))["learner_steps"]
+
+    def row_pairs(self):
+        return zip(self.output["steps"], self.model["steps"])
 
 
-def _paired_steps(bundle):
-    return zip(_actual(bundle)["steps"], _truth(bundle)["steps"])
+CASES = [
+    ReplayCase(name)
+    for name in _recording_directories(SEALED_INPUTS)
+]
 
 
-def test_terminal_run_accounting():
-    """The accumulated counters and ending priority mass must describe the full replay."""
-    for bundle in FIXTURE_BUNDLES:
-        observed = _actual(bundle)["totals"]
-        recomputed = _truth(bundle)["totals"]
-        for counter in RUN_COUNTERS:
-            assert counter in observed, "%s totals omitted %s" % (bundle, counter)
-            assert int(observed[counter]) == recomputed[counter], (
-                "%s totals.%s: got %r, wanted %d"
-                % (bundle, counter, observed[counter], recomputed[counter])
-            )
-        assert "priority_sum_final" in observed, (
-            "%s totals omitted priority_sum_final" % bundle
-        )
-        assert observed["priority_sum_final"] == pytest.approx(
-            recomputed["priority_sum_final"], abs=SIX_PLACES
-        ), (
-            "%s ending priority mass: got %r, wanted %r"
-            % (
-                bundle,
-                observed["priority_sum_final"],
-                recomputed["priority_sum_final"],
-            )
-        )
-
-
-def test_output_inventory_and_envelopes():
-    """Every mounted recording needs a parseable, correctly labelled result envelope."""
-    mounted = _bundle_names(MOUNTED_RUNS)
-    absent = sorted(set(FIXTURE_BUNDLES) - set(mounted))
-    assert not absent, "fixtures absent from %s: %s" % (MOUNTED_RUNS, absent)
-
-    for bundle in mounted:
-        payload = _actual(bundle)
-        assert isinstance(payload, dict), "%s output must be an object" % bundle
-        assert all(name in payload for name in ("bundle", "steps", "totals")), (
-            "%s output lacks one or more required top-level fields" % bundle
-        )
-        assert payload["bundle"] == bundle, (
-            "%s output identifies itself as %r" % (bundle, payload["bundle"])
-        )
-        assert isinstance(payload["steps"], list), "%s steps must be an array" % bundle
-        assert isinstance(payload["totals"], dict), "%s totals must be an object" % bundle
-
-
-def test_epoch_selected_for_each_learner_iteration():
-    """The target generation reported at each iteration must equal recomputation."""
-    for bundle in FIXTURE_BUNDLES:
-        for observed, recomputed in _paired_steps(bundle):
-            assert int(observed["target_epoch"]) == recomputed["target_epoch"], (
-                "%s iteration %d uses epoch %r instead of %d"
-                % (
-                    bundle,
-                    recomputed["step"],
-                    observed["target_epoch"],
-                    recomputed["target_epoch"],
-                )
-            )
-
-
-def test_step_rows_follow_schema_and_manifest_length():
-    """Step rows must be complete, ordered, and represented with the declared value kinds."""
-    for bundle in FIXTURE_BUNDLES:
-        manifest = _read_json(os.path.join(FIXTURE_ROOT, bundle, "manifest.json"))
-        rows = _actual(bundle)["steps"]
-        assert len(rows) == manifest["learner_steps"], (
-            "%s emitted %d rows for %d learner steps"
-            % (bundle, len(rows), manifest["learner_steps"])
-        )
-
-        for position, row in enumerate(rows):
-            assert isinstance(row, dict), "%s row %d must be an object" % (
-                bundle,
-                position,
-            )
-            assert row.get("step") == position, (
-                "%s row %d carries step %r" % (bundle, position, row.get("step"))
-            )
-            for field in WHOLE_STEP_VALUES:
-                assert _integer_like(row.get(field)), (
-                    "%s row %d field %s is not integer-valued: %r"
-                    % (bundle, position, field, row.get(field))
-                )
-
-            slots = row.get("sampled")
-            assert isinstance(slots, list), "%s row %d sampled must be an array" % (
-                bundle,
-                position,
-            )
-            assert all(_integer_like(slot) for slot in slots), (
-                "%s row %d sampled contains a non-integer value: %r"
-                % (bundle, position, slots)
-            )
-            for field in STEP_MEASUREMENTS:
-                number = row.get(field)
-                assert isinstance(number, (int, float)) and not isinstance(number, bool), (
-                    "%s row %d field %s must be numeric, got %r"
-                    % (bundle, position, field, number)
-                )
-
-
-def test_nonresident_draw_rejections():
-    """The rejected-draw tally is checked separately for every learner iteration."""
-    for bundle in FIXTURE_BUNDLES:
-        for observed, recomputed in _paired_steps(bundle):
-            assert int(observed["dropped_nonresident"]) == recomputed[
-                "dropped_nonresident"
-            ], (
-                "%s iteration %d rejected %r draws; recomputation rejected %d"
-                % (
-                    bundle,
-                    recomputed["step"],
-                    observed["dropped_nonresident"],
-                    recomputed["dropped_nonresident"],
-                )
-            )
-
-
-def test_numeric_step_summaries():
-    """All per-iteration measurements are compared at the required decimal tolerance."""
-    for bundle in FIXTURE_BUNDLES:
-        for observed, recomputed in _paired_steps(bundle):
-            for field in STEP_MEASUREMENTS:
-                assert observed[field] == pytest.approx(
-                    recomputed[field], abs=SIX_PLACES
+def test_measurements_reproduce_replayed_values():
+    """Check every floating row field against a fresh replay, not a stored answer."""
+    for case in CASES:
+        for produced, baseline in case.row_pairs():
+            for key in ROW_DECIMALS:
+                assert produced[key] == pytest.approx(
+                    baseline[key], abs=ROUNDING_ERROR
                 ), (
-                    "%s iteration %d field %s: got %r, wanted %r"
+                    "%s step %d has %s=%r; replay gives %r"
                     % (
-                        bundle,
-                        recomputed["step"],
-                        field,
-                        observed[field],
-                        recomputed[field],
+                        case.name,
+                        baseline["step"],
+                        key,
+                        produced[key],
+                        baseline[key],
                     )
                 )
 
 
-def test_sampling_trace_retains_order_and_repetition():
-    """Accepted slot identifiers must reproduce the reference draw stream verbatim."""
-    for bundle in FIXTURE_BUNDLES:
-        for observed, recomputed in _paired_steps(bundle):
-            observed_slots = [int(slot) for slot in observed["sampled"]]
-            assert observed_slots == recomputed["sampled"], (
-                "%s iteration %d accepted %r; recomputation accepted %r"
+def test_each_mounted_run_has_a_well_formed_envelope():
+    """Require a named JSON result with the three schema containers for every run."""
+    mounted_names = _recording_directories(RUN_MOUNT)
+    fixture_names = [case.name for case in CASES]
+    missing_inputs = sorted(set(fixture_names).difference(mounted_names))
+    assert missing_inputs == [], "graded recordings not mounted: %s" % missing_inputs
+
+    for name in mounted_names:
+        result = _emitted(name)
+        assert isinstance(result, dict), "%s result is not an object" % name
+        assert set(("bundle", "steps", "totals")).issubset(result), (
+            "%s result is missing a required root member" % name
+        )
+        assert result["bundle"] == name, "%s result is labelled %r" % (
+            name,
+            result["bundle"],
+        )
+        assert isinstance(result["steps"], list), "%s steps is not a list" % name
+        assert isinstance(result["totals"], dict), "%s totals is not an object" % name
+
+
+def test_final_accounting_reproduces_replay():
+    """Compare all exact run counters plus the rounded terminal priority mass."""
+    for case in CASES:
+        produced = case.output["totals"]
+        baseline = case.model["totals"]
+        for key in FINAL_COUNTS:
+            assert key in produced, "%s totals is missing %s" % (case.name, key)
+            assert int(produced[key]) == baseline[key], (
+                "%s totals.%s=%r; replay gives %d"
+                % (case.name, key, produced[key], baseline[key])
+            )
+
+        assert "priority_sum_final" in produced, (
+            "%s totals is missing priority_sum_final" % case.name
+        )
+        assert produced["priority_sum_final"] == pytest.approx(
+            baseline["priority_sum_final"], abs=ROUNDING_ERROR
+        ), (
+            "%s terminal priority sum is %r; replay gives %r"
+            % (
+                case.name,
+                produced["priority_sum_final"],
+                baseline["priority_sum_final"],
+            )
+        )
+
+
+def test_row_table_is_complete_ordered_and_typed():
+    """Validate manifest length, ordinal continuity, and each schema value category."""
+    for case in CASES:
+        table = case.output["steps"]
+        assert len(table) == case.declared_steps, (
+            "%s has %d rows but declares %d steps"
+            % (case.name, len(table), case.declared_steps)
+        )
+        for ordinal, row in enumerate(table):
+            assert isinstance(row, dict), "%s row %d is not an object" % (
+                case.name,
+                ordinal,
+            )
+            assert row.get("step") == ordinal, "%s row %d reports ordinal %r" % (
+                case.name,
+                ordinal,
+                row.get("step"),
+            )
+            for key in ROW_INTEGERS:
+                assert _looks_integral(row.get(key)), (
+                    "%s row %d has non-integral %s=%r"
+                    % (case.name, ordinal, key, row.get(key))
+                )
+
+            accepted = row.get("sampled")
+            assert isinstance(accepted, list), "%s row %d sampled is not a list" % (
+                case.name,
+                ordinal,
+            )
+            assert all(_looks_integral(slot) for slot in accepted), (
+                "%s row %d sampled contains a non-integral slot: %r"
+                % (case.name, ordinal, accepted)
+            )
+            for key in ROW_DECIMALS:
+                value = row.get(key)
+                assert isinstance(value, (int, float)) and not isinstance(value, bool), (
+                    "%s row %d has non-numeric %s=%r"
+                    % (case.name, ordinal, key, value)
+                )
+
+
+def test_target_epoch_timeline_reproduces_replay():
+    """Compare the selected target generation at every ordinal."""
+    for case in CASES:
+        for produced, baseline in case.row_pairs():
+            assert int(produced["target_epoch"]) == baseline["target_epoch"], (
+                "%s step %d selects target %r; replay selects %d"
                 % (
-                    bundle,
-                    recomputed["step"],
-                    observed_slots,
-                    recomputed["sampled"],
+                    case.name,
+                    baseline["step"],
+                    produced["target_epoch"],
+                    baseline["target_epoch"],
+                )
+            )
+
+
+def test_accepted_slot_stream_reproduces_replay():
+    """Preserve accepted slot identity, order, and multiplicity for each batch."""
+    for case in CASES:
+        for produced, baseline in case.row_pairs():
+            actual_stream = [int(slot) for slot in produced["sampled"]]
+            assert actual_stream == baseline["sampled"], (
+                "%s step %d sampled %r; replay sampled %r"
+                % (
+                    case.name,
+                    baseline["step"],
+                    actual_stream,
+                    baseline["sampled"],
+                )
+            )
+
+
+def test_rejected_draw_timeline_reproduces_replay():
+    """Compare the count of nonresident selections discarded at every step."""
+    for case in CASES:
+        for produced, baseline in case.row_pairs():
+            actual_count = int(produced["dropped_nonresident"])
+            assert actual_count == baseline["dropped_nonresident"], (
+                "%s step %d drops %d selections; replay drops %d"
+                % (
+                    case.name,
+                    baseline["step"],
+                    actual_count,
+                    baseline["dropped_nonresident"],
                 )
             )

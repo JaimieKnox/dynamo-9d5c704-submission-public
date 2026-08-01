@@ -1,28 +1,25 @@
-Recorded actor activity is available as run bundles beneath `/app/runs`. Turn each bundle
-into a faithful account of the learner's execution. The existing implementation in
-`/app/rlaudit` is already complete enough to execute; the defect lies in near-correct
-interactions among phases of its learner step loop. Bring those phase relationships into
-agreement with the specification rather than treating this as a missing-module exercise.
+Build the forensic ledger for every asynchronous training recording found in `/app/runs`.
+The auditor source at `/app/rlaudit` does run, and this assignment is not asking for an
+absent component. Its learner iteration is almost right, but interactions between its
+successive phases are not faithful. Correct those interactions so replay tells the truth.
 
-The rules of record are distributed across `/app/docs/bundle-format.md`,
-`/app/docs/learner-contract.md`, `/app/docs/sampler.md`, and
-`/app/docs/output-schema.md`. Read them as a single contract when deciding how replay state
-evolves and how the result is represented.
+Four documents define that truth: `/app/docs/bundle-format.md` describes the recordings,
+`/app/docs/learner-contract.md` governs learner state, `/app/docs/sampler.md` defines draw
+semantics, and `/app/docs/output-schema.md` specifies the ledger. All four are normative.
 
-For a bundle directory named `NAME`, place the resulting JSON at
-`/app/out/NAME.json`. Grading checks these seven properties:
+Use each recording directory's basename for a JSON filename under `/app/out`. A submission
+is successful precisely when:
 
-1. Every recorded bundle has a valid JSON object containing the top-level members
-   `bundle`, `steps`, and `totals`.
-2. Its `steps` array is ordered by learner-step number, has exactly one entry for every
-   such step, and uses the schema's required value types.
-3. Each step reports the applicable epoch in `target_epoch`.
-4. Each `sampled` array preserves the precise order of accepted slot draws, including
-   duplicate slots.
-5. Each `dropped_nonresident` value equals the number of draws rejected at that step.
-6. All four floating-point summaries for a step are correct at six-decimal precision.
-7. The final `totals` object gives all six counters exactly and the terminal priority sum
-   rounded as specified.
+1. A corresponding file exists for every run, is valid JSON, and exposes `bundle`, `steps`,
+   and `totals` at its root.
+2. The step ledger contains the full learner iteration range in increasing order and every
+   row conforms to the declared data types.
+3. The value of `target_epoch` identifies the target active during its row's iteration.
+4. The slot IDs in `sampled` reproduce accepted draws in sequence without collapsing
+   repeated IDs.
+5. The per-row `dropped_nonresident` number exactly accounts for rejected draws.
+6. The quartet of step-level numeric summaries is accurate through six decimal places.
+7. Six run-wide counters and the correctly rounded ending priority sum appear in `totals`.
 
-There is no expected audit document included with any bundle. Evaluation considers only
-the files produced in `/app/out`. Changes anywhere within `/app/rlaudit` are permitted.
+No expected audit document is supplied. The grader reads only generated content in
+`/app/out`, and the implementation beneath `/app/rlaudit` may be changed freely.

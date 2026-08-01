@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "dynamo/audit-replay-learner"
-description = "Rebuild the missing learner step loop of an asynchronous actor-learner replay auditor so recorded runs reproduce the contract ledger"
+description = "Repair near-correct replay learner orchestration whose silent phase interactions corrupt graded ledgers"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -25,53 +25,32 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-The task ships a deterministic replay auditor for an asynchronous actor-learner reinforcement
-learning trainer together with recorded run bundles, but the learner step loop that admits
-visible transitions, registers segments, draws a priority proportional batch, scores accepted
-draws and writes priorities back did not survive. The arithmetic kernel, the sampler, the ring
-buffer and most shard helpers look intact, and short sample runs never wrap their buffer, neve
-hit a time-limit cut and never cross a target refresh, so an orchestration that trusts the
-surviving helpers without checking them against the contract can look locally consistent while
-still being wrong on the graded runs. No bundle ships an expected audit document, so there is
-no iterate-and-match oracle. Reproducing the learner means synthesizing the full step loop and
-also noticing the silent helper disagreements that only appear once refresh boundaries and
-time-limit truncations start interacting with residency and write-back timing.
+The auditor runs end-to-end and its helpers are contract-correct, but two composition defects
+inside an otherwise complete learner loop remain silent on the three sample bundles. Graded
+bundles combine small ring buffers, target refreshes and multi-draw batches early: residency
+must use the earliest covered transition, and priority updates must remain invisible until
+all draws in a step resolve. These interacting state-machine errors reroute later draws and
+importance weights without producing a crash or an obvious local failure.
 
-The expertise required is off-policy RL training infrastructure: n-step credit assignment
-inside episode boundaries, the distinction between environment termination and a time limit
-cut for bootstrapping, truncated importance sampling with separate clip bounds, prioritized
-replay with an importance sampling correction, and actor-to-learner staleness. The contract
-points the value-target recursion at the surviving V-trace kernel rather than restating it, so
-turning the constraints into a correct step loop takes reasoning about ring-buffer eviction,
-visibility and refresh timing rather than transcription of a finished program. One wrong
-residency, bootstrap, refresh or write-back decision reroutes every later draw on the graded
-bundles that wrap early and draw larger batches.
-
-The bundles are synthetic, produced by a reference simulator of an asynchronous run, and they
-are realistically challenging because the conditions that expose gaps are exactly the
-conditions that make real asynchronous trainers hard to audit. In the real world this is the
-work of engineers who own asynchronous RL training infrastructure and have to establish
-whether a learner metric regression was a learning problem or a replay accounting problem.
+Solving the task requires tracing asynchronous admission, segment registration, exact `<=`
+ring residency, epoch floor division, priority-proportional sampling, V-trace scoring and
+deferred write-back as one ordered transaction. The work is both implementation and debugging:
+the loop already looks plausible, sample ledgers stay green, and no expected output is shipped.
 """
 solution_explanation = """
-Treat the auditor as a state-machine specification problem with untrusted surviving helpers.
-Rebuild the learner step loop from the normative documents, using the V-trace kernel fo
-per-segment targets, and verify the helpers that look intact against the contract before
-trusting them: target-epoch selection must follow the floor-division rule exactly, and a
-time-limit cut must bootstrap from the observation recorded at the cut rather than the
-transition's own observation. Defer priority write-back until every draw of the step has
-resolved, settle residency after admission, and report the schema aggregates.
+Keep the complete loop but repair its phase boundaries. Settle segment residency from the
+earliest transition admission index after admission, snapshot registry size and total once
+before drawing, resolve the whole deterministic batch against unchanged priorities, compute
+`w_raw = (N * (p / P)) ** (-beta)` from that snapshot, and defer all priority writes until
+the batch is complete. Target epoch remains `step // target_refresh_interval`.
 """
 verification_explanation = """
-Verifier tests recompute the expected audit document for every bundle from a verifier-owned
-copy of the recorded inputs under tests/inputs, using an independent reference implementation
-that does not import /app. One test function covers each numbered success criterion. Intege
-ledger fields must match exactly. Floating aggregates must match within 1e-6 absolute after the
-contract's six-decimal rounding. The oracle copies the contract-faithful learner orchestration
-and the corrected helper modules into /app/rlaudit and runs the CLI. A nop agent leaves the
-missing orchestration in place and produces no audit documents.
+The verifier recomputes every ledger from verifier-owned bundle inputs with a reference package
+built from the same contract-correct helpers and the corrected learner. Structural fields and
+counts match exactly; floating aggregates match at six-decimal precision. The oracle copies
+only the corrected learner and runs the normal CLI, while a nop agent retains the plausible
+but phase-incorrect implementation and diverges on every graded bundle.
 """
-
 [verifier]
 timeout_sec = 900.0
 

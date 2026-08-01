@@ -50,7 +50,7 @@ def load_epochs(bundle_dir):
 
 def epoch_for_step(step, interval, n_epochs):
     """Target epoch in force for a learner step, clamped to the highest available snapshot."""
-    epoch = (step + 1) // interval
+    epoch = step // interval
     if epoch > n_epochs - 1:
         epoch = n_epochs - 1
     return epoch

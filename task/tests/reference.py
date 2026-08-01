@@ -1,9 +1,4 @@
-"""Independent reference implementation of the learner contract.
-
-Reads verifier-owned copies of the bundle inputs under tests/inputs and produces
-the expected audit document for a bundle. Kept separate from the agent-visible
-package so expectations cannot be shifted by editing /app.
-"""
+"""Independent verifier reference for the learner contract."""
 
 from refpkg import learner
 
@@ -14,4 +9,3 @@ def expected(bundle_dir):
 
 def audit(bundle_dir):
     return expected(bundle_dir)
-

@@ -3,7 +3,7 @@
 This document fixes every rule that decides an audit document. It applies to every bundle
 under `/app/runs`. Where an inequality appears it is the exact comparison the contract uses.
 
-## 1. Global admission orde
+## 1. Global admission order
 
 Every shard line of the bundle belongs to one single stream of transitions. The `seq` field
 is a transition's position in that stream and is unique across the bundle. The shard files
@@ -28,8 +28,8 @@ receives admission index `k` and occupies slot `k mod buffer_capacity`. Admissio
 whatever occupied that slot before, and nothing else ever clears or moves a slot.
 
 A segment is **resident**, meaning still drawable, only while the buffer still holds every
-transition the segment covers. A transition admitted at index `k` remains in the buffe
-exactly while `admitted_so_far - k <= buffer_capacity`, where `admitted_so_far` is the numbe
+transition the segment covers. A transition admitted at index `k` remains in the buffer
+exactly while `admitted_so_far - k <= buffer_capacity`, where `admitted_so_far` is the number
 of transitions admitted by the end of the step's admission phase. Because the ring
 overwrites oldest first, a segment is resident exactly while its earliest admitted transition
 still occupies its slot. Whether that holds is settled once per learner step, after that
@@ -49,7 +49,7 @@ transitions by `t`, and stopping at the first of these conditions:
 
 Cut kind is drawn from exactly that closed set of three values. The segment covers the
 transitions from `t0` up to and including the stopping transition. A `window` segment whose
-stopping transition is the last transition of its episode is never formed and neve
+stopping transition is the last transition of its episode is never formed and never
 registered. Segment transitions are always the episode's own transitions at those offsets.
 
 ## 5. Registration
@@ -59,7 +59,7 @@ of its transitions has been admitted. All segments that become registrable in th
 are registered in ascending order of the admission index of their last transition, breaking
 ties by ascending admission index of their first transition.
 
-The learner's priority ledger is append only. A registered segment keeps its ledge
+The learner's priority ledger is append only. A registered segment keeps its ledger
 position for the rest of the run and is never removed, even after its transitions leave the
 buffer. Ledger positions are assigned in registration order starting at `0`.
 
@@ -89,7 +89,7 @@ makes no draws. Otherwise the step makes exactly `batch_size` draws using the sa
 `/app/docs/sampler.md`.
 
 Each draw is resolved in draw order. A draw landing on a ledger entry whose segment is not
-resident at this step is rejected. Rejected draws are counted, are not replaced by anothe
+resident at this step is rejected. Rejected draws are counted, are not replaced by another
 draw, contribute nothing to the step's aggregates, and leave that entry's priority
 untouched. A draw landing on a resident entry is accepted. The same entry may be drawn more
 than once in one step, and every accepted draw counts separately.
@@ -102,7 +102,7 @@ and `c_bar` as the two separate clip bounds. Choose the bootstrap from the cut k
 
 - `terminated`: there is no continuation to value
 - `truncated`: bootstrap from the observation the environment recorded at the cut
-- `window`: bootstrap from the observation of the next transition in that episode, whethe
+- `window`: bootstrap from the observation of the next transition in that episode, whether
   or not that transition is currently admitted or resident
 
 Value targets and policy-gradient advantages are exactly the truncated importance-weighted
@@ -138,7 +138,7 @@ Write backs from one step are not visible to that same step's draws, and they mu
 After write back, the step reports:
 
 - `target_epoch`: `e(s)`
-- `sampled`: the buffer slot of the first transition of each accepted draw, in draw orde
+- `sampled`: the buffer slot of the first transition of each accepted draw, in draw order
 - `dropped_nonresident`: the number of rejected draws
 - `mean_vtrace_target`: the mean of every value target produced by accepted draws, or `0.0`
 - `mean_pg_advantage`: the mean of every advantage produced by accepted draws, or `0.0`
@@ -152,7 +152,7 @@ The four floating aggregates are rounded to six decimal places.
 At the end of the run the document reports:
 
 - `transitions_enqueued`: how many transitions were admitted
-- `segments_registered`: how many segments entered the ledge
+- `segments_registered`: how many segments entered the ledger
 - `segments_evicted`: how many ledger entries are not resident after the final step
 - `draws`: how many draws were attempted across the run
 - `draws_accepted`: how many of those were accepted

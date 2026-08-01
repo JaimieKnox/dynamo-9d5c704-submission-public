@@ -25,35 +25,37 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-Nothing is absent and ordinary execution succeeds, so the challenge is recognizing two
-incorrect phase boundaries in a plausible learner loop. The three sample recordings do not
-expose them. Graded cases bring constrained ring capacity, target refreshes, and multi-draw
-batches together early: residency depends on the earliest transition covered, while priority
-writes cannot affect unresolved draws from the same step. Violating either invariant silently
-changes subsequent selections and importance weights.
+Nothing is absent and ordinary execution succeeds. The three sample recordings also remain
+green because each has one publication path and avoids the rejected-draw normalization trap.
+Graded cases instead combine unordered, overlapping publication facts with constrained rings
+and mixed accepted/rejected batches. The learner must compose a cumulative watermark reduction
+with the accepted-only importance-weight pool; treating file order as chronology or attempted
+draws as normalization samples silently changes later state and aggregates.
 
 The supplied recordings are synthetic fixtures generated to isolate these boundary cases.
 An RL-infrastructure engineer would perform this reconstruction when validating reproducibility
 or diagnosing silent learner drift in an asynchronous training pipeline.
 
-Solving the task requires tracing asynchronous admission, segment registration, exact `<=`
-ring residency, epoch floor division, priority-proportional sampling, V-trace scoring and
-deferred write-back as one ordered transaction. The work is both implementation and debugging:
-the loop already looks plausible, sample ledgers stay green, and no expected output is shipped.
+Solving the task requires reconciling the main contract with the exact reductions in its
+normative comparisons appendix, then tracing admission, registration, residency, sampling,
+V-trace scoring, accepted-only normalization and deferred write-back as one transaction. The
+work is both implementation and debugging: helpers and most of the loop are already correct,
+sample ledgers stay green, and no expected output is shipped.
 """
 solution_explanation = """
-Keep the complete loop but repair its phase boundaries. Settle segment residency from the
-earliest transition admission index after admission, snapshot registry size and total once
-before drawing, resolve the whole deterministic batch against unchanged priorities, compute
-`w_raw = (N * (p / P)) ** (-beta)` from that snapshot, and defer all priority writes until
-the batch is complete. Target epoch remains `step // target_refresh_interval`.
+Reduce all in-force ingest entries to their greatest watermark without using JSON order.
+During each batch, compute raw importance weights only for resident accepted draws and use
+that accepted multiset for both `w_max` and the normalized mean. Preserve the already-correct
+earliest-index residency, pre-draw priority snapshot, deferred write-back, and epoch floor
+division behavior.
 """
 verification_explanation = """
 The verifier recomputes every ledger from verifier-owned bundle inputs with a reference package
 built from the same contract-correct helpers and the corrected learner. Structural fields and
 counts match exactly; floating aggregates match at six-decimal precision. The oracle copies
-only the corrected learner and runs the normal CLI, while a nop agent retains the plausible
-but phase-incorrect implementation and diverges on every graded bundle.
+the corrected ingest and learner modules and runs the normal CLI, while a nop agent retains
+the plausible order-sensitive visibility and attempted-weight normalization and diverges on
+every graded bundle.
 """
 [verifier]
 timeout_sec = 900.0

@@ -3,9 +3,10 @@ The auditor source at `/app/rlaudit` does run, and this assignment is not asking
 absent component. Its learner iteration is almost right, but interactions between its
 successive phases are not faithful. Correct those interactions so replay tells the truth.
 
-Four documents define that truth: `/app/docs/bundle-format.md` describes the recordings,
-`/app/docs/learner-contract.md` governs learner state, `/app/docs/sampler.md` defines draw
-semantics, and `/app/docs/output-schema.md` specifies the ledger. All four are normative.
+Five documents define that truth: `/app/docs/bundle-format.md` describes the recordings,
+`/app/docs/learner-contract.md` governs learner state, `/app/docs/comparisons.md` fixes exact
+boundary predicates and reductions, `/app/docs/sampler.md` defines draw semantics, and
+`/app/docs/output-schema.md` specifies the ledger. All five are normative.
 
 Use each recording directory's basename for a JSON filename under `/app/out`. A submission
 is successful precisely when:

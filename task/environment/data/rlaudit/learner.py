@@ -42,11 +42,7 @@ def segment_stats(segment, feats, ep_params, gamma, rho_bar, c_bar):
 
 
 def run_bundle(bundle_dir):
-    """Audit one run bundle.
-
-    This complete orchestration intentionally mirrors the recorded learner phases closely;
-    repair the subtle phase-composition disagreements described by the contract.
-    """
+    """Audit one run bundle."""
     with open(os.path.join(bundle_dir, "manifest.json")) as handle:
         manifest = json.load(handle)
     feats = _load_features(bundle_dir)
@@ -102,21 +98,18 @@ def run_bundle(bundle_dir):
         target_pool = []
         advantage_pool = []
         weights = []
+        attempted_weights = []
+        updates = {}
         if size > 0 and total > 0.0:
-            rng = sampler.step_stream(manifest["sampler_seed"], step)
-            total_draws += manifest["batch_size"]
-            for _ in range(manifest["batch_size"]):
-                target = rng.next_unit() * total
-                acc = 0.0
-                position = len(registry.priorities) - 1
-                for candidate, priority in enumerate(registry.priorities):
-                    acc += priority
-                    if target < acc:
-                        position = candidate
-                        break
+            picks = sampler.draw(
+                manifest["sampler_seed"], step, manifest["batch_size"], registry.priorities, total
+            )
+            total_draws += len(picks)
+            for position in picks:
                 segment = registry.segments[position]
                 raw_weight = (size * (registry.priorities[position] / total)) ** (-beta)
-                if not buffer.is_resident(segment.complete_index):
+                attempted_weights.append(raw_weight)
+                if not buffer.is_resident(segment.residency_index):
                     dropped += 1
                     continue
                 targets, advantages = segment_stats(
@@ -129,20 +122,19 @@ def run_bundle(bundle_dir):
                 magnitude = 0.0
                 for value in advantages:
                     magnitude += abs(value)
-                registry.priorities[position] = (
-                    magnitude / len(advantages) + priority_eps
-                ) ** alpha
-                total = registry.total()
+                updates[position] = (magnitude / len(advantages) + priority_eps) ** alpha
                 total_accepted += 1
                 drawn.add(position)
 
         if weights:
-            top = max(weights)
+            top = max(attempted_weights)
             mean_weight = sum(w / top for w in weights) / len(weights)
         else:
             mean_weight = 0.0
         mean_target = sum(target_pool) / len(target_pool) if target_pool else 0.0
         mean_advantage = sum(advantage_pool) / len(advantage_pool) if advantage_pool else 0.0
+        for position, priority in updates.items():
+            registry.priorities[position] = priority
         step_records.append(
             {
                 "step": step,

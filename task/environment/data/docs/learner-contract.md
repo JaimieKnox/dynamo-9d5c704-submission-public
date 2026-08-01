@@ -12,13 +12,10 @@ learner admitted transitions in stream order and in no other order.
 
 ## 2. Visibility
 
-The ingest log records when recorded material became visible to the learner. Each entry
-states that from its `step` onward the learner could see every transition up to and including
-its `seq_watermark`. An entry recorded at a step is already in force at that step. Visibility
-is cumulative and only ever grows as the run proceeds. When more than one entry is in force,
-the learner sees as far as the furthest watermark any of them grants. Entries are not
-required to be sorted and more than one entry may share a step. Before any entry is in force
-the learner sees nothing at all.
+The ingest log is an unordered history of cumulative publication facts. An entry becomes
+effective on its own `step`, and its watermark is inclusive. Replay combines every fact
+effective for the current step; JSON position is not chronology. The visibility reduction,
+including the no-entry identity, is specified in `comparisons.md`.
 
 ## 3. Buffer admission and residency
 
@@ -27,15 +24,10 @@ yet been admitted is admitted. The `k`-th transition ever admitted, counting fro
 receives admission index `k` and occupies slot `k mod buffer_capacity`. Admission overwrites
 whatever occupied that slot before, and nothing else ever clears or moves a slot.
 
-A segment is **resident**, meaning still drawable, only while the buffer still holds every
-transition the segment covers. A transition admitted at index `k` remains in the buffer
-exactly while `admitted_so_far - k <= buffer_capacity`, where `admitted_so_far` is the number
-of transitions admitted by the end of the step's admission phase. Because the ring
-overwrites oldest first, a segment is resident exactly while its earliest admitted transition
-still occupies its slot. Whether that holds is settled once per learner step, after that
-step's admission phase, and the same answer is used for the whole of that step. Admission
-for a step is complete before that step decides residency, and residency is settled before
-that step draws.
+A segment is **resident**, meaning still drawable, only while all transitions it spans
+survive in the ring. Residency is settled after the step's admission phase and reused for
+the whole draw phase. The index that controls this test and its inclusive capacity boundary
+are defined in `comparisons.md`.
 
 ## 4. Segments
 
@@ -111,27 +103,19 @@ clipped ratios and the bundle's `gamma`. Do not re-derive a different recursion.
 
 ## 9. Importance sampling weight
 
-For an accepted draw whose ledger priority before the step's write back is `p`, with `N` and
-`P` taken once at the start of sampling for that step (before any write back) and with the
-bundle's `beta`,
-
-    w_raw = (N * (p / P)) ** (-beta)
-
-The reported weight for a step is the mean of `w_raw / w_max` over that step's accepted
-draws, where `w_max` is the largest raw weight among the draws that step accepted. When the
-step accepted no draw the reported weight is `0.0`. Rejected draws contribute nothing.
+The step reports a normalized importance weight for its useful samples. Registry size,
+priority mass, acceptance scope, and the normalization reduction must all refer to the same
+draw-phase snapshot. Apply the formula and pool definition in `comparisons.md`; in
+particular, do not infer the pool from the number of sampler attempts.
 
 ## 10. Priority write back
 
-After every draw of a step has been resolved, each accepted draw's ledger entry is rewritten
-to
+Accepted draws produce candidate ledger rewrites of
 
     (mean of the absolute values of its advantages + priority_eps) ** alpha
 
-using the bundle's `alpha` and `priority_eps`. When the same entry is accepted more than once
-in one step, the last rewrite of that step wins. Rejected draws leave their entry untouched.
-Write backs from one step are not visible to that same step's draws, and they must not change
-`N`, `P` or any `w_raw` used while the step is still drawing.
+using the bundle's `alpha` and `priority_eps`. Rejected draws do not produce candidates.
+Batch snapshot and repeated-entry commit ordering follow `comparisons.md`.
 
 ## 11. Per step aggregates
 

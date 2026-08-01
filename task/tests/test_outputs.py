@@ -1,8 +1,7 @@
-"""Verifier for the replay auditor task.
+"""Checks generated replay ledgers against verifier-owned source recordings.
 
-One test function per numbered success criterion of instruction.md. Expectations are
-recomputed at verify time by tests/reference.py from tests/inputs, the verifier's own copy
-of the recorded bundle inputs, so they cannot be shifted by editing anything under /app.
+The application tree is never used to derive answers.  A separate implementation consumes
+the fixtures beside this file, and the emitted JSON is inspected independently by concern.
 """
 
 import json
@@ -12,20 +11,20 @@ import pytest
 
 import reference
 
-TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUTS_DIR = os.path.join(TESTS_DIR, "inputs")
-OUT_DIR = "/app/out"
-RUNS_DIR = "/app/runs"
-TOL = 1e-6
+HERE = os.path.dirname(os.path.abspath(__file__))
+FIXTURE_ROOT = os.path.join(HERE, "inputs")
+GENERATED_ROOT = "/app/out"
+MOUNTED_RUNS = "/app/runs"
+SIX_PLACES = 1e-6
 
-STEP_INT_FIELDS = ("step", "target_epoch", "dropped_nonresident")
-STEP_FLOAT_FIELDS = (
+WHOLE_STEP_VALUES = ("step", "target_epoch", "dropped_nonresident")
+STEP_MEASUREMENTS = (
     "mean_vtrace_target",
     "mean_pg_advantage",
     "mean_is_weight",
     "priority_sum_after",
 )
-TOTAL_INT_FIELDS = (
+RUN_COUNTERS = (
     "transitions_enqueued",
     "segments_registered",
     "segments_evicted",
@@ -34,182 +33,200 @@ TOTAL_INT_FIELDS = (
     "unique_segments_drawn",
 )
 
-BUNDLES = sorted(
-    name
-    for name in os.listdir(INPUTS_DIR)
-    if os.path.isfile(os.path.join(INPUTS_DIR, name, "manifest.json"))
-)
 
-
-def _is_int(value):
-    if isinstance(value, bool):
-        return False
-    if isinstance(value, int):
-        return True
-    return isinstance(value, float) and float(value).is_integer()
-
-
-def _load_document(bundle):
-    path = os.path.join(OUT_DIR, bundle + ".json")
-    assert os.path.isfile(path), "missing audit document %s" % path
-    with open(path) as handle:
-        return json.load(handle)
-
-
-def _expected(bundle):
-    return reference.audit(os.path.join(INPUTS_DIR, bundle))
-
-
-DOCUMENTS = {}
-EXPECTED = {}
-
-
-def _document(bundle):
-    if bundle not in DOCUMENTS:
-        DOCUMENTS[bundle] = _load_document(bundle)
-    return DOCUMENTS[bundle]
-
-
-def _expectation(bundle):
-    if bundle not in EXPECTED:
-        EXPECTED[bundle] = _expected(bundle)
-    return EXPECTED[bundle]
-
-
-def test_audit_document_per_bundle():
-    """Criterion 1: every bundle under /app/runs has a parseable audit document with the
-    three top level keys of the output schema."""
-    listed = sorted(
-        name
-        for name in os.listdir(RUNS_DIR)
-        if os.path.isfile(os.path.join(RUNS_DIR, name, "manifest.json"))
+def _bundle_names(root):
+    return sorted(
+        entry
+        for entry in os.listdir(root)
+        if os.path.isfile(os.path.join(root, entry, "manifest.json"))
     )
-    assert set(BUNDLES).issubset(set(listed)), (
-        "run bundles missing from %s: %s" % (RUNS_DIR, sorted(set(BUNDLES) - set(listed)))
+
+
+FIXTURE_BUNDLES = _bundle_names(FIXTURE_ROOT)
+_actual_cache = {}
+_reference_cache = {}
+
+
+def _integer_like(item):
+    return (
+        not isinstance(item, bool)
+        and isinstance(item, (int, float))
+        and float(item).is_integer()
     )
-    for bundle in listed:
-        document = _document(bundle)
-        assert isinstance(document, dict), "%s: audit document is not a JSON object" % bundle
-        for key in ("bundle", "steps", "totals"):
-            assert key in document, "%s: audit document has no %r key" % (bundle, key)
-        assert document["bundle"] == bundle, (
-            "%s: bundle field is %r" % (bundle, document["bundle"])
+
+
+def _read_json(path):
+    with open(path) as stream:
+        return json.load(stream)
+
+
+def _actual(bundle):
+    if bundle not in _actual_cache:
+        filename = os.path.join(GENERATED_ROOT, bundle + ".json")
+        assert os.path.isfile(filename), "%s was not generated" % filename
+        _actual_cache[bundle] = _read_json(filename)
+    return _actual_cache[bundle]
+
+
+def _truth(bundle):
+    if bundle not in _reference_cache:
+        fixture = os.path.join(FIXTURE_ROOT, bundle)
+        _reference_cache[bundle] = reference.audit(fixture)
+    return _reference_cache[bundle]
+
+
+def _paired_steps(bundle):
+    return zip(_actual(bundle)["steps"], _truth(bundle)["steps"])
+
+
+def test_terminal_run_accounting():
+    """The accumulated counters and ending priority mass must describe the full replay."""
+    for bundle in FIXTURE_BUNDLES:
+        observed = _actual(bundle)["totals"]
+        recomputed = _truth(bundle)["totals"]
+        for counter in RUN_COUNTERS:
+            assert counter in observed, "%s totals omitted %s" % (bundle, counter)
+            assert int(observed[counter]) == recomputed[counter], (
+                "%s totals.%s: got %r, wanted %d"
+                % (bundle, counter, observed[counter], recomputed[counter])
+            )
+        assert "priority_sum_final" in observed, (
+            "%s totals omitted priority_sum_final" % bundle
         )
-        assert isinstance(document["steps"], list), "%s: steps is not an array" % bundle
-        assert isinstance(document["totals"], dict), "%s: totals is not an object" % bundle
-
-
-def test_step_ledger_shape():
-    """Criterion 2: steps covers every learner step of the bundle in ascending order with
-    every schema field present and of the declared type."""
-    for bundle in BUNDLES:
-        manifest_path = os.path.join(INPUTS_DIR, bundle, "manifest.json")
-        with open(manifest_path) as handle:
-            learner_steps = json.load(handle)["learner_steps"]
-        steps = _document(bundle)["steps"]
-        assert len(steps) == learner_steps, (
-            "%s: %d step entries, expected %d" % (bundle, len(steps), learner_steps)
+        assert observed["priority_sum_final"] == pytest.approx(
+            recomputed["priority_sum_final"], abs=SIX_PLACES
+        ), (
+            "%s ending priority mass: got %r, wanted %r"
+            % (
+                bundle,
+                observed["priority_sum_final"],
+                recomputed["priority_sum_final"],
+            )
         )
-        for index, record in enumerate(steps):
-            assert isinstance(record, dict), "%s step %d: not an object" % (bundle, index)
-            assert record.get("step") == index, (
-                "%s: step entry %d reports step %r" % (bundle, index, record.get("step"))
-            )
-            for field in STEP_INT_FIELDS:
-                assert _is_int(record.get(field)), (
-                    "%s step %d: %s is %r, expected an integer"
-                    % (bundle, index, field, record.get(field))
-                )
-            drawn = record.get("sampled")
-            assert isinstance(drawn, list), (
-                "%s step %d: sampled is %r, expected an array" % (bundle, index, drawn)
-            )
-            for slot in drawn:
-                assert _is_int(slot), (
-                    "%s step %d: sampled holds %r, expected integers" % (bundle, index, slot)
-                )
-            for field in STEP_FLOAT_FIELDS:
-                value = record.get(field)
-                assert isinstance(value, (int, float)) and not isinstance(value, bool), (
-                    "%s step %d: %s is %r, expected a number"
-                    % (bundle, index, field, value)
-                )
 
 
-def test_target_epoch_per_step():
-    """Criterion 3: target_epoch on every step is the target epoch the contract puts in
-    force for that step."""
-    for bundle in BUNDLES:
-        got = _document(bundle)["steps"]
-        expected = _expectation(bundle)["steps"]
-        for record, want in zip(got, expected):
-            assert int(record["target_epoch"]) == want["target_epoch"], (
-                "%s step %d: target_epoch is %r, expected %d"
-                % (bundle, want["step"], record["target_epoch"], want["target_epoch"])
-            )
+def test_output_inventory_and_envelopes():
+    """Every mounted recording needs a parseable, correctly labelled result envelope."""
+    mounted = _bundle_names(MOUNTED_RUNS)
+    absent = sorted(set(FIXTURE_BUNDLES) - set(mounted))
+    assert not absent, "fixtures absent from %s: %s" % (MOUNTED_RUNS, absent)
+
+    for bundle in mounted:
+        payload = _actual(bundle)
+        assert isinstance(payload, dict), "%s output must be an object" % bundle
+        assert all(name in payload for name in ("bundle", "steps", "totals")), (
+            "%s output lacks one or more required top-level fields" % bundle
+        )
+        assert payload["bundle"] == bundle, (
+            "%s output identifies itself as %r" % (bundle, payload["bundle"])
+        )
+        assert isinstance(payload["steps"], list), "%s steps must be an array" % bundle
+        assert isinstance(payload["totals"], dict), "%s totals must be an object" % bundle
 
 
-def test_accepted_draw_slot_sequences():
-    """Criterion 4: sampled on every step is the exact ordered slot sequence of that
-    step's accepted draws, repeats included."""
-    for bundle in BUNDLES:
-        got = _document(bundle)["steps"]
-        expected = _expectation(bundle)["steps"]
-        for record, want in zip(got, expected):
-            drawn = [int(slot) for slot in record["sampled"]]
-            assert drawn == want["sampled"], (
-                "%s step %d: sampled is %r, expected %r"
-                % (bundle, want["step"], drawn, want["sampled"])
-            )
-
-
-def test_rejected_draw_counts():
-    """Criterion 5: dropped_nonresident on every step is the exact number of draws that
-    step rejected."""
-    for bundle in BUNDLES:
-        got = _document(bundle)["steps"]
-        expected = _expectation(bundle)["steps"]
-        for record, want in zip(got, expected):
-            assert int(record["dropped_nonresident"]) == want["dropped_nonresident"], (
-                "%s step %d: dropped_nonresident is %r, expected %d"
+def test_epoch_selected_for_each_learner_iteration():
+    """The target generation reported at each iteration must equal recomputation."""
+    for bundle in FIXTURE_BUNDLES:
+        for observed, recomputed in _paired_steps(bundle):
+            assert int(observed["target_epoch"]) == recomputed["target_epoch"], (
+                "%s iteration %d uses epoch %r instead of %d"
                 % (
                     bundle,
-                    want["step"],
-                    record["dropped_nonresident"],
-                    want["dropped_nonresident"],
+                    recomputed["step"],
+                    observed["target_epoch"],
+                    recomputed["target_epoch"],
                 )
             )
 
 
-def test_step_aggregates():
-    """Criterion 6: the four per step aggregates match the contract to six decimal
-    places."""
-    for bundle in BUNDLES:
-        got = _document(bundle)["steps"]
-        expected = _expectation(bundle)["steps"]
-        for record, want in zip(got, expected):
-            for field in STEP_FLOAT_FIELDS:
-                assert record[field] == pytest.approx(want[field], abs=TOL), (
-                    "%s step %d: %s is %r, expected %r"
-                    % (bundle, want["step"], field, record[field], want[field])
-                )
-
-
-def test_run_totals():
-    """Criterion 7: totals holds the seven run totals, the six counts exactly and
-    priority_sum_final to six decimal places."""
-    for bundle in BUNDLES:
-        got = _document(bundle)["totals"]
-        want = _expectation(bundle)["totals"]
-        for field in TOTAL_INT_FIELDS:
-            assert field in got, "%s: totals has no %r key" % (bundle, field)
-            assert int(got[field]) == want[field], (
-                "%s: totals.%s is %r, expected %d" % (bundle, field, got[field], want[field])
-            )
-        assert "priority_sum_final" in got, "%s: totals has no priority_sum_final" % bundle
-        assert got["priority_sum_final"] == pytest.approx(
-            want["priority_sum_final"], abs=TOL
-        ), (
-            "%s: totals.priority_sum_final is %r, expected %r"
-            % (bundle, got["priority_sum_final"], want["priority_sum_final"])
+def test_step_rows_follow_schema_and_manifest_length():
+    """Step rows must be complete, ordered, and represented with the declared value kinds."""
+    for bundle in FIXTURE_BUNDLES:
+        manifest = _read_json(os.path.join(FIXTURE_ROOT, bundle, "manifest.json"))
+        rows = _actual(bundle)["steps"]
+        assert len(rows) == manifest["learner_steps"], (
+            "%s emitted %d rows for %d learner steps"
+            % (bundle, len(rows), manifest["learner_steps"])
         )
+
+        for position, row in enumerate(rows):
+            assert isinstance(row, dict), "%s row %d must be an object" % (
+                bundle,
+                position,
+            )
+            assert row.get("step") == position, (
+                "%s row %d carries step %r" % (bundle, position, row.get("step"))
+            )
+            for field in WHOLE_STEP_VALUES:
+                assert _integer_like(row.get(field)), (
+                    "%s row %d field %s is not integer-valued: %r"
+                    % (bundle, position, field, row.get(field))
+                )
+
+            slots = row.get("sampled")
+            assert isinstance(slots, list), "%s row %d sampled must be an array" % (
+                bundle,
+                position,
+            )
+            assert all(_integer_like(slot) for slot in slots), (
+                "%s row %d sampled contains a non-integer value: %r"
+                % (bundle, position, slots)
+            )
+            for field in STEP_MEASUREMENTS:
+                number = row.get(field)
+                assert isinstance(number, (int, float)) and not isinstance(number, bool), (
+                    "%s row %d field %s must be numeric, got %r"
+                    % (bundle, position, field, number)
+                )
+
+
+def test_nonresident_draw_rejections():
+    """The rejected-draw tally is checked separately for every learner iteration."""
+    for bundle in FIXTURE_BUNDLES:
+        for observed, recomputed in _paired_steps(bundle):
+            assert int(observed["dropped_nonresident"]) == recomputed[
+                "dropped_nonresident"
+            ], (
+                "%s iteration %d rejected %r draws; recomputation rejected %d"
+                % (
+                    bundle,
+                    recomputed["step"],
+                    observed["dropped_nonresident"],
+                    recomputed["dropped_nonresident"],
+                )
+            )
+
+
+def test_numeric_step_summaries():
+    """All per-iteration measurements are compared at the required decimal tolerance."""
+    for bundle in FIXTURE_BUNDLES:
+        for observed, recomputed in _paired_steps(bundle):
+            for field in STEP_MEASUREMENTS:
+                assert observed[field] == pytest.approx(
+                    recomputed[field], abs=SIX_PLACES
+                ), (
+                    "%s iteration %d field %s: got %r, wanted %r"
+                    % (
+                        bundle,
+                        recomputed["step"],
+                        field,
+                        observed[field],
+                        recomputed[field],
+                    )
+                )
+
+
+def test_sampling_trace_retains_order_and_repetition():
+    """Accepted slot identifiers must reproduce the reference draw stream verbatim."""
+    for bundle in FIXTURE_BUNDLES:
+        for observed, recomputed in _paired_steps(bundle):
+            observed_slots = [int(slot) for slot in observed["sampled"]]
+            assert observed_slots == recomputed["sampled"], (
+                "%s iteration %d accepted %r; recomputation accepted %r"
+                % (
+                    bundle,
+                    recomputed["step"],
+                    observed_slots,
+                    recomputed["sampled"],
+                )
+            )

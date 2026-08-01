@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "dynamo/audit-replay-learner"
-description = "Repair near-correct replay learner orchestration whose silent phase interactions corrupt graded ledgers"
+description = "Correct phase-boundary behavior in an executable replay learner that emits inaccurate audit ledgers"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -25,12 +25,12 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-The auditor runs end-to-end and its helpers are contract-correct, but two composition defects
-inside an otherwise complete learner loop remain silent on the three sample bundles. Graded
-bundles combine small ring buffers, target refreshes and multi-draw batches early: residency
-must use the earliest covered transition, and priority updates must remain invisible until
-all draws in a step resolve. These interacting state-machine errors reroute later draws and
-importance weights without producing a crash or an obvious local failure.
+Nothing is absent and ordinary execution succeeds, so the challenge is recognizing two
+incorrect phase boundaries in a plausible learner loop. The three sample recordings do not
+expose them. Graded cases bring constrained ring capacity, target refreshes, and multi-draw
+batches together early: residency depends on the earliest transition covered, while priority
+writes cannot affect unresolved draws from the same step. Violating either invariant silently
+changes subsequent selections and importance weights.
 
 Solving the task requires tracing asynchronous admission, segment registration, exact `<=`
 ring residency, epoch floor division, priority-proportional sampling, V-trace scoring and

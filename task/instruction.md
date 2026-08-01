@@ -1,22 +1,28 @@
-The replay auditor in `/app/rlaudit` reconstructs what the learner of an asynchronous
-actor-learner training run did from recorded actor shards. The package runs end-to-end,
-but its graded ledgers are wrong: repair the learner step loop so its phase interactions
-match the normative contract.
+Recorded actor activity is available as run bundles beneath `/app/runs`. Turn each bundle
+into a faithful account of the learner's execution. The existing implementation in
+`/app/rlaudit` is already complete enough to execute; the defect lies in near-correct
+interactions among phases of its learner step loop. Bring those phase relationships into
+agreement with the specification rather than treating this as a missing-module exercise.
 
-Each directory under `/app/runs` is one recorded run bundle. `/app/docs/bundle-format.md`,
-`/app/docs/learner-contract.md`, `/app/docs/sampler.md` and `/app/docs/output-schema.md`
-are normative and together state every rule that decides an audit document.
+The rules of record are distributed across `/app/docs/bundle-format.md`,
+`/app/docs/learner-contract.md`, `/app/docs/sampler.md`, and
+`/app/docs/output-schema.md`. Read them as a single contract when deciding how replay state
+evolves and how the result is represented.
 
-Write one audit document per bundle to `/app/out/<bundle>.json`, using the bundle directory
-name. For every bundle under `/app/runs`:
+For a bundle directory named `NAME`, place the resulting JSON at
+`/app/out/NAME.json`. Grading checks these seven properties:
 
-1. The document exists, parses as JSON, and carries `bundle`, `steps` and `totals`.
-2. `steps` has one correctly typed entry per learner step in ascending order.
-3. `target_epoch` is the epoch in force for that step.
-4. `sampled` is the exact ordered slot sequence of accepted draws, repeats included.
-5. `dropped_nonresident` is the exact rejected-draw count.
-6. The four per-step floating aggregates match the contract to six decimal places.
-7. `totals` contains the six exact counts and rounded final priority sum.
+1. Every recorded bundle has a valid JSON object containing the top-level members
+   `bundle`, `steps`, and `totals`.
+2. Its `steps` array is ordered by learner-step number, has exactly one entry for every
+   such step, and uses the schema's required value types.
+3. Each step reports the applicable epoch in `target_epoch`.
+4. Each `sampled` array preserves the precise order of accepted slot draws, including
+   duplicate slots.
+5. Each `dropped_nonresident` value equals the number of draws rejected at that step.
+6. All four floating-point summaries for a step are correct at six-decimal precision.
+7. The final `totals` object gives all six counters exactly and the terminal priority sum
+   rounded as specified.
 
-No bundle ships an expected audit document. Only `/app/out` is graded. You may replace
-anything under `/app/rlaudit`.
+There is no expected audit document included with any bundle. Evaluation considers only
+the files produced in `/app/out`. Changes anywhere within `/app/rlaudit` are permitted.

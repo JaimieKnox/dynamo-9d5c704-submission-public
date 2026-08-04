@@ -24,27 +24,27 @@ admission phase has given every one of its transitions an admission index. Let `
 the bundle `register_delay`. The segment may enter the priority ledger only on a later
 or equal step `s` satisfying `s >= complete_step + R`. Registration order among segments
 that become eligible on the same step is ascending `(latest, earliest)` admission index.
-The attached scoring epoch is the target epoch in force on the step of actual ledger
-insert, not the step of completion when those differ.
+The scoring epoch attached at registration is the target epoch in force on that insert
+step, `e(s)` from `learner-contract.md`.
 
 ## Scoring epoch attachment
 
-Each segment carries the target epoch attached at ledger insert. Later accepted draws
-evaluate values and current-policy log probabilities under that attached epoch. The
-reported `target_epoch` field for a step uses the step formula and does not rewrite
-attachments on segments that remain drawable.
+Each registered segment carries the scoring epoch attached when it entered the ledger.
+Later accepted draws evaluate values and current-policy log probabilities under that
+attached epoch. The reported `target_epoch` field for a step uses the step formula and
+does not rewrite attachments on segments that remain drawable.
 
 ## Sampler lag and step snapshots
 
 Let `K` be `sampler_priority_lag`. When `K` is `0`, draws use the current pre-draw
 priority vector. When `K` is greater than `0`, draws use the priority vector as it stood
 after write-back of the previous learner step, extended with the current priorities of
-any ledger rows that did not yet exist then. Importance weights always use the current
-pre-draw priority vector and its mass `P`, together with registry length `N`, never the
-lagged sampler vector.
+any ledger rows that did not yet exist then.
 
-Before any draw, capture `N` and the current `P` from the complete ledger, including
-nonresident entries. Candidate priority rewrites become visible to later draws only after
+Before any draw, capture `N` and the current mass `P` from the complete ledger, including
+nonresident entries. Importance weights for accepted draws use those captured current
+pre-draw priorities and that captured `P`, together with registry length `N`. Candidate
+priority rewrites become visible to later draws only after
 the step's entire batch has been resolved. When one ledger position is accepted more than
 once, the rewrite from the last such acceptance in draw order remains.
 

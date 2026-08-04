@@ -88,8 +88,9 @@ the sampler in `/app/docs/sampler.md` on the sampler priority vector.
 
 Each draw is resolved in draw order against residency under the current ring. Rejected
 draws are counted, are not replaced, contribute nothing to aggregates, and leave priorities
-untouched. Accepted draws may repeat an entry. Importance weights use current pre-draw
-priorities and current `P`, not the lagged sampler vector.
+untouched. Accepted draws may repeat an entry. Importance weights use the captured current
+pre-draw priorities and current `P` from before any draw of the step, not the lagged sampler
+vector and not priorities rewritten earlier in the same batch.
 
 ## 8. Per segment quantities
 

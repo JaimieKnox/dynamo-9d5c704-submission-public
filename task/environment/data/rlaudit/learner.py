@@ -91,22 +91,34 @@ def run_bundle(bundle_dir):
             if segment.ready_step is None:
                 still_waiting.append(segment)
                 continue
-            # Ready segments enter the ledger on the step they become complete.
-            due.append(segment)
+            if step >= segment.ready_step + register_delay:
+                due.append(segment)
+            else:
+                still_waiting.append(segment)
         due.sort(key=lambda seg: (seg.complete_index, seg.start_index))
         register_epoch = params.epoch_for_step(
             step, manifest["target_refresh_interval"], len(epochs)
         )
         for segment in due:
-            segment.frozen_epoch = register_epoch
-            registry.insert(segment, buffer)
+            # Attach the epoch that was in force when the segment first became complete.
+            segment.frozen_epoch = params.epoch_for_step(
+                segment.ready_step, manifest["target_refresh_interval"], len(epochs)
+            )
+            registry.insert(segment)
         unregistered = still_waiting
 
         size = len(registry.segments)
         current_priorities = list(registry.priorities)
         current_total = sum(current_priorities)
-        draw_priorities = current_priorities
-        draw_total = current_total
+        if sampler_priority_lag <= 0 or not lagged_priorities:
+            draw_priorities = current_priorities
+            draw_total = current_total
+        else:
+            draw_priorities = list(lagged_priorities)
+            if len(draw_priorities) < size:
+                draw_priorities = draw_priorities + current_priorities[len(draw_priorities):]
+            draw_priorities = draw_priorities[:size]
+            draw_total = sum(draw_priorities)
         epoch = params.epoch_for_step(step, manifest["target_refresh_interval"], len(epochs))
         sampled = []
         dropped = 0
@@ -119,10 +131,13 @@ def run_bundle(bundle_dir):
                 manifest["sampler_seed"], step, manifest["batch_size"], draw_priorities, draw_total
             )
             total_draws += len(picks)
+            working_priorities = list(draw_priorities)
+            working_total = draw_total
             for position in picks:
                 segment = registry.segments[position]
-                priority = current_priorities[position]
-                raw_weight = (size * (priority / current_total)) ** (-beta)
+                # Importance weight follows the same vector the sampler just drew from.
+                priority = working_priorities[position]
+                raw_weight = (size * (priority / working_total)) ** (-beta)
                 if not buffer.is_resident(segment.residency_index):
                     dropped += 1
                     continue
@@ -137,7 +152,11 @@ def run_bundle(bundle_dir):
                 magnitude = 0.0
                 for value in advantages:
                     magnitude += abs(value)
-                updates[position] = (magnitude / len(advantages) + priority_eps) ** alpha
+                new_priority = (magnitude / len(advantages) + priority_eps) ** alpha
+                # Commit write-back before resolving the rest of the batch.
+                working_priorities[position] = new_priority
+                registry.priorities[position] = new_priority
+                working_total = sum(working_priorities)
                 total_accepted += 1
                 drawn.add(position)
 
@@ -148,8 +167,6 @@ def run_bundle(bundle_dir):
             mean_weight = 0.0
         mean_target = sum(target_pool) / len(target_pool) if target_pool else 0.0
         mean_advantage = sum(advantage_pool) / len(advantage_pool) if advantage_pool else 0.0
-        for position, priority in updates.items():
-            registry.priorities[position] = priority
         lagged_priorities = list(registry.priorities)
         step_records.append(
             {

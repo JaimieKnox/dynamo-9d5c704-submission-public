@@ -34,19 +34,11 @@ class PriorityRegistry:
         self.segments = []
         self.priorities = []
 
-    def insert(self, segment, buffer=None):
-        """Append an entry seeded from the largest priority among drawable ledger rows."""
+    def insert(self, segment):
+        """Append an entry seeded from the largest priority the ledger currently holds."""
         seed = 1.0
         if self.priorities:
-            if buffer is None:
-                seed = max(self.priorities)
-            else:
-                resident = [
-                    priority
-                    for segment_i, priority in zip(self.segments, self.priorities)
-                    if buffer.is_resident(segment_i.residency_index)
-                ]
-                seed = max(resident) if resident else 1.0
+            seed = max(self.priorities)
         self.segments.append(segment)
         self.priorities.append(seed)
         return len(self.segments) - 1

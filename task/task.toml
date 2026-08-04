@@ -36,6 +36,15 @@ epoch snapshots, tight rings with multi-draw batches, and unordered publication 
 patches that only restore max-watermark ingest or accepted-only weight pools are insufficient.
 The agent must compose lagged visibility, registration-time epoch freeze, residency, deferred
 priority write-back, and full-registry IS normalization as one long-horizon state machine.
+
+Every run bundle is a synthetic recording generated for this task, modeled on asynchronous
+actor-learner training of the IMPALA and V-trace family. Visibility lag, epoch refresh timing,
+ring capacity and batch shape were chosen to isolate boundary combinations that a production
+pipeline reaches only occasionally, which is what makes the data realistically challenging: the
+recordings carry every fact an auditor needs, and nothing in the environment reveals which
+reconstruction is correct. RL infrastructure engineers do exactly this reconstruction when they
+validate replay and audit tooling against a learner contract, rebuild a training run for a
+reproducibility postmortem, or diagnose silent learner drift after a sampler or scoring change.
 """
 solution_explanation = """
 Keep the shipped loop structure. Honor visibility_lag when reducing ingest watermarks. Freeze

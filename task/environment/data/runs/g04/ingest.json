@@ -2,7 +2,7 @@
   "admissions": [
     {
       "seq_watermark": 342,
-      "step": 0
+      "step": 6
     },
     {
       "seq_watermark": 171,

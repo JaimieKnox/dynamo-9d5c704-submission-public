@@ -15,7 +15,7 @@ class Segment:
     @property
     def residency_index(self):
         """Admission index that decides whether the segment is still drawable."""
-        return self.start_index
+        return self.complete_index
 
 
 def group_episodes(rows):
@@ -58,4 +58,3 @@ def build_segments(episodes, n_step):
                 boot = rows[last + 1]["obs_id"]
             out.append(Segment(episode_id, t0, rows[t0:last + 1], cut, boot))
     return out
-

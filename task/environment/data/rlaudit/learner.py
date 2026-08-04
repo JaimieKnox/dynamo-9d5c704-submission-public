@@ -41,12 +41,11 @@ def segment_stats(segment, feats, ep_params, gamma, rho_bar, c_bar):
     return vtrace(rewards, values, boot, rhos, cs, gamma)
 
 
-def _resident_count(registry, buffer):
-    count = 0
+def _retarget_drawable(registry, buffer, epoch):
+    """Move ledger entries that are still drawable onto the newest target snapshot."""
     for segment in registry.segments:
         if buffer.is_resident(segment.residency_index):
-            count += 1
-    return count
+            segment.frozen_epoch = epoch
 
 
 def run_bundle(bundle_dir):
@@ -65,7 +64,10 @@ def run_bundle(bundle_dir):
     alpha = manifest["alpha"]
     beta = manifest["beta"]
     priority_eps = manifest["priority_eps"]
-    visibility_lag = int(manifest.get("visibility_lag", 0))
+    interval = manifest["target_refresh_interval"]
+    visibility = ingest.VisibilityCursor(
+        admissions, int(manifest.get("visibility_lag", 0))
+    )
     buffer = TransitionBuffer(manifest["buffer_capacity"])
     registry = PriorityRegistry()
     pending = rows
@@ -74,8 +76,9 @@ def run_bundle(bundle_dir):
     total_draws = 0
     total_accepted = 0
     drawn = set()
+    live_epoch = None
     for step in range(manifest["learner_steps"]):
-        watermark = ingest.visible_seq(admissions, step, visibility_lag)
+        watermark = visibility.advance(step)
         held_back = []
         for row in pending:
             if row["seq"] <= watermark:
@@ -94,38 +97,37 @@ def run_bundle(bundle_dir):
             else:
                 still_waiting.append(segment)
         ready.sort(key=lambda seg: (seg.complete_index, seg.start_index))
-        register_epoch = params.epoch_for_step(
-            step, manifest["target_refresh_interval"], len(epochs)
-        )
+        epoch = params.epoch_for_step(step, interval, len(epochs))
         for segment in ready:
-            segment.frozen_epoch = register_epoch
+            segment.frozen_epoch = epoch
             registry.insert(segment)
         unregistered = still_waiting
 
+        if epoch != live_epoch:
+            _retarget_drawable(registry, buffer, epoch)
+            live_epoch = epoch
+
         size = len(registry.segments)
-        total = registry.total()
-        epoch = params.epoch_for_step(step, manifest["target_refresh_interval"], len(epochs))
-        ep_params = epochs[epoch]
+        snapshot = list(registry.priorities)
+        total = sum(snapshot)
         sampled = []
         dropped = 0
         target_pool = []
         advantage_pool = []
         weights = []
         updates = {}
-        weight_n = _resident_count(registry, buffer)
-        if weight_n <= 0:
-            weight_n = size
         if size > 0 and total > 0.0:
             picks = sampler.draw(
-                manifest["sampler_seed"], step, manifest["batch_size"], registry.priorities, total
+                manifest["sampler_seed"], step, manifest["batch_size"], snapshot, total
             )
             total_draws += len(picks)
             for position in picks:
                 segment = registry.segments[position]
-                raw_weight = (weight_n * (registry.priorities[position] / total)) ** (-beta)
+                raw_weight = (size * (snapshot[position] / total)) ** (-beta)
                 if not buffer.is_resident(segment.residency_index):
                     dropped += 1
                     continue
+                ep_params = epochs[segment.frozen_epoch]
                 targets, advantages = segment_stats(
                     segment, feats, ep_params, gamma, rho_bar, c_bar
                 )
@@ -141,14 +143,13 @@ def run_bundle(bundle_dir):
                 drawn.add(position)
 
         if weights:
-            top = max(weights)
-            mean_weight = sum(w / top for w in weights) / len(weights)
+            mean_weight = sum(min(1.0, w) for w in weights) / len(weights)
         else:
             mean_weight = 0.0
         mean_target = sum(target_pool) / len(target_pool) if target_pool else 0.0
         mean_advantage = sum(advantage_pool) / len(advantage_pool) if advantage_pool else 0.0
         for position, priority in updates.items():
-            registry.priorities[position] = priority
+            registry.reweight(position, priority)
         step_records.append(
             {
                 "step": step,

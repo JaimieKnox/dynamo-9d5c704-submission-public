@@ -3,6 +3,8 @@
 import json
 import os
 
+NOTHING_VISIBLE = -1
+
 
 def load_shards(bundle_dir):
     """Every recorded transition of the bundle in ascending global admission order."""
@@ -25,14 +27,20 @@ def load_admissions(bundle_dir):
         return json.load(handle)["admissions"]
 
 
-def visible_seq(admissions, step, visibility_lag=0):
-    """Highest watermark among ingest entries effective at this learner step."""
-    best = 0
-    found = False
-    for entry in admissions:
-        effective_from = entry["step"] + visibility_lag
-        if step >= effective_from:
-            if (not found) or entry["seq_watermark"] > best:
-                best = entry["seq_watermark"]
-                found = True
-    return best if found else 0
+class VisibilityCursor:
+    """Publication watermark the learner can see at a given step."""
+
+    def __init__(self, admissions, visibility_lag):
+        self.entries = list(admissions)
+        self.lag = visibility_lag
+        self.watermark = NOTHING_VISIBLE
+
+    def advance(self, step):
+        """Inclusive watermark implied by every entry effective at this learner step."""
+        best = NOTHING_VISIBLE
+        for entry in self.entries:
+            if step >= entry["step"] + self.lag:
+                if entry["seq_watermark"] > best:
+                    best = entry["seq_watermark"]
+        self.watermark = best
+        return best

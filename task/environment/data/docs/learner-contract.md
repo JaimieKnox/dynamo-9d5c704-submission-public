@@ -26,9 +26,11 @@ receives admission index `k` and occupies slot `k mod buffer_capacity`. Admissio
 whatever occupied that slot before, and nothing else ever clears or moves a slot.
 
 A segment is **resident**, meaning still drawable, only while all transitions it spans
-survive in the ring. Residency is settled after the step's admission phase and reused for
-the whole draw phase. The index that controls this test and its inclusive capacity boundary
-are defined in `comparisons.md`.
+survive in the ring. Because slots are overwritten in admission order, the earliest
+transition a segment spans is the first one it loses, so that transition's admission index
+is the one residency turns on. Residency is settled after the step's admission phase and
+reused for the whole draw phase. The index that controls this test and its inclusive
+capacity boundary are defined in `comparisons.md`.
 
 ## 4. Segments
 
@@ -56,16 +58,18 @@ The learner's priority ledger is append only. A registered segment keeps its led
 position for the rest of the run and is never removed, even after its transitions leave the
 buffer. Ledger positions are assigned in registration order starting at `0`.
 
-A segment is seeded with the largest priority the ledger currently holds. Every ledger entry
-counts toward that maximum, whether or not it is still resident. When the ledger is empty,
-the seed is `1.0`. A segment registered earlier in the same step is eligible to supply that
-maximum.
+A segment is seeded with the largest priority the ledger holds at the moment that segment is
+inserted, reflecting every write back already committed in the run. Every ledger entry counts
+toward that maximum, whether or not it is still resident. When the ledger is empty, the seed
+is `1.0`. A segment registered earlier in the same step is eligible to supply that maximum.
 
 Registration for a step is complete before that step draws, so a segment registered in a step
 can be drawn in that same step.
 
 At the moment of registration, freeze the target epoch then in force on the segment. That
-frozen epoch is the only epoch used later when scoring the segment. The freeze rule is
+frozen epoch stays with the segment for the rest of the run and is the only epoch ever used
+to score it. Later target refreshes advance the epoch reported for a step without revising
+any epoch already frozen onto a registered segment, resident or not. The freeze rule is
 stated in `comparisons.md`.
 
 ## 6. Target epoch
@@ -75,8 +79,8 @@ The target epoch reported for learner step `s` is
     e(s) = min(s // target_refresh_interval, n_epochs - 1)
 
 using integer floor division, where `n_epochs` is the number of epoch files the bundle
-ships. The reported `target_epoch` field always uses `e(s)`. Scoring an accepted draw does
-not use `e(s)`. It uses the frozen registration epoch of the drawn segment.
+ships. The reported `target_epoch` field always uses `e(s)`. The epoch that scores an
+accepted draw is the frozen registration epoch of the drawn segment.
 
 ## 7. Sampling
 
@@ -109,11 +113,10 @@ clipped ratios and the bundle's `gamma`. Do not re-derive a different recursion.
 
 ## 9. Importance sampling weight
 
-The step reports a normalized importance weight for its useful samples. Registry size,
-priority mass, acceptance scope, and the normalization reduction must all refer to the same
-draw-phase snapshot. Apply the formula and pool definition in `comparisons.md`. In
-particular, `N` is the full registry length from that snapshot, not a residency-filtered
-count, and rejected draws do not enter the normalization pool.
+The step reports a capped importance weight for its useful samples. Registry size `N`,
+priority mass `P`, and acceptance scope all refer to the same draw-phase snapshot, where `N`
+is the length of the full registry in that snapshot and the pool is the step's accepted
+draws. Apply the formula and cap in `comparisons.md`.
 
 ## 10. Priority write back
 

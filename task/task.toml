@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "dynamo/audit-replay-learner"
-description = "Repair near-correct async replay learner whose lagged visibility, frozen scoring epochs, and IS weight scope silently disagree with the contract"
+description = "Repair a near-correct async replay auditor whose ingest cursor, residency key and epoch retargeting pass silently disagree with the contract"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -23,19 +23,35 @@ model_tested = "Opus-4.8"
 agent_tested = "Terminus-2"
 task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
-expert_time_estimate_hours = 10
+expert_time_estimate_hours = 12
 difficulty_explanation = """
-The auditor already runs and most helpers look contract-faithful. Three interacting defects remain
-silent on the sample bundles: ingest facts ignore visibility_lag, V-trace scoring uses the draw
-step epoch instead of the epoch frozen at segment registration, and importance weights substitute
-a resident-only N for the full registry length. Sample bundles use lag zero, a single scoring
-epoch, and a large ring, so those disagreements never surface there.
+The auditor runs end to end and no module carries an unused parameter, an unread field, or a
+helper whose name gives a wrong rule away, so diffing the docs against the obvious files
+localizes nothing. Three defects sit in three modules that each read as ordinary infrastructure.
+Ingest consumes the publication log through one forward cursor, which stalls silently whenever a
+fact recorded for an earlier step sits later in the file. Segment residency keys on the admission
+index of a segment's newest transition rather than its oldest, so evicted segments stay drawable.
+The learner freezes the target epoch at registration and scores from that frozen field, both
+correct, while a separate maintenance pass re-points every still drawable ledger entry at the
+newest epoch on each refresh boundary.
 
-Graded bundles combine deferred ingest effectiveness, early target refreshes across multiple
-epoch snapshots, tight rings with multi-draw batches, and unordered publication logs. Local
-patches that only restore max-watermark ingest or accepted-only weight pools are insufficient.
-The agent must compose lagged visibility, registration-time epoch freeze, residency, deferred
-priority write-back, and full-registry IS normalization as one long-horizon state machine.
+The three sample recordings publish one in-order fact at zero lag, hold a ring larger than the
+whole run, and never leave their single epoch, so all three reconstruct correctly under the
+shipped tree and no local experiment separates right from wrong. Graded recordings combine
+out-of-order publication histories, tight rings with multi-draw batches, and repeated epoch
+refreshes. Every proper subset of the three repairs still diverges on all six graded recordings,
+so there is no partial credit, and the shipped code is already contract-correct at three further
+points that invite an over-eager edit: the inclusive residency boundary, the ledger-wide seeding
+maximum, and the full registry size inside the importance weight.
+
+Every run bundle is a synthetic recording generated for this task, modeled on asynchronous
+actor-learner training of the IMPALA and V-trace family. Visibility lag, epoch refresh timing,
+ring capacity and batch shape were chosen to isolate boundary combinations that a production
+pipeline reaches only occasionally, which is what makes the data realistically challenging: the
+recordings carry every fact an auditor needs, and nothing in the environment reveals which
+reconstruction is correct. RL infrastructure engineers do exactly this reconstruction when they
+validate replay and audit tooling against a learner contract, rebuild a training run for a
+reproducibility postmortem, or diagnose silent learner drift after a sampler or scoring change.
 
 Every run bundle is a synthetic recording generated for this task, modeled on asynchronous
 actor-learner training of the IMPALA and V-trace family. Visibility lag, epoch refresh timing,
@@ -47,19 +63,23 @@ validate replay and audit tooling against a learner contract, rebuild a training
 reproducibility postmortem, or diagnose silent learner drift after a sampler or scoring change.
 """
 solution_explanation = """
-Keep the shipped loop structure. Honor visibility_lag when reducing ingest watermarks. Freeze
-the target epoch onto each segment at registration and score every later accepted draw under that
-frozen snapshot while still reporting e(s) as target_epoch. Snapshot full registry N and P before
-drawing, normalize IS weights over accepted draws only with that full N, and apply priority
-write-backs only after the batch resolves. Replace ingest.py and learner.py with the fixed copies,
-then run the CLI over /app/runs into /app/out.
+Keep the shipped loop structure and every module that already matches the contract. In ingest,
+reduce over all publication entries effective at the current step instead of consuming the log
+through a forward cursor that treats file position as chronology. In segments, key residency on
+the admission index of the segment's earliest transition. In the learner, drop the maintenance
+pass that re-points drawable ledger entries at the newest epoch, so the epoch frozen at
+registration is the only epoch that ever scores a segment. Leave the inclusive residency
+boundary, the ledger-wide seeding maximum and the full registry size in the importance weight
+alone. Copy the three fixed modules over /app/rlaudit, then run the CLI over /app/runs into
+/app/out.
 """
 verification_explanation = """
-The verifier recomputes every ledger from verifier-owned bundle inputs with a reference package
-built from the corrected ingest and learner. Structural fields and counts match exactly. Floating
-aggregates match at six-decimal precision. The oracle copies the fixed modules and runs the CLI.
-A nop agent keeps lagged-visibility ignore, draw-step scoring, and resident-only N, so every
-graded bundle diverges while samples stay green.
+The verifier recomputes every ledger from verifier-owned copies of the recordings with a
+reference package built from the corrected ingest, segments and learner. Structural fields and
+counts match exactly. Floating aggregates match at six-decimal precision. The oracle copies the
+three fixed modules and runs the CLI. A nop agent keeps the stalling ingest cursor, the
+newest-transition residency key and the epoch retargeting pass, so all six graded recordings
+diverge while all three samples stay green.
 """
 [verifier]
 timeout_sec = 900.0

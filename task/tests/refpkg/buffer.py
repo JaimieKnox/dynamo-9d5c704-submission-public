@@ -36,13 +36,15 @@ class PriorityRegistry:
 
     def insert(self, segment):
         """Append an entry seeded from the largest priority the ledger currently holds."""
-        best = 1.0
+        seed = 1.0
         if self.priorities:
-            best = max(self.priorities)
+            seed = max(self.priorities)
         self.segments.append(segment)
-        self.priorities.append(best)
+        self.priorities.append(seed)
         return len(self.segments) - 1
+
+    def reweight(self, position, priority):
+        self.priorities[position] = priority
 
     def total(self):
         return sum(self.priorities)
-

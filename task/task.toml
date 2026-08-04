@@ -36,6 +36,12 @@ An agent that only patches lagged ingest watermarks or resident-only N no longer
 graded ledger. Solving requires tracing snapshot isolation across repeated draws, the difference
 between reported target_epoch and attached scoring epochs, and segment-formation boundaries
 together as one long-horizon state machine.
+
+The run bundles under /app/runs are hand-constructed synthetic recordings built to isolate those
+composition interactions. They are not captured from a live training job. An RL training
+infrastructure engineer auditing a replay learner against a normative contract would need this
+skill when async actor shards, priority replay, and V-trace scoring disagree under residency and
+batch snapshot rules.
 """
 solution_explanation = """
 Keep faithful ingest visibility and full-registry IS weight scope. Form no window segment that

@@ -15,8 +15,8 @@ learner admitted transitions in stream order and in no other order.
 The ingest log is an unordered history of cumulative publication facts. An entry becomes
 effective only after its recorded `step` plus the bundle `visibility_lag` have both been
 reached. Its watermark is inclusive. Replay combines every fact effective for the current
-step. JSON position is not chronology. The visibility reduction, including the no-entry
-identity, is specified in `comparisons.md`.
+step. JSON position is not chronology. The empty-visibility sentinel and the watermark
+reduction are specified in `comparisons.md`.
 
 ## 3. Buffer admission and residency
 
@@ -26,11 +26,9 @@ receives admission index `k` and occupies slot `k mod buffer_capacity`. Admissio
 whatever occupied that slot before, and nothing else ever clears or moves a slot.
 
 A segment is **resident**, meaning still drawable, only while all transitions it spans
-survive in the ring. Because slots are overwritten in admission order, the earliest
-transition a segment spans is the first one it loses, so that transition's admission index
-is the one residency turns on. Residency is settled after the step's admission phase and
-reused for the whole draw phase. The index that controls this test and its inclusive
-capacity boundary are defined in `comparisons.md`.
+survive in the ring. Residency is settled after the step's admission phase and reused for
+the whole draw phase. The index that controls this test and its inclusive capacity boundary
+are defined in `comparisons.md`.
 
 ## 4. Segments
 
@@ -49,28 +47,25 @@ registered. Segment transitions are always the episode's own transitions at thos
 
 ## 5. Registration
 
-A segment becomes registrable at the first learner step by whose admission phase every one
-of its transitions has been admitted. All segments that become registrable in the same step
-are registered in ascending order of the admission index of their last transition, breaking
+A segment becomes complete at the first learner step by whose admission phase every one of
+its transitions has been admitted. It becomes registrable only after the bundle
+`register_delay` additional learner steps have elapsed from that completion step, as
+detailed in `comparisons.md`. All segments that become registrable in the same step are
+registered in ascending order of the admission index of their last transition, breaking
 ties by ascending admission index of their first transition.
 
 The learner's priority ledger is append only. A registered segment keeps its ledger
 position for the rest of the run and is never removed, even after its transitions leave the
 buffer. Ledger positions are assigned in registration order starting at `0`.
 
-A segment is seeded with the largest priority the ledger holds at the moment that segment is
-inserted, reflecting every write back already committed in the run. Every ledger entry counts
-toward that maximum, whether or not it is still resident. When the ledger is empty, the seed
-is `1.0`. A segment registered earlier in the same step is eligible to supply that maximum.
+A segment is seeded with the largest priority the ledger currently holds. Every ledger entry
+counts toward that maximum, whether or not it is still resident. When the ledger is empty,
+the seed is `1.0`. A segment registered earlier in the same step is eligible to supply that
+maximum.
 
 Registration for a step is complete before that step draws, so a segment registered in a step
-can be drawn in that same step.
-
-At the moment of registration, freeze the target epoch then in force on the segment. That
-frozen epoch stays with the segment for the rest of the run and is the only epoch ever used
-to score it. Later target refreshes advance the epoch reported for a step without revising
-any epoch already frozen onto a registered segment, resident or not. The freeze rule is
-stated in `comparisons.md`.
+can be drawn in that same step. The scoring epoch attached to the segment is the epoch in
+force on the insert step.
 
 ## 6. Target epoch
 
@@ -79,28 +74,27 @@ The target epoch reported for learner step `s` is
     e(s) = min(s // target_refresh_interval, n_epochs - 1)
 
 using integer floor division, where `n_epochs` is the number of epoch files the bundle
-ships. The reported `target_epoch` field always uses `e(s)`. The epoch that scores an
-accepted draw is the frozen registration epoch of the drawn segment.
+ships. The reported `target_epoch` field always uses `e(s)`. Scoring an accepted draw uses
+the attached registration epoch of the drawn segment.
 
 ## 7. Sampling
 
-Let `N` be the number of registered segments and `P` the sum of the priorities of all `N`
-ledger entries, resident or not. Both are read from the ledger as it stands once this step's
-registration phase is complete, so both account for every entry this step just registered.
-Every seed and every write back is strictly positive, so `P` is positive whenever `N` is.
-When `N` is `0` the step makes no draws. Otherwise the step makes exactly `batch_size` draws
-using the sampler in `/app/docs/sampler.md`.
+Let `N` be the number of registered segments. Let `P` be the sum of the current pre-draw
+priorities of all `N` ledger entries, resident or not. Draws are taken from the sampler
+priority vector defined by `sampler_priority_lag` in `comparisons.md`. When that vector's
+mass is not greater than `0.0`, or when `N` is `0`, or when current `P` is not greater than
+`0.0`, the step makes no draws. Otherwise the step makes exactly `batch_size` draws using
+the sampler in `/app/docs/sampler.md` on the sampler priority vector.
 
-Each draw is resolved in draw order. A draw landing on a ledger entry whose segment is not
-resident at this step is rejected. Rejected draws are counted, are not replaced by another
-draw, contribute nothing to the step's aggregates, and leave that entry's priority
-untouched. A draw landing on a resident entry is accepted. The same entry may be drawn more
-than once in one step, and every accepted draw counts separately.
+Each draw is resolved in draw order against residency under the current ring. Rejected
+draws are counted, are not replaced, contribute nothing to aggregates, and leave priorities
+untouched. Accepted draws may repeat an entry. Importance weights use current pre-draw
+priorities and current `P`, not the lagged sampler vector.
 
 ## 8. Per segment quantities
 
 For an accepted draw, evaluate values and current-policy log probabilities under the
-segment's frozen registration epoch. Clip the importance ratio of each transition with the
+segment's attached registration epoch. Clip the importance ratio of each transition with the
 bundle's `rho_bar` and `c_bar` as the two separate clip bounds. Choose the bootstrap from
 the cut kind alone:
 
@@ -115,10 +109,8 @@ clipped ratios and the bundle's `gamma`. Do not re-derive a different recursion.
 
 ## 9. Importance sampling weight
 
-The step reports a capped importance weight for its useful samples. Registry size `N`,
-priority mass `P`, and acceptance scope all refer to the same draw-phase snapshot, where `N`
-is the length of the full registry in that snapshot and the pool is the step's accepted
-draws. Apply the formula and cap in `comparisons.md`.
+The step reports a normalized importance weight for its useful samples. Apply the formula
+and pool definition in `comparisons.md`. Rejected draws do not enter the normalization pool.
 
 ## 10. Priority write back
 
@@ -128,7 +120,9 @@ Accepted draws produce candidate ledger rewrites of
 
 using the bundle's `alpha` and `priority_eps`. Rejected draws do not produce candidates.
 The pre-draw snapshot, the invisibility of in-batch rewrites to later draws, and
-repeated-entry commit ordering follow `comparisons.md`.
+repeated-entry commit ordering follow `comparisons.md`. After write-back, the resulting
+priority vector becomes the lagged sampler vector for the next step when
+`sampler_priority_lag` is greater than `0`.
 
 ## 11. Per step aggregates
 

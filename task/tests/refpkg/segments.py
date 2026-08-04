@@ -12,6 +12,7 @@ class Segment:
         self.start_index = None
         self.complete_index = None
         self.frozen_epoch = None
+        self.ready_step = None
 
     @property
     def residency_index(self):

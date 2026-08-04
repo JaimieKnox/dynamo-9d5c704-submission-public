@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "dynamo/audit-replay-learner"
-description = "Repair near-correct async replay learner whose batch snapshots, attached scoring epochs, and window formation silently disagree under composition"
+description = "Repair near-correct async replay learner whose delayed registration, lagged sampler priorities, and ledger seeding disagree under long-horizon composition"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -25,37 +25,35 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 12
 difficulty_explanation = """
-The auditor runs and several previously failing helpers are already contract-faithful. The graded
-failures come from composition: priority rewrites become visible inside the same multi-draw batch,
-attached scoring epochs on resident segments are retargeted when the reported target epoch moves,
-and window segments are illegally formed when a scan stops on an episode's final transition.
-Sample bundles use batch size one and a single scoring epoch, and their episode endings avoid the
-illegal window shape, so those interactions stay green there.
+The auditor runs and several previously failing helpers are already contract-faithful. Graded
+ledgers still diverge because registration waits a configured delay after completion, the sampler
+draws from the previous step's post-writeback priorities while importance weights use the current
+pre-draw snapshot, and new ledger rows seed from the full ledger maximum rather than only resident
+rows. Sample bundles set both delays to zero and keep a large ring, so those interactions stay green
+there.
 
-An agent that only patches lagged ingest watermarks or resident-only N no longer reaches the
-graded ledger. Solving requires tracing snapshot isolation across repeated draws, the difference
-between reported target_epoch and attached scoring epochs, and segment-formation boundaries
-together as one long-horizon state machine.
+The recordings are synthetic fixtures built to force delayed registration, stale sampler mass, and
+wrap-time seeding to interact. An RL infrastructure engineer would perform this reconstruction when
+validating reproducibility of an asynchronous learner under publication lag and priority aging.
 
-The run bundles under /app/runs are hand-constructed synthetic recordings built to isolate those
-composition interactions. They are not captured from a live training job. An RL training
-infrastructure engineer auditing a replay learner against a normative contract would need this
-skill when async actor shards, priority replay, and V-trace scoring disagree under residency and
-batch snapshot rules.
+Solving requires tracing completion versus insert timing, attached scoring epochs at insert,
+lagged sampler vectors versus current IS weights, and ledger-wide seed maxima across wraparound as
+one state machine. Local patches that only restore in-batch write-back isolation or end-window skips
+no longer reach the graded ledger.
 """
 solution_explanation = """
-Keep faithful ingest visibility and full-registry IS weight scope. Form no window segment that
-stops on an episode's last transition. Attach the registration-time target epoch to each segment
-and never rewrite that attachment when later steps report a new target_epoch. Snapshot N, P, and
-priorities before the batch, resolve every draw against that snapshot, and commit accepted
-priority rewrites only after the batch finishes, with the last acceptance winning for repeats.
-Install the fixed ingest, segments, and learner modules, then run the CLI.
+Honor register_delay between segment completion and ledger insert, attaching the insert-step epoch.
+When sampler_priority_lag is positive, draw from the previous step's post-writeback priorities while
+still computing importance weights from the current pre-draw snapshot. Seed inserts from the max
+over every ledger priority, resident or not. Keep faithful visibility sentinels, window formation,
+and deferred in-batch write-back. Install the fixed ingest, buffer, segments, and learner modules,
+then run the CLI.
 """
 verification_explanation = """
 The verifier recomputes ledgers from sealed inputs with a reference package that follows the
 contract. Counts match exactly and floating aggregates match at six decimals. The oracle copies
-the three fixed modules and runs the CLI. A nop agent keeps in-batch priority visibility, epoch
-retargeting, and illegal end windows, so graded bundles diverge while samples stay green.
+the four fixed modules and runs the CLI. A nop agent ignores registration delay, sampler lag, and
+ledger-wide seeding, so graded bundles diverge while samples stay green.
 """
 
 [verifier]

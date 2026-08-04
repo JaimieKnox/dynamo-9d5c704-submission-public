@@ -17,6 +17,8 @@ under `/app/runs` holds the files below. This document is normative for field me
 | `learner_steps` | number of learner steps in the run, indexed `0` to `learner_steps - 1` |
 | `target_refresh_interval` | learner steps between target parameter refreshes |
 | `visibility_lag` | non-negative integer learner steps added to every ingest entry's `step` before that entry becomes effective |
+| `register_delay` | non-negative integer learner steps a fully admitted segment must wait before it may enter the priority ledger |
+| `sampler_priority_lag` | when greater than zero, draws use the post-writeback priority vector from the previous learner step |
 | `alpha` | priority exponent |
 | `beta` | importance sampling exponent for the replay correction |
 | `priority_eps` | additive floor inside the priority expression |

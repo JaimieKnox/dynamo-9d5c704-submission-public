@@ -12,6 +12,7 @@ class Segment:
         self.start_index = None
         self.complete_index = None
         self.frozen_epoch = None
+        self.ready_step = None
 
     @property
     def residency_index(self):
@@ -55,8 +56,7 @@ def build_segments(episodes, n_step):
                 boot = rows[last]["cut_obs_id"]
             else:
                 if last + 1 >= count:
-                    boot = rows[last]["obs_id"]
-                else:
-                    boot = rows[last + 1]["obs_id"]
+                    continue
+                boot = rows[last + 1]["obs_id"]
             out.append(Segment(episode_id, t0, rows[t0:last + 1], cut, boot))
     return out

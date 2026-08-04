@@ -3,6 +3,8 @@
 import json
 import os
 
+NOTHING_VISIBLE = -1
+
 
 def load_shards(bundle_dir):
     """Every recorded transition of the bundle in ascending global admission order."""
@@ -27,7 +29,7 @@ def load_admissions(bundle_dir):
 
 def visible_seq(admissions, step, visibility_lag=0):
     """Highest watermark among ingest entries effective at this learner step."""
-    best = 0
+    best = NOTHING_VISIBLE
     found = False
     for entry in admissions:
         effective_from = entry["step"] + visibility_lag
@@ -35,4 +37,4 @@ def visible_seq(admissions, step, visibility_lag=0):
             if (not found) or entry["seq_watermark"] > best:
                 best = entry["seq_watermark"]
                 found = True
-    return best if found else 0
+    return best if found else NOTHING_VISIBLE

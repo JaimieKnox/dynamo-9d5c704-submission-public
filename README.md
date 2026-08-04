@@ -10,9 +10,8 @@ bundle under `/app/runs` produces a contract-faithful audit document at
 
 ## Approach
 
-Ingest visibility and full-registry weight scope are already faithful in the shipped
-tree. The remaining defects are compositional: in-batch priority visibility, attached
-scoring-epoch retargeting on resident segments, and illegal end-of-episode window
-segments. The oracle replaces `ingest.py`, `segments.py`, and `learner.py`, then runs
-the CLI. Sample bundles keep batch size one and a single scoring epoch so those
-interactions stay green under the buggy tree.
+Ordinary visibility, window formation, and in-batch write-back isolation are already
+faithful in the shipped tree. Graded failures come from delayed registration, lagged
+sampler priorities versus current importance weights, and resident-scoped priority
+seeding under ring wrap. The oracle replaces ingest, buffer, segments, and learner,
+then runs the CLI. Sample bundles set the new delays to zero and keep a large ring.

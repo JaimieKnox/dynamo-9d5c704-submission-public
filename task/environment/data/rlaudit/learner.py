@@ -58,6 +58,8 @@ def run_bundle(bundle_dir):
     beta = manifest["beta"]
     priority_eps = manifest["priority_eps"]
     visibility_lag = int(manifest.get("visibility_lag", 0))
+    register_delay = int(manifest.get("register_delay", 0))
+    sampler_priority_lag = int(manifest.get("sampler_priority_lag", 0))
     buffer = TransitionBuffer(manifest["buffer_capacity"])
     registry = PriorityRegistry()
     pending = rows
@@ -66,6 +68,7 @@ def run_bundle(bundle_dir):
     total_draws = 0
     total_accepted = 0
     drawn = set()
+    lagged_priorities = []
     for step in range(manifest["learner_steps"]):
         watermark = ingest.visible_seq(admissions, step, visibility_lag)
         held_back = []
@@ -76,26 +79,34 @@ def run_bundle(bundle_dir):
                 held_back.append(row)
         pending = held_back
 
-        ready = []
-        still_waiting = []
         for segment in unregistered:
-            if all("_index" in row for row in segment.rows):
+            if segment.ready_step is None and all("_index" in row for row in segment.rows):
                 segment.start_index = min(row["_index"] for row in segment.rows)
                 segment.complete_index = max(row["_index"] for row in segment.rows)
-                ready.append(segment)
-            else:
+                segment.ready_step = step
+
+        due = []
+        still_waiting = []
+        for segment in unregistered:
+            if segment.ready_step is None:
                 still_waiting.append(segment)
-        ready.sort(key=lambda seg: (seg.complete_index, seg.start_index))
+                continue
+            # Ready segments enter the ledger on the step they become complete.
+            due.append(segment)
+        due.sort(key=lambda seg: (seg.complete_index, seg.start_index))
         register_epoch = params.epoch_for_step(
             step, manifest["target_refresh_interval"], len(epochs)
         )
-        for segment in ready:
+        for segment in due:
             segment.frozen_epoch = register_epoch
-            registry.insert(segment)
+            registry.insert(segment, buffer)
         unregistered = still_waiting
 
         size = len(registry.segments)
-        total = registry.total()
+        current_priorities = list(registry.priorities)
+        current_total = sum(current_priorities)
+        draw_priorities = current_priorities
+        draw_total = current_total
         epoch = params.epoch_for_step(step, manifest["target_refresh_interval"], len(epochs))
         sampled = []
         dropped = 0
@@ -103,16 +114,15 @@ def run_bundle(bundle_dir):
         advantage_pool = []
         weights = []
         updates = {}
-        if size > 0 and total > 0.0:
+        if size > 0 and draw_total > 0.0 and current_total > 0.0:
             picks = sampler.draw(
-                manifest["sampler_seed"], step, manifest["batch_size"], registry.priorities, total
+                manifest["sampler_seed"], step, manifest["batch_size"], draw_priorities, draw_total
             )
             total_draws += len(picks)
-            live_total = total
             for position in picks:
                 segment = registry.segments[position]
-                priority = registry.priorities[position]
-                raw_weight = (size * (priority / live_total)) ** (-beta) if live_total > 0 else 0.0
+                priority = current_priorities[position]
+                raw_weight = (size * (priority / current_total)) ** (-beta)
                 if not buffer.is_resident(segment.residency_index):
                     dropped += 1
                     continue
@@ -127,9 +137,7 @@ def run_bundle(bundle_dir):
                 magnitude = 0.0
                 for value in advantages:
                     magnitude += abs(value)
-                new_priority = (magnitude / len(advantages) + priority_eps) ** alpha
-                registry.priorities[position] = new_priority
-                live_total = registry.total()
+                updates[position] = (magnitude / len(advantages) + priority_eps) ** alpha
                 total_accepted += 1
                 drawn.add(position)
 
@@ -140,9 +148,9 @@ def run_bundle(bundle_dir):
             mean_weight = 0.0
         mean_target = sum(target_pool) / len(target_pool) if target_pool else 0.0
         mean_advantage = sum(advantage_pool) / len(advantage_pool) if advantage_pool else 0.0
-        for segment in registry.segments:
-            if buffer.is_resident(segment.residency_index):
-                segment.frozen_epoch = epoch
+        for position, priority in updates.items():
+            registry.priorities[position] = priority
+        lagged_priorities = list(registry.priorities)
         step_records.append(
             {
                 "step": step,

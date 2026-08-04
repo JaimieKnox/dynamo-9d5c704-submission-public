@@ -1,8 +1,8 @@
 The replay auditor in `/app/rlaudit` reconstructs what the learner of an asynchronous
 actor-learner training run did from recorded actor shards. The package runs end to end,
-but graded ledgers diverge from the contract when phase boundaries, attached scoring
-epochs, batch snapshots, and segment formation interact. Repair the implementation so
-those interactions match the docs.
+but graded ledgers diverge when delayed registration, lagged sampler priorities, and
+ledger seeding interact across steps. Repair the implementation so those interactions
+match the docs.
 
 Each directory under `/app/runs` is one recorded run bundle. `/app/docs/bundle-format.md`,
 `/app/docs/learner-contract.md`, `/app/docs/comparisons.md`, `/app/docs/sampler.md`, and

@@ -11,8 +11,10 @@
   "n_actions": 4,
   "n_step": 4,
   "priority_eps": 0.01,
+  "register_delay": 2,
   "rho_bar": 2.0,
+  "sampler_priority_lag": 1,
   "sampler_seed": 8100021,
   "target_refresh_interval": 3,
-  "visibility_lag": 2
+  "visibility_lag": 1
 }

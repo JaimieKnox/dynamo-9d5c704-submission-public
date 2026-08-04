@@ -25,11 +25,14 @@ def load_admissions(bundle_dir):
         return json.load(handle)["admissions"]
 
 
-def visible_seq(admissions, step):
-    """Highest admission sequence number the learner can see at `step`."""
+def visible_seq(admissions, step, visibility_lag=0):
+    """Highest watermark among ingest entries effective at this learner step."""
     best = 0
+    found = False
     for entry in admissions:
-        if entry["step"] <= step and entry["seq_watermark"] > best:
-            best = entry["seq_watermark"]
-    return best
-
+        effective_from = entry["step"] + visibility_lag
+        if step >= effective_from:
+            if (not found) or entry["seq_watermark"] > best:
+                best = entry["seq_watermark"]
+                found = True
+    return best if found else 0

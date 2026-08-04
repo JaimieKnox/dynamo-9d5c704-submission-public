@@ -16,6 +16,7 @@ under `/app/runs` holds the files below. This document is normative for field me
 | `batch_size` | number of draws the learner makes per learner step |
 | `learner_steps` | number of learner steps in the run, indexed `0` to `learner_steps - 1` |
 | `target_refresh_interval` | learner steps between target parameter refreshes |
+| `visibility_lag` | non-negative integer learner steps added to every ingest entry's `step` before that entry becomes effective |
 | `alpha` | priority exponent |
 | `beta` | importance sampling exponent for the replay correction |
 | `priority_eps` | additive floor inside the priority expression |
@@ -68,8 +69,8 @@ highest `t`.
 
 ## `ingest.json`
 
-`{"admissions": [{"step": <int>, "seq_watermark": <int>}, ...]}`. Each entry records that
-from learner step `step` onward the learner could see every transition up to and including
-admission sequence number `seq_watermark`. Entries are not required to be sorted and more
-than one entry may share a step.
-
+`{"admissions": [{"step": <int>, "seq_watermark": <int>}, ...]}`. Each entry records a
+publication fact whose recorded `step` is the earliest learner step at which the fact
+is eligible to become effective after adding the bundle `visibility_lag`. Once effective,
+the learner can see every transition up to and including `seq_watermark`. Entries are not
+required to be sorted and more than one entry may share a step.

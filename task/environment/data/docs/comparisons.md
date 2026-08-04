@@ -6,9 +6,10 @@ by `learner-contract.md`.
 
 ## Admission and visibility
 
-At learner step `s`, define the active ingest entries as
+Let `L` be the bundle `visibility_lag`. At learner step `s`, define the active ingest
+entries as
 
-    A(s) = {entry | entry.step <= s}
+    A(s) = {entry | s >= entry.step + L}
 
 If `A(s)` is empty, no transition is visible. Otherwise the inclusive visibility
 watermark is
@@ -29,16 +30,26 @@ Registration occurs at the first step when all segment transitions have admissio
 indices. Ready segments are ordered by `(last_admission_index,
 first_admission_index)`.
 
+## Frozen scoring epoch
+
+When a segment is registered at learner step `r`, freeze
+
+    e_reg = min(r // target_refresh_interval, n_epochs - 1)
+
+on that segment. Every later accepted draw of that segment evaluates values and current
+policy log probabilities under epoch `e_reg`, even when the draw occurs at a later step
+whose reported `target_epoch` differs.
+
 ## Step snapshots
 
-The target epoch is
+The reported target epoch for step `s` is
 
     min(s // target_refresh_interval, n_epochs - 1)
 
-Before drawing, take `N` from the complete registry and `P` from the sum of every
+Before drawing, take `N` from the complete registry length and `P` from the sum of every
 registry priority, including nonresident entries. All draws in the step use those
 same values and the same pre-write-back priorities. Updates are applied only after
-the entire batch has been resolved; when an entry appears repeatedly, its final
+the entire batch has been resolved. When an entry appears repeatedly, its final
 accepted update in draw order wins.
 
 ## Draw acceptance and importance weights
@@ -48,9 +59,10 @@ draw with pre-step priority `p`, compute
 
     w_raw = (N * (p / P)) ** (-beta)
 
-Let `W` be the multiset of raw weights from accepted draws only. Rejected attempts
-have no raw weight in this reduction. If `W` is empty, `mean_is_weight` is `0.0`.
-Otherwise:
+where `N` is the full registry length from the pre-draw snapshot, not the count of
+currently resident segments. Let `W` be the multiset of raw weights from accepted
+draws only. Rejected attempts have no raw weight in this reduction. If `W` is empty,
+`mean_is_weight` is `0.0`. Otherwise:
 
     w_max = max(W)
     mean_is_weight = mean(w / w_max for w in W)

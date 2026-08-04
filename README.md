@@ -1,16 +1,17 @@
-# dynamo/audit-replay-learne
+# dynamo/audit-replay-learner
 
 Development notes for reviewers. The agent never sees this file.
 
 ## Overview
 
-Rebuild the missing learner step loop of a replay auditor for an asynchronous
-actor-learner reinforcement learning trainer so every recorded run bundle unde
-`/app/runs` produces a contract-faithful audit document at `/app/out/<bundle>.json`.
+Repair a near-correct asynchronous actor-learner replay auditor so every recorded run
+bundle under `/app/runs` produces a contract-faithful audit document at
+`/app/out/<bundle>.json`.
 
 ## Approach
 
-Supporting modules (buffer, ingest, segments, sampler, params, vtrace) are contract
-faithful. `learner.run_bundle` raises `NotImplementedError`. The oracle installs a
-complete orchestration and runs the CLI. Graded bundles wrap the ring early and draw
-multi-draw batches so residency, write-back timing and weight scope must compose.
+Supporting modules are largely contract faithful. The shipped learner loop is almost
+complete but disagrees with lagged visibility, registration-time epoch freeze, and
+full-registry importance weight scope. The oracle installs fixed `ingest.py` and
+`learner.py`, then runs the CLI. Graded bundles force those three interactions to matter
+while sample bundles stay green under the buggy tree.

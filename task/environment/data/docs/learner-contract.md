@@ -13,9 +13,10 @@ learner admitted transitions in stream order and in no other order.
 ## 2. Visibility
 
 The ingest log is an unordered history of cumulative publication facts. An entry becomes
-effective on its own `step`, and its watermark is inclusive. Replay combines every fact
-effective for the current step; JSON position is not chronology. The visibility reduction,
-including the no-entry identity, is specified in `comparisons.md`.
+effective only after its recorded `step` plus the bundle `visibility_lag` have both been
+reached. Its watermark is inclusive. Replay combines every fact effective for the current
+step. JSON position is not chronology. The visibility reduction, including the no-entry
+identity, is specified in `comparisons.md`.
 
 ## 3. Buffer admission and residency
 
@@ -63,15 +64,19 @@ maximum.
 Registration for a step is complete before that step draws, so a segment registered in a step
 can be drawn in that same step.
 
+At the moment of registration, freeze the target epoch then in force on the segment. That
+frozen epoch is the only epoch used later when scoring the segment. The freeze rule is
+stated in `comparisons.md`.
+
 ## 6. Target epoch
 
-The target epoch in force for learner step `s` is
+The target epoch reported for learner step `s` is
 
     e(s) = min(s // target_refresh_interval, n_epochs - 1)
 
 using integer floor division, where `n_epochs` is the number of epoch files the bundle
-ships. Every value and every current policy log probability used at step `s` is evaluated
-under the epoch `e(s)` snapshot.
+ships. The reported `target_epoch` field always uses `e(s)`. Scoring an accepted draw does
+not use `e(s)`. It uses the frozen registration epoch of the drawn segment.
 
 ## 7. Sampling
 
@@ -88,9 +93,10 @@ than once in one step, and every accepted draw counts separately.
 
 ## 8. Per segment quantities
 
-For an accepted draw, evaluate values and current-policy log probabilities under the epoch
-`e(s)` snapshot. Clip the importance ratio of each transition with the bundle's `rho_bar`
-and `c_bar` as the two separate clip bounds. Choose the bootstrap from the cut kind alone:
+For an accepted draw, evaluate values and current-policy log probabilities under the
+segment's frozen registration epoch. Clip the importance ratio of each transition with the
+bundle's `rho_bar` and `c_bar` as the two separate clip bounds. Choose the bootstrap from
+the cut kind alone:
 
 - `terminated`: there is no continuation to value
 - `truncated`: bootstrap from the observation the environment recorded at the cut
@@ -105,8 +111,9 @@ clipped ratios and the bundle's `gamma`. Do not re-derive a different recursion.
 
 The step reports a normalized importance weight for its useful samples. Registry size,
 priority mass, acceptance scope, and the normalization reduction must all refer to the same
-draw-phase snapshot. Apply the formula and pool definition in `comparisons.md`; in
-particular, do not infer the pool from the number of sampler attempts.
+draw-phase snapshot. Apply the formula and pool definition in `comparisons.md`. In
+particular, `N` is the full registry length from that snapshot, not a residency-filtered
+count, and rejected draws do not enter the normalization pool.
 
 ## 10. Priority write back
 

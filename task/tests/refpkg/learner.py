@@ -57,6 +57,7 @@ def run_bundle(bundle_dir):
     alpha = manifest["alpha"]
     beta = manifest["beta"]
     priority_eps = manifest["priority_eps"]
+    visibility_lag = int(manifest.get("visibility_lag", 0))
     buffer = TransitionBuffer(manifest["buffer_capacity"])
     registry = PriorityRegistry()
     pending = rows
@@ -66,7 +67,7 @@ def run_bundle(bundle_dir):
     total_accepted = 0
     drawn = set()
     for step in range(manifest["learner_steps"]):
-        watermark = ingest.visible_seq(admissions, step)
+        watermark = ingest.visible_seq(admissions, step, visibility_lag)
         held_back = []
         for row in pending:
             if row["seq"] <= watermark:
@@ -85,14 +86,17 @@ def run_bundle(bundle_dir):
             else:
                 still_waiting.append(segment)
         ready.sort(key=lambda seg: (seg.complete_index, seg.start_index))
+        register_epoch = params.epoch_for_step(
+            step, manifest["target_refresh_interval"], len(epochs)
+        )
         for segment in ready:
+            segment.frozen_epoch = register_epoch
             registry.insert(segment)
         unregistered = still_waiting
 
         size = len(registry.segments)
         total = registry.total()
         epoch = params.epoch_for_step(step, manifest["target_refresh_interval"], len(epochs))
-        ep_params = epochs[epoch]
         sampled = []
         dropped = 0
         target_pool = []
@@ -110,6 +114,7 @@ def run_bundle(bundle_dir):
                 if not buffer.is_resident(segment.residency_index):
                     dropped += 1
                     continue
+                ep_params = epochs[segment.frozen_epoch]
                 targets, advantages = segment_stats(
                     segment, feats, ep_params, gamma, rho_bar, c_bar
                 )
@@ -162,4 +167,3 @@ def run_bundle(bundle_dir):
             "priority_sum_final": _round6(registry.total()),
         },
     }
-

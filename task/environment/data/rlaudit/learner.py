@@ -41,6 +41,14 @@ def segment_stats(segment, feats, ep_params, gamma, rho_bar, c_bar):
     return vtrace(rewards, values, boot, rhos, cs, gamma)
 
 
+def _resident_count(registry, buffer):
+    count = 0
+    for segment in registry.segments:
+        if buffer.is_resident(segment.residency_index):
+            count += 1
+    return count
+
+
 def run_bundle(bundle_dir):
     """Audit one run bundle."""
     with open(os.path.join(bundle_dir, "manifest.json")) as handle:
@@ -57,6 +65,7 @@ def run_bundle(bundle_dir):
     alpha = manifest["alpha"]
     beta = manifest["beta"]
     priority_eps = manifest["priority_eps"]
+    visibility_lag = int(manifest.get("visibility_lag", 0))
     buffer = TransitionBuffer(manifest["buffer_capacity"])
     registry = PriorityRegistry()
     pending = rows
@@ -66,7 +75,7 @@ def run_bundle(bundle_dir):
     total_accepted = 0
     drawn = set()
     for step in range(manifest["learner_steps"]):
-        watermark = ingest.visible_seq(admissions, step)
+        watermark = ingest.visible_seq(admissions, step, visibility_lag)
         held_back = []
         for row in pending:
             if row["seq"] <= watermark:
@@ -85,7 +94,11 @@ def run_bundle(bundle_dir):
             else:
                 still_waiting.append(segment)
         ready.sort(key=lambda seg: (seg.complete_index, seg.start_index))
+        register_epoch = params.epoch_for_step(
+            step, manifest["target_refresh_interval"], len(epochs)
+        )
         for segment in ready:
+            segment.frozen_epoch = register_epoch
             registry.insert(segment)
         unregistered = still_waiting
 
@@ -98,8 +111,10 @@ def run_bundle(bundle_dir):
         target_pool = []
         advantage_pool = []
         weights = []
-        attempted_weights = []
         updates = {}
+        weight_n = _resident_count(registry, buffer)
+        if weight_n <= 0:
+            weight_n = size
         if size > 0 and total > 0.0:
             picks = sampler.draw(
                 manifest["sampler_seed"], step, manifest["batch_size"], registry.priorities, total
@@ -107,8 +122,7 @@ def run_bundle(bundle_dir):
             total_draws += len(picks)
             for position in picks:
                 segment = registry.segments[position]
-                raw_weight = (size * (registry.priorities[position] / total)) ** (-beta)
-                attempted_weights.append(raw_weight)
+                raw_weight = (weight_n * (registry.priorities[position] / total)) ** (-beta)
                 if not buffer.is_resident(segment.residency_index):
                     dropped += 1
                     continue
@@ -127,7 +141,7 @@ def run_bundle(bundle_dir):
                 drawn.add(position)
 
         if weights:
-            top = max(attempted_weights)
+            top = max(weights)
             mean_weight = sum(w / top for w in weights) / len(weights)
         else:
             mean_weight = 0.0
@@ -164,4 +178,3 @@ def run_bundle(bundle_dir):
             "priority_sum_final": _round6(registry.total()),
         },
     }
-

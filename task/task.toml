@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "dynamo/audit-replay-learner"
-description = "Correct phase-boundary behavior in an executable replay learner that emits inaccurate audit ledgers"
+description = "Repair near-correct async replay learner whose lagged visibility, frozen scoring epochs, and IS weight scope silently disagree with the contract"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -23,39 +23,34 @@ model_tested = "Opus-4.8"
 agent_tested = "Terminus-2"
 task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
-expert_time_estimate_hours = 8
+expert_time_estimate_hours = 10
 difficulty_explanation = """
-Nothing is absent and ordinary execution succeeds. The three sample recordings also remain
-green because each has one publication path and avoids the rejected-draw normalization trap.
-Graded cases instead combine unordered, overlapping publication facts with constrained rings
-and mixed accepted/rejected batches. The learner must compose a cumulative watermark reduction
-with the accepted-only importance-weight pool; treating file order as chronology or attempted
-draws as normalization samples silently changes later state and aggregates.
+The auditor already runs and most helpers look contract-faithful. Three interacting defects remain
+silent on the sample bundles: ingest facts ignore visibility_lag, V-trace scoring uses the draw
+step epoch instead of the epoch frozen at segment registration, and importance weights substitute
+a resident-only N for the full registry length. Sample bundles use lag zero, a single scoring
+epoch, and a large ring, so those disagreements never surface there.
 
-The supplied recordings are synthetic fixtures generated to isolate these boundary cases.
-An RL-infrastructure engineer would perform this reconstruction when validating reproducibility
-or diagnosing silent learner drift in an asynchronous training pipeline.
-
-Solving the task requires reconciling the main contract with the exact reductions in its
-normative comparisons appendix, then tracing admission, registration, residency, sampling,
-V-trace scoring, accepted-only normalization and deferred write-back as one transaction. The
-work is both implementation and debugging: helpers and most of the loop are already correct,
-sample ledgers stay green, and no expected output is shipped.
+Graded bundles combine deferred ingest effectiveness, early target refreshes across multiple
+epoch snapshots, tight rings with multi-draw batches, and unordered publication logs. Local
+patches that only restore max-watermark ingest or accepted-only weight pools are insufficient.
+The agent must compose lagged visibility, registration-time epoch freeze, residency, deferred
+priority write-back, and full-registry IS normalization as one long-horizon state machine.
 """
 solution_explanation = """
-Reduce all in-force ingest entries to their greatest watermark without using JSON order.
-During each batch, compute raw importance weights only for resident accepted draws and use
-that accepted multiset for both `w_max` and the normalized mean. Preserve the already-correct
-earliest-index residency, pre-draw priority snapshot, deferred write-back, and epoch floor
-division behavior.
+Keep the shipped loop structure. Honor visibility_lag when reducing ingest watermarks. Freeze
+the target epoch onto each segment at registration and score every later accepted draw under that
+frozen snapshot while still reporting e(s) as target_epoch. Snapshot full registry N and P before
+drawing, normalize IS weights over accepted draws only with that full N, and apply priority
+write-backs only after the batch resolves. Replace ingest.py and learner.py with the fixed copies,
+then run the CLI over /app/runs into /app/out.
 """
 verification_explanation = """
 The verifier recomputes every ledger from verifier-owned bundle inputs with a reference package
-built from the same contract-correct helpers and the corrected learner. Structural fields and
-counts match exactly; floating aggregates match at six-decimal precision. The oracle copies
-the corrected ingest and learner modules and runs the normal CLI, while a nop agent retains
-the plausible order-sensitive visibility and attempted-weight normalization and diverges on
-every graded bundle.
+built from the corrected ingest and learner. Structural fields and counts match exactly. Floating
+aggregates match at six-decimal precision. The oracle copies the fixed modules and runs the CLI.
+A nop agent keeps lagged-visibility ignore, draw-step scoring, and resident-only N, so every
+graded bundle diverges while samples stay green.
 """
 [verifier]
 timeout_sec = 900.0

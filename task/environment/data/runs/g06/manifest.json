@@ -1,8 +1,8 @@
 {
   "alpha": 0.6,
-  "batch_size": 12,
+  "batch_size": 8,
   "beta": 0.4,
-  "buffer_capacity": 18,
+  "buffer_capacity": 16,
   "bundle": "g06",
   "c_bar": 1.2,
   "feature_dim": 8,
@@ -13,5 +13,6 @@
   "priority_eps": 0.01,
   "rho_bar": 2.0,
   "sampler_seed": 8100026,
-  "target_refresh_interval": 4
+  "target_refresh_interval": 3,
+  "visibility_lag": 1
 }

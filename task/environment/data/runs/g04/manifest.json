@@ -13,5 +13,6 @@
   "priority_eps": 0.01,
   "rho_bar": 2.0,
   "sampler_seed": 8100024,
-  "target_refresh_interval": 3
+  "target_refresh_interval": 3,
+  "visibility_lag": 1
 }

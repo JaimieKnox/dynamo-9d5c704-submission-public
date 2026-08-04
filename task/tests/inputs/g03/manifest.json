@@ -1,6 +1,6 @@
 {
   "alpha": 0.6,
-  "batch_size": 10,
+  "batch_size": 7,
   "beta": 0.4,
   "buffer_capacity": 15,
   "bundle": "g03",

@@ -10,8 +10,9 @@ bundle under `/app/runs` produces a contract-faithful audit document at
 
 ## Approach
 
-Supporting modules are largely contract faithful. The shipped learner loop is almost
-complete but disagrees with lagged visibility, registration-time epoch freeze, and
-full-registry importance weight scope. The oracle installs fixed `ingest.py` and
-`learner.py`, then runs the CLI. Graded bundles force those three interactions to matter
-while sample bundles stay green under the buggy tree.
+Ingest visibility and full-registry weight scope are already faithful in the shipped
+tree. The remaining defects are compositional: in-batch priority visibility, attached
+scoring-epoch retargeting on resident segments, and illegal end-of-episode window
+segments. The oracle replaces `ingest.py`, `segments.py`, and `learner.py`, then runs
+the CLI. Sample bundles keep batch size one and a single scoring epoch so those
+interactions stay green under the buggy tree.

@@ -127,7 +127,8 @@ Accepted draws produce candidate ledger rewrites of
     (mean of the absolute values of its advantages + priority_eps) ** alpha
 
 using the bundle's `alpha` and `priority_eps`. Rejected draws do not produce candidates.
-Batch snapshot and repeated-entry commit ordering follow `comparisons.md`.
+The pre-draw snapshot, the invisibility of in-batch rewrites to later draws, and
+repeated-entry commit ordering follow `comparisons.md`.
 
 ## 11. Per step aggregates
 

@@ -52,10 +52,13 @@ The reported target epoch for step `s` is
     min(s // target_refresh_interval, n_epochs - 1)
 
 Before drawing, take `N` from the complete registry length and `P` from the sum of every
-registry priority, including nonresident entries. All draws in the step use those
-same values and the same pre-write-back priorities. Updates are applied only after
-the entire batch has been resolved. When an entry appears repeatedly, its final
-accepted update in draw order wins.
+registry priority, including nonresident entries and including every entry the same step
+just registered. Both come from the state that stands once this step's admission and
+registration phases are finished. All draws in the step use those same values and the same
+pre-write-back priorities. Updates are applied only after the entire batch has been
+resolved, so a draw never sees a priority another draw of the same step wrote. Every
+accepted draw of one entry within a step yields the same candidate for that entry, so the
+entry ends the step holding that value.
 
 ## Draw acceptance and importance weights
 

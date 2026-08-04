@@ -1,4 +1,9 @@
-"""Learner replay orchestration."""
+"""Learner replay orchestration.
+
+The replay engine walks each learner step once. Admission, segment registration and
+the draw batch share the incremental state maintained across the loop rather than
+recomputing it, so a long run stays linear in the number of transitions.
+"""
 
 import json
 import math
@@ -41,10 +46,23 @@ def segment_stats(segment, feats, ep_params, gamma, rho_bar, c_bar):
     return vtrace(rewards, values, boot, rhos, cs, gamma)
 
 
-def _retarget_drawable(registry, buffer, epoch):
+def _slot_floor(buffer):
+    """Oldest admission index the ring still owns."""
+    return buffer.write_index - buffer.capacity
+
+
+def _index_by_last_transition(all_segments):
+    """Segments keyed by the stream position that completes them."""
+    table = {}
+    for segment in all_segments:
+        table.setdefault(segment.rows[-1]["seq"], []).append(segment)
+    return table
+
+
+def _retarget_drawable(registry, floor, epoch):
     """Move ledger entries that are still drawable onto the newest target snapshot."""
     for segment in registry.segments:
-        if buffer.is_resident(segment.residency_index):
+        if segment.residency_index >= floor:
             segment.frozen_epoch = epoch
 
 
@@ -58,6 +76,7 @@ def run_bundle(bundle_dir):
     admissions = ingest.load_admissions(bundle_dir)
     episodes = segmod.group_episodes(rows)
     all_segments = segmod.build_segments(episodes, manifest["n_step"])
+    completes = _index_by_last_transition(all_segments)
     gamma = manifest["gamma"]
     rho_bar = manifest["rho_bar"]
     c_bar = manifest["c_bar"]
@@ -70,61 +89,55 @@ def run_bundle(bundle_dir):
     )
     buffer = TransitionBuffer(manifest["buffer_capacity"])
     registry = PriorityRegistry()
-    pending = rows
-    unregistered = all_segments
     step_records = []
+    stream = 0
+    draw_mass = 0.0
+    admitted_mass = 0.0
     total_draws = 0
     total_accepted = 0
     drawn = set()
     live_epoch = None
     for step in range(manifest["learner_steps"]):
-        watermark = visibility.advance(step)
-        held_back = []
-        for row in pending:
-            if row["seq"] <= watermark:
-                buffer.enqueue(row)
-            else:
-                held_back.append(row)
-        pending = held_back
-
-        ready = []
-        still_waiting = []
-        for segment in unregistered:
-            if all("_index" in row for row in segment.rows):
-                segment.start_index = segment.rows[0]["_index"]
-                segment.complete_index = max(row["_index"] for row in segment.rows)
-                ready.append(segment)
-            else:
-                still_waiting.append(segment)
-        ready.sort(key=lambda seg: (seg.complete_index, seg.start_index))
+        floor = _slot_floor(buffer)
         epoch = params.epoch_for_step(step, interval, len(epochs))
-        for segment in ready:
-            segment.frozen_epoch = epoch
-            registry.insert(segment)
-        unregistered = still_waiting
+        watermark = visibility.advance(step)
+        while stream < len(rows) and rows[stream]["seq"] <= watermark:
+            row = rows[stream]
+            buffer.enqueue(row)
+            stream += 1
+            for segment in completes.pop(row["seq"], ()):
+                segment.start_index = segment.rows[0]["_index"]
+                segment.complete_index = row["_index"]
+                segment.frozen_epoch = epoch
+                position = registry.insert(segment)
+                admitted_mass += registry.priorities[position]
 
         if epoch != live_epoch:
-            _retarget_drawable(registry, buffer, epoch)
+            _retarget_drawable(registry, floor, epoch)
             live_epoch = epoch
 
         size = len(registry.segments)
-        snapshot = list(registry.priorities)
-        total = sum(snapshot)
         sampled = []
         dropped = 0
         target_pool = []
         advantage_pool = []
         weights = []
         updates = {}
-        if size > 0 and total > 0.0:
+        if size > 0 and draw_mass > 0.0:
             picks = sampler.draw(
-                manifest["sampler_seed"], step, manifest["batch_size"], snapshot, total
+                manifest["sampler_seed"],
+                step,
+                manifest["batch_size"],
+                registry.priorities,
+                draw_mass,
             )
             total_draws += len(picks)
             for position in picks:
                 segment = registry.segments[position]
-                raw_weight = (size * (snapshot[position] / total)) ** (-beta)
-                if not buffer.is_resident(segment.residency_index):
+                raw_weight = (
+                    size * (registry.priorities[position] / draw_mass)
+                ) ** (-beta)
+                if segment.residency_index < floor:
                     dropped += 1
                     continue
                 ep_params = epochs[segment.frozen_epoch]
@@ -149,7 +162,9 @@ def run_bundle(bundle_dir):
         mean_target = sum(target_pool) / len(target_pool) if target_pool else 0.0
         mean_advantage = sum(advantage_pool) / len(advantage_pool) if advantage_pool else 0.0
         for position, priority in updates.items():
+            admitted_mass += priority - registry.priorities[position]
             registry.reweight(position, priority)
+        draw_mass = admitted_mass
         step_records.append(
             {
                 "step": step,

@@ -15,7 +15,7 @@ class Segment:
     @property
     def residency_index(self):
         """Admission index that decides whether the segment is still drawable."""
-        return self.complete_index
+        return self.start_index
 
 
 def group_episodes(rows):

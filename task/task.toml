@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "dynamo/audit-replay-learner"
-description = "Repair a near-correct async replay auditor whose ingest cursor, residency key and epoch retargeting pass silently disagree with the contract"
+description = "Repair an async replay auditor whose fused single-pass learner loop and forward ingest cursor silently disagree with the phase order the contract requires"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -25,61 +25,62 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 12
 difficulty_explanation = """
-The auditor runs end to end and no module carries an unused parameter, an unread field, or a
-helper whose name gives a wrong rule away, so diffing the docs against the obvious files
-localizes nothing. Three defects sit in three modules that each read as ordinary infrastructure.
-Ingest consumes the publication log through one forward cursor, which stalls silently whenever a
-fact recorded for an earlier step sits later in the file. Segment residency keys on the admission
-index of a segment's newest transition rather than its oldest, so evicted segments stay drawable.
-The learner freezes the target epoch at registration and scores from that frozen field, both
-correct, while a separate maintenance pass re-points every still drawable ledger entry at the
-newest epoch on each refresh boundary.
+The docs specify the learner step as three ordered phases: admit everything visible, register
+every segment those admissions complete, then draw against the state both phases leave behind.
+The shipped learner fuses all three into one pass over the transition stream for linear cost, and
+that fusion is where the defects live. Because no module carries an unused parameter, an unread
+field, or a helper whose name gives the wrong rule away, comparing the docs against the shipped
+files line by line localizes nothing. An agent has to reconstruct the phase order the contract
+implies and then work out which quantities the fused pass reads a phase too early.
 
-The three sample recordings publish one in-order fact at zero lag, hold a ring larger than the
-whole run, and never leave their single epoch, so all three reconstruct correctly under the
-shipped tree and no local experiment separates right from wrong. Graded recordings combine
-out-of-order publication histories, tight rings with multi-draw batches, and repeated epoch
-refreshes. Every proper subset of the three repairs still diverges on all six graded recordings,
-so there is no partial credit, and the shipped code is already contract-correct at three further
+Four defects follow from that. Ingest consumes the publication log through one forward cursor,
+which stalls silently whenever a fact recorded for an earlier step sits later in the file. The
+learner captures the residency floor on entry to the step, before the step's own admissions
+advance the ring, so segments the ring has already overwritten stay drawable. The learner carries
+the sampling mass as a running total folded in after the draws, so each step divides by the mass
+as it stood before that step's registrations while the registry size it pairs that mass with is
+current. Finally the learner freezes the target epoch at registration and scores from the frozen
+field, both correct, while a separate maintenance pass re-points every still drawable ledger
+entry at the newest epoch on each refresh boundary.
+
+Nothing in the environment reveals which reconstruction is right, because no bundle ships an
+expected document and the shipped auditor raises nothing on any of them. Graded recordings
+combine out-of-order publication histories, tight rings with multi-draw batches, and repeated
+epoch refreshes, so every proper subset of the two module repairs still diverges on all six of
+them and there is no partial credit. The shipped code is also already contract-correct at four
 points that invite an over-eager edit: the inclusive residency boundary, the ledger-wide seeding
-maximum, and the full registry size inside the importance weight.
+maximum, the full registry size inside the importance weight, and the deferred write back that
+keeps a batch reading pre-batch priorities. Each of those four has a graded recording that
+punishes changing it.
 
 Every run bundle is a synthetic recording generated for this task, modeled on asynchronous
 actor-learner training of the IMPALA and V-trace family. Visibility lag, epoch refresh timing,
 ring capacity and batch shape were chosen to isolate boundary combinations that a production
-pipeline reaches only occasionally, which is what makes the data realistically challenging: the
-recordings carry every fact an auditor needs, and nothing in the environment reveals which
-reconstruction is correct. RL infrastructure engineers do exactly this reconstruction when they
-validate replay and audit tooling against a learner contract, rebuild a training run for a
-reproducibility postmortem, or diagnose silent learner drift after a sampler or scoring change.
-
-Every run bundle is a synthetic recording generated for this task, modeled on asynchronous
-actor-learner training of the IMPALA and V-trace family. Visibility lag, epoch refresh timing,
-ring capacity and batch shape were chosen to isolate boundary combinations that a production
-pipeline reaches only occasionally, which is what makes the data realistically challenging: the
-recordings carry every fact an auditor needs, and nothing in the environment reveals which
-reconstruction is correct. RL infrastructure engineers do exactly this reconstruction when they
-validate replay and audit tooling against a learner contract, rebuild a training run for a
-reproducibility postmortem, or diagnose silent learner drift after a sampler or scoring change.
+pipeline reaches only occasionally, which is what makes the data realistically challenging. RL
+infrastructure engineers do exactly this reconstruction when they validate replay and audit
+tooling against a learner contract, rebuild a training run for a reproducibility postmortem, or
+diagnose silent learner drift after a sampler or scoring change.
 """
 solution_explanation = """
-Keep the shipped loop structure and every module that already matches the contract. In ingest,
-reduce over all publication entries effective at the current step instead of consuming the log
-through a forward cursor that treats file position as chronology. In segments, key residency on
-the admission index of the segment's earliest transition. In the learner, drop the maintenance
-pass that re-points drawable ledger entries at the newest epoch, so the epoch frozen at
-registration is the only epoch that ever scores a segment. Leave the inclusive residency
-boundary, the ledger-wide seeding maximum and the full registry size in the importance weight
-alone. Copy the three fixed modules over /app/rlaudit, then run the CLI over /app/runs into
-/app/out.
+Restore the contract's phase order in the learner and leave every module that already matches the
+contract alone. In ingest, reduce over all publication entries effective at the current step
+instead of consuming the log through a forward cursor that treats file position as chronology. In
+the learner, run admission to completion first, register the segments those admissions complete
+in ascending completion then start order, and only then take the registry size and the priority
+sum that the draws divide by, so both reflect the step's own registrations. Settle residency
+against the ring as it stands after those admissions rather than against a floor captured on
+entry. Drop the maintenance pass that re-points drawable ledger entries at the newest epoch, so
+the epoch frozen at registration is the only epoch that ever scores a segment. Leave the
+inclusive residency boundary, the ledger-wide seeding maximum and the full registry size in the
+importance weight, and the deferred write back as shipped. Copy the two fixed modules over
+/app/rlaudit, then run the CLI over /app/runs into /app/out.
 """
 verification_explanation = """
 The verifier recomputes every ledger from verifier-owned copies of the recordings with a
-reference package built from the corrected ingest, segments and learner. Structural fields and
-counts match exactly. Floating aggregates match at six-decimal precision. The oracle copies the
-three fixed modules and runs the CLI. A nop agent keeps the stalling ingest cursor, the
-newest-transition residency key and the epoch retargeting pass, so all six graded recordings
-diverge while all three samples stay green.
+reference package built from the corrected ingest and learner. Structural fields and counts match
+exactly. Floating aggregates match at six-decimal precision. The oracle copies the two fixed
+modules and runs the CLI. A nop agent keeps the stalling ingest cursor and the fused learner
+pass, so all nine recordings diverge from the reference.
 """
 [verifier]
 timeout_sec = 900.0

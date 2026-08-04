@@ -85,9 +85,11 @@ accepted draw is the frozen registration epoch of the drawn segment.
 ## 7. Sampling
 
 Let `N` be the number of registered segments and `P` the sum of the priorities of all `N`
-ledger entries, resident or not. When `N` is `0` or `P` is not greater than `0.0`, the step
-makes no draws. Otherwise the step makes exactly `batch_size` draws using the sampler in
-`/app/docs/sampler.md`.
+ledger entries, resident or not. Both are read from the ledger as it stands once this step's
+registration phase is complete, so both account for every entry this step just registered.
+Every seed and every write back is strictly positive, so `P` is positive whenever `N` is.
+When `N` is `0` the step makes no draws. Otherwise the step makes exactly `batch_size` draws
+using the sampler in `/app/docs/sampler.md`.
 
 Each draw is resolved in draw order. A draw landing on a ledger entry whose segment is not
 resident at this step is rejected. Rejected draws are counted, are not replaced by another

@@ -1,6 +1,6 @@
 """Black-box acceptance checks for the ledgers left in the output mount.
 
-Answers come from replaying the sealed fixture copies through ``reference``.  The candidate
+Expectations are sealed by ``derive_expectations`` before this module loads. The candidate
 package therefore contributes observations only, never the values used as the oracle.
 """
 
@@ -9,9 +9,8 @@ import os
 
 import pytest
 
-import reference
-
 BASE = os.path.dirname(os.path.abspath(__file__))
+SEAL_PATH = os.path.join(BASE, "sealed_expectations.json")
 SEALED_INPUTS = os.path.join(BASE, "inputs")
 OUTPUT_MOUNT = "/app/out"
 RUN_MOUNT = "/app/runs"
@@ -54,6 +53,11 @@ def _looks_integral(value):
     return float(value).is_integer()
 
 
+assert os.path.isfile(SEAL_PATH), "sealed expectations missing; run derive_expectations first"
+with open(SEAL_PATH) as handle:
+    SEALED = json.load(handle)
+os.remove(SEAL_PATH)
+
 _outputs = {}
 
 
@@ -66,12 +70,11 @@ def _emitted(name):
 
 
 class ReplayCase:
-    """Lazy access to one candidate ledger and its independently reconstructed peer."""
+    """Lazy access to one candidate ledger and its sealed peer."""
 
     def __init__(self, name):
         self.name = name
         self.input_dir = os.path.join(SEALED_INPUTS, name)
-        self._model = None
 
     @property
     def output(self):
@@ -79,9 +82,8 @@ class ReplayCase:
 
     @property
     def model(self):
-        if self._model is None:
-            self._model = reference.expected(self.input_dir)
-        return self._model
+        assert self.name in SEALED, "sealed expectations missing bundle %s" % self.name
+        return SEALED[self.name]
 
     @property
     def declared_steps(self):
@@ -98,7 +100,7 @@ CASES = [
 
 
 def test_measurements_reproduce_replayed_values():
-    """Check every floating row field against a fresh replay, not a stored answer."""
+    """Check every floating row field against a sealed replay, not a stored answer file in /app."""
     for case in CASES:
         for produced, baseline in case.row_pairs():
             for key in ROW_DECIMALS:

@@ -84,6 +84,9 @@ def run_bundle(bundle_dir):
                 segment.start_index = min(row["_index"] for row in segment.rows)
                 segment.complete_index = max(row["_index"] for row in segment.rows)
                 segment.ready_step = step
+                segment.frozen_epoch = params.epoch_for_step(
+                    step, manifest["target_refresh_interval"], len(epochs)
+                )
 
         due = []
         still_waiting = []
@@ -95,12 +98,8 @@ def run_bundle(bundle_dir):
                 due.append(segment)
             else:
                 still_waiting.append(segment)
-        due.sort(key=lambda seg: (seg.start_index, seg.complete_index))
-        register_epoch = params.epoch_for_step(
-            step, manifest["target_refresh_interval"], len(epochs)
-        )
+        due.sort(key=lambda seg: (seg.complete_index, seg.start_index))
         for segment in due:
-            segment.frozen_epoch = register_epoch
             registry.insert(segment)
         unregistered = still_waiting
 
@@ -128,14 +127,20 @@ def run_bundle(bundle_dir):
                 manifest["sampler_seed"], step, manifest["batch_size"], draw_priorities, draw_total
             )
             total_draws += len(picks)
+            weight_total = 0.0
+            for segment_i, priority_i in zip(registry.segments, current_priorities):
+                if buffer.is_resident(segment_i.residency_index):
+                    weight_total += priority_i
+            if weight_total <= 0.0:
+                weight_total = current_total
             for position in picks:
                 segment = registry.segments[position]
                 priority = current_priorities[position]
-                raw_weight = (size * (priority / current_total)) ** (-beta)
+                raw_weight = (size * (priority / weight_total)) ** (-beta)
                 if not buffer.is_resident(segment.residency_index):
                     dropped += 1
                     continue
-                ep_params = epochs[epoch]
+                ep_params = epochs[segment.frozen_epoch]
                 targets, advantages = segment_stats(
                     segment, feats, ep_params, gamma, rho_bar, c_bar
                 )
@@ -146,7 +151,9 @@ def run_bundle(bundle_dir):
                 magnitude = 0.0
                 for value in advantages:
                     magnitude += abs(value)
-                updates[position] = (magnitude / len(advantages) + priority_eps) ** alpha
+                candidate = (magnitude / len(advantages) + priority_eps) ** alpha
+                if position not in updates:
+                    updates[position] = candidate
                 total_accepted += 1
                 drawn.add(position)
 

@@ -10,7 +10,9 @@ bundle under `/app/runs` produces a contract-faithful audit document at
 
 ## Approach
 
-Visibility lag, truncation cut observation, and deferred write-back are already
-faithful. Graded failures come from completing-transition residency, completion-step
-epoch attachment under register_delay, and resident-only importance-weight mass. The
-oracle replaces ingest, buffer, segments, and learner, then runs the CLI.
+Ring boundary inclusivity, truncated cut observations, pre-draw importance mass, and
+deferred write-back are already contract-faithful. Graded failures come from applying
+publication lag with the wrong sign, scoring under the live step epoch, and sorting
+same-step registration by first-then-final admission. The oracle replaces ingest,
+buffer, segments, and learner, then runs the CLI. Sample bundles null publication lag
+and freeze a single target epoch so those interactions stay green there.

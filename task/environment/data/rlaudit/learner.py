@@ -95,7 +95,7 @@ def run_bundle(bundle_dir):
                 due.append(segment)
             else:
                 still_waiting.append(segment)
-        due.sort(key=lambda seg: (seg.complete_index, seg.start_index))
+        due.sort(key=lambda seg: (seg.start_index, seg.complete_index))
         register_epoch = params.epoch_for_step(
             step, manifest["target_refresh_interval"], len(epochs)
         )
@@ -135,7 +135,7 @@ def run_bundle(bundle_dir):
                 if not buffer.is_resident(segment.residency_index):
                     dropped += 1
                     continue
-                ep_params = epochs[segment.frozen_epoch]
+                ep_params = epochs[epoch]
                 targets, advantages = segment_stats(
                     segment, feats, ep_params, gamma, rho_bar, c_bar
                 )

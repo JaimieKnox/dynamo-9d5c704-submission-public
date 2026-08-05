@@ -13,10 +13,10 @@ learner admitted transitions in stream order and in no other order.
 ## 2. Visibility
 
 The ingest log is an unordered history of cumulative publication facts. An entry becomes
-effective only after its recorded `step` plus the bundle `visibility_lag` have both been
-reached. Its watermark is inclusive. Replay combines every fact effective for the current
-step. JSON position is not chronology. The empty-visibility sentinel and the watermark
-reduction are specified in `comparisons.md`.
+eligible only after the learner has waited the bundle's configured publication lag past
+that entry's recorded step. Its watermark is inclusive. Replay combines every fact
+eligible for the current step. JSON position is not chronology. The empty-visibility
+sentinel and the watermark reduction are specified in `comparisons.md`.
 
 ## 3. Buffer admission and residency
 
@@ -61,8 +61,8 @@ the seed is `1.0`. A segment registered earlier in the same step is eligible to 
 maximum.
 
 Registration for a step is complete before that step draws, so a segment registered in a step
-can be drawn in that same step. The scoring epoch attached to the segment is `e(s)` for the
-insert step.
+can be drawn in that same step. The scoring epoch stored on the ledger entry is `e(s)` for
+the insert step.
 
 ## 6. Target epoch
 
@@ -72,12 +72,12 @@ The target epoch reported for learner step `s` is
 
 using integer floor division, where `n_epochs` is the number of epoch files the bundle
 ships. The reported `target_epoch` field always uses `e(s)`. Scoring an accepted draw uses
-the epoch carried by that segment's ledger entry.
+the epoch stored on that segment's ledger entry.
 
 ## 7. Sampling
 
-Let `N` be the number of currently resident registered segments. Let `P` be the sum of
-the current pre-draw priorities of those resident entries only. Draws are taken from the sampler
+Let `N` be the number of registered segments. Let `P` be the sum of the current pre-draw
+priorities of all `N` ledger entries, resident or not. Draws are taken from the sampler
 priority vector defined by `sampler_priority_lag` in `comparisons.md`. When that vector's
 mass is not greater than `0.0`, or when `N` is `0`, or when current `P` is not greater than
 `0.0`, the step makes no draws. Otherwise the step makes exactly `batch_size` draws using
@@ -85,17 +85,18 @@ the sampler in `/app/docs/sampler.md` on the sampler priority vector.
 
 Each draw is resolved in draw order against residency under the current ring. Rejected
 draws are counted, are not replaced, contribute nothing to aggregates, and leave priorities
-untouched. Accepted draws may repeat an entry. Importance weights use the resident-only length and mass captured at the start of the draw phase.md`.
+untouched. Accepted draws may repeat an entry. Importance weights use the captured `N` and
+`P` from before the batch, as fixed in `comparisons.md`.
 
 ## 8. Per segment quantities
 
-For an accepted draw, evaluate values and current-policy log probabilities under the
-epoch carried by the segment's ledger entry. Clip the importance ratio of each transition
-with the bundle's `rho_bar` and `c_bar` as the two separate clip bounds. Choose the
-bootstrap from the cut kind alone:
+For an accepted draw, evaluate values and current-policy log probabilities under the epoch
+stored on the segment's ledger entry. Clip the importance ratio of each transition with the
+bundle's `rho_bar` and `c_bar` as the two separate clip bounds. Choose the bootstrap from
+the cut kind alone:
 
 - `terminated`: there is no continuation to value
-- `truncated`: bootstrap from the observation recorded with the truncation cut
+- `truncated`: bootstrap from the observation the environment recorded at the cut
 - `window`: bootstrap from the observation of the next transition in that episode, whether
   or not that transition is currently admitted or resident
 

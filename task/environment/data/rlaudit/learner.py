@@ -83,7 +83,7 @@ def run_bundle(bundle_dir):
         )
         for segment in unregistered:
             if segment.ready_step is None and all("_index" in row for row in segment.rows):
-                segment.mark_complete(step, epoch=live_epoch)
+                segment.mark_complete(step)
 
         due = []
         still_waiting = []
@@ -91,11 +91,12 @@ def run_bundle(bundle_dir):
             if segment.ready_step is None:
                 still_waiting.append(segment)
                 continue
-            if step >= segment.ready_step + register_delay:
+            delay_needed = register_delay + (1 if register_delay > 0 else 0)
+            if step >= segment.ready_step + delay_needed:
                 due.append(segment)
             else:
                 still_waiting.append(segment)
-        due.sort(key=lambda seg: (seg.start_index, seg.complete_index))
+        due.sort(key=lambda seg: (seg.complete_index, seg.start_index))
         register_epoch = params.epoch_for_step(
             step, manifest["target_refresh_interval"], len(epochs)
         )
@@ -127,9 +128,10 @@ def run_bundle(bundle_dir):
             total_draws += len(picks)
             for position in picks:
                 segment = registry.segments[position]
-                priority = draw_priorities[position]
+                priority = current_priorities[position]
                 raw_weight = (size * (priority / current_total)) ** (-beta)
                 if not buffer.is_resident(segment.residency_index):
+                    weights.append(raw_weight)
                     dropped += 1
                     continue
                 ep_params = epochs[segment.frozen_epoch]
@@ -156,8 +158,8 @@ def run_bundle(bundle_dir):
             mean_weight = 0.0
         mean_target = sum(target_pool) / len(target_pool) if target_pool else 0.0
         mean_advantage = sum(advantage_pool) / len(advantage_pool) if advantage_pool else 0.0
-        registry.snapshot_lag_before_commit()
         registry.commit_accepts(ordered_updates)
+        registry.snapshot_lag_after_commit()
         step_records.append(
             {
                 "step": step,

@@ -13,20 +13,17 @@ class Segment:
         self.complete_index = None
         self.frozen_epoch = None
         self.ready_step = None
-        self._completion_epoch = None
 
     @property
     def residency_index(self):
         """Admission index that decides whether the segment is still drawable."""
-        return self.complete_index
+        return self.start_index
 
     def mark_complete(self, step, epoch=None):
-        """Record completion indices and remember the epoch observed at completion."""
+        """Record completion indices. Scoring epoch is stamped at ledger insert."""
         self.start_index = min(row["_index"] for row in self.rows)
         self.complete_index = max(row["_index"] for row in self.rows)
         self.ready_step = step
-        if epoch is not None:
-            self._completion_epoch = epoch
 
     def stamp_epoch(self, epoch):
         self.frozen_epoch = epoch

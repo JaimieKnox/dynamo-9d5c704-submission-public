@@ -49,9 +49,10 @@ registered. Segment transitions are always the episode's own transitions at thos
 A segment becomes complete at the first learner step by whose admission phase every one of
 its transitions has been admitted. It becomes registrable only after the bundle
 `register_delay` additional learner steps have elapsed from that completion step, as
-detailed in `comparisons.md`. Same-step registration order prefers the segment whose last covered transition was
-admitted later, and breaks remaining ties by the admission of its first covered
-transition.
+detailed in `comparisons.md`. Same-step registration order is ascending by the latest covered admission index, then
+by the earliest covered admission index. Among segments that become eligible together,
+the segment with the smaller latest-admission index is registered earlier, so later
+same-step registrations can still see its seed contribution.
 
 The learner's priority ledger is append only. A registered segment keeps its ledger
 position for the rest of the run and is never removed, even after its transitions leave the
@@ -110,7 +111,8 @@ clipped ratios and the bundle's `gamma`. Do not re-derive a different recursion.
 ## 9. Importance sampling weight
 
 The step reports a normalized importance weight for its useful samples. Apply the formula
-and pool definition in `comparisons.md`. Rejected draws do not enter the normalization pool.
+and pool definition in `comparisons.md`. Rejected draws do not enter the importance-weight normalization pool and must not
+contribute raw weights to `max(W)` or the average.
 
 ## 10. Priority write back
 

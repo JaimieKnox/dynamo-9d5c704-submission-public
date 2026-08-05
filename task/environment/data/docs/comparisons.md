@@ -24,7 +24,7 @@ the buffer for the segment's covered transitions. A segment becomes complete on 
 phase has given every one of its transitions an admission index. Let `R` be the bundle
 `register_delay`. The segment may enter the priority ledger only on a step `s` satisfying
 `s >= complete_step + R`. Among segments that become eligible on the same step, register in ascending order of the
-latest admission index, breaking ties by ascending earliest admission index.
+latest admission index, breaking ties by ascending earliest admission index. The smaller latest-admission index registers first; descending latest-admission order is wrong.
 
 The scoring epoch attached to a segment is `e(s)` for the learner step on which that
 segment enters the priority ledger under the delay rule above.

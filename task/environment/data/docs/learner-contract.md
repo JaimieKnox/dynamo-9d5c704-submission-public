@@ -54,6 +54,11 @@ by the earliest covered admission index. Among segments that become eligible tog
 the segment with the smaller latest-admission index is registered earlier, so later
 same-step registrations can still see its seed contribution.
 
+Example. Two segments become eligible on the same step with latest-admission indices
+7 and 9 and earliest-admission indices 2 and 4. Registration writes the segment whose
+latest-admission index is 7 first, then the segment whose latest-admission index is 9.
+Sorting same-step eligibles by descending latest-admission index is incorrect.
+
 The learner's priority ledger is append only. A registered segment keeps its ledger
 position for the rest of the run and is never removed, even after its transitions leave the
 buffer. Ledger positions are assigned in registration order starting at `0`.

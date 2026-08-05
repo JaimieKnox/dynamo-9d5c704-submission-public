@@ -72,7 +72,7 @@ The target epoch reported for learner step `s` is
 
 using integer floor division, where `n_epochs` is the number of epoch files the bundle
 ships. The reported `target_epoch` field always uses `e(s)`. Scoring an accepted draw uses
-the attached registration epoch of the drawn segment.
+the epoch carried by that segment's ledger entry.
 
 ## 7. Sampling
 
@@ -85,15 +85,15 @@ the sampler in `/app/docs/sampler.md` on the sampler priority vector.
 
 Each draw is resolved in draw order against residency under the current ring. Rejected
 draws are counted, are not replaced, contribute nothing to aggregates, and leave priorities
-untouched. Accepted draws may repeat an entry. Importance weights use the captured current
-pre-draw priorities and captured `P` from before the batch, as fixed in `comparisons.md`.
+untouched. Accepted draws may repeat an entry. Importance weights use the captured `N` and
+`P` from before the batch, as fixed in `comparisons.md`.
 
 ## 8. Per segment quantities
 
 For an accepted draw, evaluate values and current-policy log probabilities under the
-segment's attached registration epoch. Clip the importance ratio of each transition with the
-bundle's `rho_bar` and `c_bar` as the two separate clip bounds. Choose the bootstrap from
-the cut kind alone:
+epoch carried by the segment's ledger entry. Clip the importance ratio of each transition
+with the bundle's `rho_bar` and `c_bar` as the two separate clip bounds. Choose the
+bootstrap from the cut kind alone:
 
 - `terminated`: there is no continuation to value
 - `truncated`: bootstrap from the observation the environment recorded at the cut

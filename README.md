@@ -10,9 +10,9 @@ bundle under `/app/runs` produces a contract-faithful audit document at
 
 ## Approach
 
-Epoch attachment, importance-weight snapshots, and deferred write-back are already
-contract-faithful. Graded failures come from using the latest admission index for
-residency, padding lagged sampler rows with ones, and sorting same-step registration
-by earliest-then-latest. The oracle replaces ingest, buffer, segments, and learner,
-then runs the CLI. Sample bundles null the delays, use a large ring, and keep batch
-size one so those interactions stay green there.
+Earliest-index residency, current-priority lag padding, and latest-first registration
+order are already contract-faithful. Graded failures come from ignoring visibility_lag
+in ingest, scoring accepted draws under the live step epoch, and using resident-only
+N in importance weights. The oracle replaces ingest, buffer, segments, and learner,
+then runs the CLI. Sample bundles null visibility lag, freeze a single target epoch,
+and keep a large ring so those interactions stay green there.

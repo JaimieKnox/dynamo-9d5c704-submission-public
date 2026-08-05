@@ -95,7 +95,7 @@ def run_bundle(bundle_dir):
                 due.append(segment)
             else:
                 still_waiting.append(segment)
-        due.sort(key=lambda seg: (seg.start_index, seg.complete_index))
+        due.sort(key=lambda seg: (seg.complete_index, seg.start_index))
         register_epoch = params.epoch_for_step(
             step, manifest["target_refresh_interval"], len(epochs)
         )
@@ -113,8 +113,7 @@ def run_bundle(bundle_dir):
         else:
             draw_priorities = list(lagged_priorities)
             if len(draw_priorities) < size:
-                pad = size - len(draw_priorities)
-                draw_priorities = draw_priorities + [1.0] * pad
+                draw_priorities = draw_priorities + current_priorities[len(draw_priorities):]
             draw_priorities = draw_priorities[:size]
             draw_total = sum(draw_priorities)
         epoch = params.epoch_for_step(step, manifest["target_refresh_interval"], len(epochs))
@@ -129,14 +128,20 @@ def run_bundle(bundle_dir):
                 manifest["sampler_seed"], step, manifest["batch_size"], draw_priorities, draw_total
             )
             total_draws += len(picks)
+            resident_n = sum(
+                1
+                for segment_i in registry.segments
+                if buffer.is_resident(segment_i.residency_index)
+            )
+            weight_n = resident_n if resident_n > 0 else size
             for position in picks:
                 segment = registry.segments[position]
                 priority = current_priorities[position]
-                raw_weight = (size * (priority / current_total)) ** (-beta)
+                raw_weight = (weight_n * (priority / current_total)) ** (-beta)
                 if not buffer.is_resident(segment.residency_index):
                     dropped += 1
                     continue
-                ep_params = epochs[segment.frozen_epoch]
+                ep_params = epochs[epoch]
                 targets, advantages = segment_stats(
                     segment, feats, ep_params, gamma, rho_bar, c_bar
                 )

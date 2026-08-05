@@ -24,8 +24,7 @@ admission phase has given every one of its transitions an admission index. Let `
 the bundle `register_delay`. The segment may enter the priority ledger only on a later
 or equal step `s` satisfying `s >= complete_step + R`. Registration order among segments
 that become eligible on the same step is ascending `(latest, earliest)` admission index.
-The scoring epoch attached at registration is the target epoch in force on that insert
-step, `e(s)` from `learner-contract.md`.
+The scoring epoch attached at registration is `e(s)` for the insert step.
 
 ## Scoring epoch attachment
 
@@ -38,15 +37,16 @@ does not rewrite attachments on segments that remain drawable.
 
 Let `K` be `sampler_priority_lag`. When `K` is `0`, draws use the current pre-draw
 priority vector. When `K` is greater than `0`, draws use the priority vector as it stood
-after write-back of the previous learner step, extended with the current priorities of
-any ledger rows that did not yet exist then.
+after write-back of the previous learner step. If that lagged vector is shorter than the
+current ledger, extend it by appending, in ledger order, the current pre-draw priorities
+of the missing trailing rows.
 
 Before any draw, capture `N` and the current mass `P` from the complete ledger, including
 nonresident entries. Importance weights for accepted draws use those captured current
 pre-draw priorities and that captured `P`, together with registry length `N`. Candidate
-priority rewrites become visible to later draws only after
-the step's entire batch has been resolved. When one ledger position is accepted more than
-once, the rewrite from the last such acceptance in draw order remains.
+priority rewrites are committed after the step's entire batch has been resolved. When one
+ledger position is accepted more than once, the rewrite from the last such acceptance in
+draw order remains.
 
 ## Priority seeding
 

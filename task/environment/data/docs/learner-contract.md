@@ -25,10 +25,9 @@ yet been admitted is admitted. The `k`-th transition ever admitted, counting fro
 receives admission index `k` and occupies slot `k mod buffer_capacity`. Admission overwrites
 whatever occupied that slot before, and nothing else ever clears or moves a slot.
 
-A segment is **resident**, meaning still drawable, only while all transitions it spans
-survive in the ring. Residency is settled after the step's admission phase and reused for
-the whole draw phase. The index that controls this test and its inclusive capacity boundary
-are defined in `comparisons.md`.
+A segment is **resident**, meaning still drawable, only while the residency index defined
+in `comparisons.md` still satisfies the ring predicate. Residency is settled after the
+step's admission phase and reused for the whole draw phase.
 
 ## 4. Segments
 
@@ -50,9 +49,7 @@ registered. Segment transitions are always the episode's own transitions at thos
 A segment becomes complete at the first learner step by whose admission phase every one of
 its transitions has been admitted. It becomes registrable only after the bundle
 `register_delay` additional learner steps have elapsed from that completion step, as
-detailed in `comparisons.md`. All segments that become registrable in the same step are
-registered in ascending order of the admission index of their last transition, breaking
-ties by ascending admission index of their first transition.
+detailed in `comparisons.md`. Same-step registration order follows `comparisons.md`.
 
 The learner's priority ledger is append only. A registered segment keeps its ledger
 position for the rest of the run and is never removed, even after its transitions leave the
@@ -64,8 +61,8 @@ the seed is `1.0`. A segment registered earlier in the same step is eligible to 
 maximum.
 
 Registration for a step is complete before that step draws, so a segment registered in a step
-can be drawn in that same step. The scoring epoch attached to the segment is the epoch in
-force on the insert step.
+can be drawn in that same step. The scoring epoch attached to the segment is `e(s)` for the
+insert step.
 
 ## 6. Target epoch
 
@@ -89,8 +86,7 @@ the sampler in `/app/docs/sampler.md` on the sampler priority vector.
 Each draw is resolved in draw order against residency under the current ring. Rejected
 draws are counted, are not replaced, contribute nothing to aggregates, and leave priorities
 untouched. Accepted draws may repeat an entry. Importance weights use the captured current
-pre-draw priorities and current `P` from before any draw of the step, not the lagged sampler
-vector and not priorities rewritten earlier in the same batch.
+pre-draw priorities and captured `P` from before the batch, as fixed in `comparisons.md`.
 
 ## 8. Per segment quantities
 
@@ -120,10 +116,9 @@ Accepted draws produce candidate ledger rewrites of
     (mean of the absolute values of its advantages + priority_eps) ** alpha
 
 using the bundle's `alpha` and `priority_eps`. Rejected draws do not produce candidates.
-The pre-draw snapshot, the invisibility of in-batch rewrites to later draws, and
-repeated-entry commit ordering follow `comparisons.md`. After write-back, the resulting
-priority vector becomes the lagged sampler vector for the next step when
-`sampler_priority_lag` is greater than `0`.
+The pre-draw snapshot, batch commit timing, and repeated-entry commit ordering follow
+`comparisons.md`. After write-back, the resulting priority vector becomes the lagged
+sampler vector for the next step when `sampler_priority_lag` is greater than `0`.
 
 ## 11. Per step aggregates
 

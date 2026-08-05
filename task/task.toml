@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "dynamo/audit-replay-learner"
-description = "Repair near-correct async replay learner whose epoch attachment, IS weights, and in-batch write-back disagree under delayed registration"
+description = "Repair near-correct async replay learner whose residency index, lag padding, and registration order disagree under ring wrap"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -25,36 +25,35 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 12
 difficulty_explanation = """
-The auditor runs and delayed registration, lagged sampler draws, and ledger-wide seeding are
-already contract-faithful. Graded ledgers still diverge because the scoring epoch is taken from
-the completion step rather than the insert step, importance weights read the sampler priority
-vector instead of the captured current pre-draw snapshot, and priority write-backs become visible
-to later draws inside the same batch. Sample bundles set both delays to zero and batch size to
-one, so those interactions stay green there.
+The auditor runs and insert-step epoch attachment, current pre-draw importance weights, and
+deferred in-batch write-back are already contract-faithful. Graded ledgers still diverge because
+segment residency follows the latest admission index rather than the earliest, lagged sampler
+vectors pad newly registered rows with 1.0 rather than current priorities, and same-step
+registration sorts by earliest-then-latest instead of latest-then-earliest. Sample bundles set
+both delays to zero, keep a large ring, and use batch size one, so those interactions stay green
+there.
 
-The recordings are synthetic fixtures built to force insert-versus-completion epoch crossings,
-lagged-versus-current weight mass, and multi-draw write-back isolation to interact. An RL
-infrastructure engineer would perform this reconstruction when validating reproducibility of an
-asynchronous learner under publication lag and priority aging.
+The recordings are synthetic fixtures built to force wrap-time residency, lag extension during
+registration bursts, and same-step seed order to interact across modules. An RL infrastructure
+engineer would perform this reconstruction when validating reproducibility of an asynchronous
+learner under publication lag and priority aging.
 
-Solving requires tracing registration timing against target refresh, separating the draw vector
-from the weight snapshot, and deferring in-batch ledger rewrites as one state machine. Local
-patches that only restore register_delay gating or resident-only seeding no longer reach the
-graded ledger.
+Solving requires tracing residency through the segment helper, lag extension in the learner, and
+registration ordering against live seed maxima as one state machine. Local patches that only
+restore insert-step epochs or deferred write-backs no longer reach the graded ledger.
 """
 solution_explanation = """
-Keep delayed registration, lagged draws, and ledger-wide seeding. Attach the insert-step target
-epoch at registration. Compute importance weights from the captured current pre-draw priorities
-and mass even when draws used a lagged vector. Defer priority write-backs until after the whole
-batch resolves, then publish the post-writeback vector as the next step's lag snapshot. Install
-the fixed ingest, buffer, segments, and learner modules, then run the CLI.
+Keep insert-step epoch attachment, current pre-draw importance weights, and deferred write-back.
+Make segment residency follow the earliest admission index. When extending a lagged sampler
+vector, append current pre-draw priorities for new trailing rows. Sort same-step registrations by
+ascending (latest, earliest) admission index. Install the fixed ingest, buffer, segments, and
+learner modules, then run the CLI.
 """
 verification_explanation = """
 The verifier recomputes ledgers from sealed inputs with a reference package that follows the
 contract. Counts match exactly and floating aggregates match at six decimals. The oracle copies
-the four fixed modules and runs the CLI. A nop agent keeps completion-epoch attachment, sampler-
-vector importance weights, and eager in-batch write-back, so graded bundles diverge while samples
-stay green.
+the four fixed modules and runs the CLI. A nop agent keeps latest-index residency, unit lag
+padding, and earliest-first registration order, so graded bundles diverge while samples stay green.
 """
 
 [verifier]

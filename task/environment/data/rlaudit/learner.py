@@ -95,12 +95,12 @@ def run_bundle(bundle_dir):
                 due.append(segment)
             else:
                 still_waiting.append(segment)
-        due.sort(key=lambda seg: (seg.complete_index, seg.start_index))
+        due.sort(key=lambda seg: (seg.start_index, seg.complete_index))
         register_epoch = params.epoch_for_step(
             step, manifest["target_refresh_interval"], len(epochs)
         )
         for segment in due:
-            registry.insert(segment)
+            registry.insert(segment, epoch=register_epoch, is_resident=buffer.is_resident)
         unregistered = still_waiting
 
         size, current_total, current_priorities = registry.pre_draw_state(buffer.is_resident)
@@ -127,7 +127,7 @@ def run_bundle(bundle_dir):
             total_draws += len(picks)
             for position in picks:
                 segment = registry.segments[position]
-                priority = current_priorities[position]
+                priority = draw_priorities[position]
                 raw_weight = (size * (priority / current_total)) ** (-beta)
                 if not buffer.is_resident(segment.residency_index):
                     dropped += 1

@@ -19,13 +19,12 @@ After the admission phase, a transition admitted at index `k` is resident exactl
 
     admitted_so_far - k <= buffer_capacity
 
-Segment residence follows that predicate for the admission index of the segment's
-earliest transition. A segment becomes complete on the first learner step whose admission
+Segment residence follows that predicate for the admission index that first enters
+the buffer for the segment's covered transitions. A segment becomes complete on the first learner step whose admission
 phase has given every one of its transitions an admission index. Let `R` be the bundle
 `register_delay`. The segment may enter the priority ledger only on a step `s` satisfying
-`s >= complete_step + R`. Among segments that become eligible on the same step, register
-in ascending order of the latest admission index, breaking ties by the earliest admission
-index.
+`s >= complete_step + R`. Among segments that become eligible on the same step, register in the order implied by
+the contract's same-step registration reduction in `learner-contract.md`.
 
 The scoring epoch attached to a segment is `e(s)` for the learner step on which that
 segment enters the priority ledger under the delay rule above.

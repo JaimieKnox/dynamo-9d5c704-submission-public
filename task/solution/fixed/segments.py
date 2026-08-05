@@ -13,6 +13,7 @@ class Segment:
         self.complete_index = None
         self.frozen_epoch = None
         self.ready_step = None
+        self._completion_epoch = None
 
     @property
     def residency_index(self):
@@ -24,7 +25,7 @@ class Segment:
         self.start_index = min(row["_index"] for row in self.rows)
         self.complete_index = max(row["_index"] for row in self.rows)
         self.ready_step = step
-        
+
     def stamp_epoch(self, epoch):
         self.frozen_epoch = epoch
 

@@ -100,7 +100,7 @@ def run_bundle(bundle_dir):
             step, manifest["target_refresh_interval"], len(epochs)
         )
         for segment in due:
-            registry.insert(segment, epoch=register_epoch)
+            registry.insert(segment, epoch=register_epoch, is_resident=buffer.is_resident)
         unregistered = still_waiting
 
         size, current_total, current_priorities = registry.pre_draw_state(buffer.is_resident)

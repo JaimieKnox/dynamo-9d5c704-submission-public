@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "dynamo/audit-replay-learner"
-description = "Repair near-correct async replay learner whose registry helpers disagree with insert-time epoch stamping, full-ledger draw mass, last-wins commit, and post-commit lag snapshots"
+description = "Repair near-correct async replay learner whose residency anchor, registration order, completion-cached epochs, resident seed/mass, lagged IS numerators, and pre-commit lag snapshots disagree"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -25,39 +25,39 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 12
 difficulty_explanation = """
-The auditor runs and previously brittle helpers are already contract-faithful on visibility lag
-sign, registration sort keys, and ordinary frozen scoring under zero delay. Graded ledgers still
-diverge because scoring epochs are cached at completion inside segment helpers instead of being
-stamped by the registry at delayed insert, because a shared pre-draw mass helper filters to
-resident rows for both the draw gate and IS weights, because ordered commit on the registry keeps
-the first rewrite of a repeated accept, and because the lagged sampler snapshot is frozen before
-write-back. Sample bundles set registration delay and sampler lag to zero and keep a large ring
-with unit batches, so those interactions stay green there.
+The auditor runs and ordinary frozen scoring under zero delay stays green. Graded ledgers still
+diverge because residency is anchored on the last covered admission instead of the first, same-step
+registration sorts earliest-then-latest, registry insert prefers a completion-cached epoch over the
+insert-time argument, seeding and shared pre-draw mass filter to resident rows, importance numerators
+read the sampler lag vector, and the lagged snapshot is frozen before write-back. Sample bundles keep
+registration delay and sampler lag at zero with a large ring, so those interactions stay green there.
 
 The recordings are synthetic fixtures built so delayed insert crosses an epoch boundary, ring wrap
-creates nonresident ledger mass during draws, multi-draw batches repeat positions, and lag greater
-than zero exposes pre-commit snapshots. An RL infrastructure engineer would perform this
-reconstruction when validating asynchronous learner reproducibility under publication lag and
-priority aging.
+creates nonresident mass, same-step registration collisions exist, lag greater than zero separates
+sampler and current vectors, and multi-draw batches stress seeding after eviction. An RL
+infrastructure engineer would perform this reconstruction when validating asynchronous learner
+reproducibility under publication lag and priority aging.
 
-Solving requires composing completion versus insert stamping across segment and registry helpers,
-full-ledger mass versus residency filtering in one shared helper, last-wins ordered commit, and
-post-commit lag capture as one state machine. Patching only the learner orchestrator no longer
+Solving requires composing residency anchors, registration order, insert-time epoch ownership,
+full-ledger seed and mass, current-priority IS numerators, and post-commit lag capture across
+segment, buffer, and learner helpers. A learner-only patch that leaves those helpers wrong no longer
 reaches the graded ledger.
 """
 solution_explanation = """
-Keep faithful visibility postponement, registration ordering, and deferred in-batch priority
-visibility. Complete segments without caching a scoring epoch, and stamp `e(s)` inside registry
-insert after register_delay. Compute the shared pre-draw mass over the full ledger for both the
-draw gate and importance weights. Commit ordered accepts with last-wins semantics, then capture
-the lagged sampler vector. Install the fixed modules and run the CLI.
+Keep faithful visibility postponement and deferred in-batch priority visibility. Anchor residency
+on the first covered admission. Register same-step due segments by latest then earliest admission.
+Complete without caching a scoring epoch, and stamp `e(s)` from the insert-time argument inside
+registry insert. Seed and gate from full-ledger priority extremes and mass. Score importance weights
+from current pre-draw priorities. Commit write-backs, then capture the lagged sampler vector.
+Install the fixed modules and run the CLI.
 """
 verification_explanation = """
 The verifier seals oracle ledgers in a derive phase, removes the reference tree, then grades agent
 outputs against the sealed bundle with no oracle import. Counts match exactly and floating
 aggregates match at six decimals. The oracle copies fixed modules and runs the CLI. A nop agent
-keeps completion-time epoch caching, resident-only shared mass, first-wins commit, and pre-commit
-lag snapshots, so graded bundles diverge while samples stay green.
+keeps the completion-cached epoch path, resident seed/mass filters, last-covered residency anchor,
+earliest-first registration order, lagged IS numerators, and pre-commit lag snapshots, so graded
+bundles diverge while samples stay green.
 """
 
 [verifier]

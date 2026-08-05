@@ -35,7 +35,7 @@ class PriorityRegistry:
         self.priorities = []
         self._lagged = []
 
-    def insert(self, segment, epoch=None):
+    def insert(self, segment, epoch=None, is_resident=None):
         """Append an entry seeded from the largest priority the ledger currently holds."""
         seed = 1.0
         if self.priorities:

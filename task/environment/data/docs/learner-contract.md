@@ -49,7 +49,9 @@ registered. Segment transitions are always the episode's own transitions at thos
 A segment becomes complete at the first learner step by whose admission phase every one of
 its transitions has been admitted. It becomes registrable only after the bundle
 `register_delay` additional learner steps have elapsed from that completion step, as
-detailed in `comparisons.md`. Same-step registration order follows `comparisons.md`.
+detailed in `comparisons.md`. Same-step registration order prefers the segment whose last covered transition was
+admitted later, and breaks remaining ties by the admission of its first covered
+transition.
 
 The learner's priority ledger is append only. A registered segment keeps its ledger
 position for the rest of the run and is never removed, even after its transitions leave the
@@ -86,8 +88,8 @@ sampler in `/app/docs/sampler.md` on the sampler priority vector.
 
 Each draw is resolved in draw order against residency under the current ring. Rejected
 draws are counted, are not replaced, contribute nothing to aggregates, and leave priorities
-untouched. Accepted draws may repeat an entry. Importance weights use the captured `N` and
-`P` from before the batch, as fixed in `comparisons.md`.
+untouched. Accepted draws may repeat an entry. Importance weights use the captured `N` and `P` from before the batch together with
+each accepted row's current pre-draw priority, not the sampler lag vector's entry.
 
 ## 8. Per segment quantities
 

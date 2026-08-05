@@ -1,8 +1,8 @@
 The replay auditor in `/app/rlaudit` reconstructs what the learner of an asynchronous
 actor-learner training run did from recorded actor shards. The package runs end to end,
-but graded ledgers diverge when delayed registration, importance-weight mass, and
-repeated-draw write-back interact across steps. Repair the implementation so those
-interactions match the docs.
+but graded ledgers diverge when registration timing, draw-phase mass, batch write-back,
+and lagged sampler snapshots interact across the buffer and learner modules. Repair the
+implementation so those interactions match the docs.
 
 Each directory under `/app/runs` is one recorded run bundle. `/app/docs/bundle-format.md`,
 `/app/docs/learner-contract.md`, `/app/docs/comparisons.md`, `/app/docs/sampler.md`, and

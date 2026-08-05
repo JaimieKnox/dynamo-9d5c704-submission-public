@@ -19,6 +19,15 @@ class Segment:
         """Admission index that decides whether the segment is still drawable."""
         return self.start_index
 
+    def mark_complete(self, step, epoch=None):
+        """Record completion indices. Scoring epoch is stamped at ledger insert."""
+        self.start_index = min(row["_index"] for row in self.rows)
+        self.complete_index = max(row["_index"] for row in self.rows)
+        self.ready_step = step
+        
+    def stamp_epoch(self, epoch):
+        self.frozen_epoch = epoch
+
 
 def group_episodes(rows):
     episodes = {}

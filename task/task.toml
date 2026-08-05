@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "dynamo/audit-replay-learner"
-description = "Repair near-correct async replay learner whose insert-time epoch attach, full-ledger IS mass, and last-wins writeback disagree under delayed registration"
+description = "Repair near-correct async replay learner whose registry helpers disagree with insert-time epoch stamping, full-ledger draw mass, last-wins commit, and post-commit lag snapshots"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -27,33 +27,37 @@ expert_time_estimate_hours = 12
 difficulty_explanation = """
 The auditor runs and previously brittle helpers are already contract-faithful on visibility lag
 sign, registration sort keys, and ordinary frozen scoring under zero delay. Graded ledgers still
-diverge because scoring epochs attach at delayed insert rather than at completion, importance
-weights use the full ledger priority mass including nonresident rows, and repeated accepts in one
-batch keep only the last rewrite. Sample bundles set registration delay and sampler lag to zero
-and keep a large ring, so those interactions stay green there.
+diverge because scoring epochs are cached at completion inside segment helpers instead of being
+stamped by the registry at delayed insert, because a shared pre-draw mass helper filters to
+resident rows for both the draw gate and IS weights, because ordered commit on the registry keeps
+the first rewrite of a repeated accept, and because the lagged sampler snapshot is frozen before
+write-back. Sample bundles set registration delay and sampler lag to zero and keep a large ring
+with unit batches, so those interactions stay green there.
 
 The recordings are synthetic fixtures built so delayed insert crosses an epoch boundary, ring wrap
-creates nonresident ledger mass during draws, and multi-draw batches repeat positions. An RL
-infrastructure engineer would perform this reconstruction when validating asynchronous learner
-reproducibility under publication lag and priority aging.
+creates nonresident ledger mass during draws, multi-draw batches repeat positions, and lag greater
+than zero exposes pre-commit snapshots. An RL infrastructure engineer would perform this
+reconstruction when validating asynchronous learner reproducibility under publication lag and
+priority aging.
 
-Solving requires composing completion versus insert timing, full-ledger IS mass versus residency,
-and last-wins batch commit order as one state machine. Single-line lag-sign or sort-key patches no
-longer reach the graded ledger.
+Solving requires composing completion versus insert stamping across segment and registry helpers,
+full-ledger mass versus residency filtering in one shared helper, last-wins ordered commit, and
+post-commit lag capture as one state machine. Patching only the learner orchestrator no longer
+reaches the graded ledger.
 """
 solution_explanation = """
-Keep faithful visibility postponement, registration ordering, sampler lag, and deferred in-batch
-priority visibility. Attach the scoring epoch on the insert step after register_delay, not on the
-earlier completion step. Compute importance weights from full-ledger pre-draw priority mass.
-When a ledger position is accepted more than once in a step, keep the last rewrite in draw order.
-Install the fixed modules and run the CLI.
+Keep faithful visibility postponement, registration ordering, and deferred in-batch priority
+visibility. Complete segments without caching a scoring epoch, and stamp `e(s)` inside registry
+insert after register_delay. Compute the shared pre-draw mass over the full ledger for both the
+draw gate and importance weights. Commit ordered accepts with last-wins semantics, then capture
+the lagged sampler vector. Install the fixed modules and run the CLI.
 """
 verification_explanation = """
 The verifier seals oracle ledgers in a derive phase, removes the reference tree, then grades agent
 outputs against the sealed bundle with no oracle import. Counts match exactly and floating
 aggregates match at six decimals. The oracle copies fixed modules and runs the CLI. A nop agent
-keeps completion-time epoch attach, resident-only IS mass, and first-wins writeback, so graded
-bundles diverge while samples stay green.
+keeps completion-time epoch caching, resident-only shared mass, first-wins commit, and pre-commit
+lag snapshots, so graded bundles diverge while samples stay green.
 """
 
 [verifier]

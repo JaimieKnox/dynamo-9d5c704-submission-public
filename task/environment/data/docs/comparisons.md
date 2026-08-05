@@ -27,23 +27,22 @@ phase has given every one of its transitions an admission index. Let `R` be the 
 in ascending order of the latest admission index, breaking ties by the earliest admission
 index.
 
-The scoring epoch attached to a segment is the target epoch in force on the learner step
-of actual ledger insert. Completing earlier does not attach an epoch when `R` still delays
-insert.
+The scoring epoch attached to a segment is `e(s)` for the learner step on which that
+segment enters the priority ledger under the delay rule above.
 
 ## Sampler lag and step snapshots
 
 Let `K` be `sampler_priority_lag`. When `K` is `0`, draws use the current pre-draw
 priority vector. When `K` is greater than `0`, draws use the priority vector as it stood
 after write-back of the previous learner step, extended with the current priorities of
-any ledger rows that did not yet exist then. Importance weights always use the current
-pre-draw priority of the drawn row together with registry length `N` and the sum `P` of
-every current pre-draw priority in the ledger, including nonresident rows.
+any ledger rows that did not yet exist then. Importance weights always use the current pre-draw priority of the drawn row together
+with registry length `N` and the ledger sum `P` defined for the draw gate in
+`learner-contract.md`.
 
-Before any draw, capture `N` and that full current `P`. Candidate priority rewrites become
-visible to later draws only after the step's entire batch has been resolved. When one
-ledger position is accepted more than once, the rewrite from the last such acceptance in
-draw order remains.
+Before any draw, capture `N` and that current `P`. Candidate priority rewrites become
+visible to later draws only after the step's entire batch has been resolved. Repeated
+acceptances of one ledger position in a batch reduce to a single committed rewrite for
+that position according to draw order.
 
 ## Priority seeding
 
@@ -58,7 +57,7 @@ with current pre-draw priority `p`,
 
     w_raw = (N * (p / P)) ** (-beta)
 
-with full-ledger `P`. Let `W` be the multiset of those raw weights from accepted draws
+with the captured `P`. Let `W` be the multiset of those raw weights from accepted draws
 only. If `W` is empty, `mean_is_weight` is `0.0`. Otherwise divide each member by
 `max(W)` and average.
 

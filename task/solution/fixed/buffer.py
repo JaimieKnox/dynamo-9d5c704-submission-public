@@ -33,15 +33,39 @@ class PriorityRegistry:
     def __init__(self):
         self.segments = []
         self.priorities = []
+        self._lagged = []
 
-    def insert(self, segment):
+    def insert(self, segment, epoch=None):
         """Append an entry seeded from the largest priority the ledger currently holds."""
         seed = 1.0
         if self.priorities:
             seed = max(self.priorities)
+        if epoch is not None:
+            segment.stamp_epoch(epoch)
         self.segments.append(segment)
         self.priorities.append(seed)
         return len(self.segments) - 1
+
+    def importance_mass(self, is_resident):
+        """Mass used for draw gating and IS weights over the full ledger."""
+        return sum(self.priorities)
+
+    def pre_draw_state(self, is_resident):
+        """Shared pre-draw snapshot: N, P, and the current priority vector."""
+        priorities = list(self.priorities)
+        return len(self.segments), self.importance_mass(is_resident), priorities
+
+    def commit_accepts(self, ordered_updates):
+        """Apply accepted rewrite candidates in draw order."""
+        for position, priority in ordered_updates:
+            self.priorities[position] = priority
+
+    def snapshot_lag_after_commit(self):
+        """Freeze the sampler lag vector after write-back."""
+        self._lagged = list(self.priorities)
+
+    def lagged_sampler_vector(self):
+        return list(self._lagged)
 
     def reweight(self, position, priority):
         self.priorities[position] = priority

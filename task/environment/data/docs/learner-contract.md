@@ -61,8 +61,8 @@ the seed is `1.0`. A segment registered earlier in the same step is eligible to 
 maximum.
 
 Registration for a step is complete before that step draws, so a segment registered in a step
-can be drawn in that same step. The scoring epoch stored on the ledger entry is `e(s)` for
-the insert step.
+can be drawn in that same step. The scoring epoch stored on the ledger entry is the target
+epoch in force when registration writes that entry.
 
 ## 6. Target epoch
 
@@ -77,11 +77,12 @@ the epoch stored on that segment's ledger entry.
 ## 7. Sampling
 
 Let `N` be the number of registered segments. Let `P` be the sum of the current pre-draw
-priorities of all `N` ledger entries, resident or not. Draws are taken from the sampler
-priority vector defined by `sampler_priority_lag` in `comparisons.md`. When that vector's
-mass is not greater than `0.0`, or when `N` is `0`, or when current `P` is not greater than
-`0.0`, the step makes no draws. Otherwise the step makes exactly `batch_size` draws using
-the sampler in `/app/docs/sampler.md` on the sampler priority vector.
+priorities over the full ledger of `N` entries. The same captured `N` and `P` gate the
+draw phase and normalize importance weights. Draws are taken from the sampler priority
+vector defined by `sampler_priority_lag` in `comparisons.md`. When that vector's mass is
+not greater than `0.0`, or when `N` is `0`, or when current `P` is not greater than `0.0`,
+the step makes no draws. Otherwise the step makes exactly `batch_size` draws using the
+sampler in `/app/docs/sampler.md` on the sampler priority vector.
 
 Each draw is resolved in draw order against residency under the current ring. Rejected
 draws are counted, are not replaced, contribute nothing to aggregates, and leave priorities
@@ -117,8 +118,8 @@ Accepted draws produce candidate ledger rewrites of
 
 using the bundle's `alpha` and `priority_eps`. Rejected draws do not produce candidates.
 The pre-draw snapshot, batch commit timing, and repeated-entry commit ordering follow
-`comparisons.md`. After write-back, the resulting priority vector becomes the lagged
-sampler vector for the next step when `sampler_priority_lag` is greater than `0`.
+`comparisons.md`. The lagged sampler vector used when `sampler_priority_lag` is greater
+than `0` is the priority vector as it stands after that step's write-back commits.
 
 ## 11. Per step aggregates
 

@@ -128,20 +128,17 @@ def run_bundle(bundle_dir):
                 manifest["sampler_seed"], step, manifest["batch_size"], draw_priorities, draw_total
             )
             total_draws += len(picks)
-            resident_n = sum(
-                1
-                for segment_i in registry.segments
-                if buffer.is_resident(segment_i.residency_index)
-            )
-            weight_n = resident_n if resident_n > 0 else size
+            working_priorities = list(current_priorities)
+            working_total = draw_total
             for position in picks:
                 segment = registry.segments[position]
-                priority = current_priorities[position]
-                raw_weight = (weight_n * (priority / current_total)) ** (-beta)
+                priority = working_priorities[position]
+                # Weight mass follows the sampler draw mass for this step.
+                raw_weight = (size * (priority / working_total)) ** (-beta)
                 if not buffer.is_resident(segment.residency_index):
                     dropped += 1
                     continue
-                ep_params = epochs[epoch]
+                ep_params = epochs[segment.frozen_epoch]
                 targets, advantages = segment_stats(
                     segment, feats, ep_params, gamma, rho_bar, c_bar
                 )
@@ -152,7 +149,10 @@ def run_bundle(bundle_dir):
                 magnitude = 0.0
                 for value in advantages:
                     magnitude += abs(value)
-                updates[position] = (magnitude / len(advantages) + priority_eps) ** alpha
+                new_priority = (magnitude / len(advantages) + priority_eps) ** alpha
+                working_priorities[position] = new_priority
+                registry.priorities[position] = new_priority
+                working_total = sum(working_priorities)
                 total_accepted += 1
                 drawn.add(position)
 
@@ -163,8 +163,6 @@ def run_bundle(bundle_dir):
             mean_weight = 0.0
         mean_target = sum(target_pool) / len(target_pool) if target_pool else 0.0
         mean_advantage = sum(advantage_pool) / len(advantage_pool) if advantage_pool else 0.0
-        for position, priority in updates.items():
-            registry.priorities[position] = priority
         lagged_priorities = list(registry.priorities)
         step_records.append(
             {

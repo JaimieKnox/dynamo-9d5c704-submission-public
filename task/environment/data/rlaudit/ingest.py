@@ -32,7 +32,7 @@ def visible_seq(admissions, step, visibility_lag=0):
     best = NOTHING_VISIBLE
     found = False
     for entry in admissions:
-        effective_from = entry["step"]
+        effective_from = entry["step"] + visibility_lag
         if step >= effective_from:
             if (not found) or entry["seq_watermark"] > best:
                 best = entry["seq_watermark"]

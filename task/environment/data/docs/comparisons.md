@@ -6,11 +6,12 @@ by `learner-contract.md`.
 
 ## Admission and visibility
 
-Let `L` be the bundle `visibility_lag`. At learner step `s`, an ingest entry participates
-only when `s` has reached the entry's recorded `step` after adding `L`. Among every
-participating entry, the inclusive visibility watermark is the greatest `seq_watermark`.
-When no entry participates, the watermark is the empty-visibility sentinel `-1` and
-nothing is admitted. File order in `ingest.json` is not a timeline.
+Let `L` be the bundle `visibility_lag`. An ingest entry participates at learner step
+`s` only after publication lag `L` has elapsed relative to that entry's recorded
+publication step. Among participating entries, the inclusive visibility watermark is
+the greatest `seq_watermark`. When none participate, the watermark is the
+empty-visibility sentinel `-1` and nothing is admitted. File order in `ingest.json`
+is not a timeline.
 
 ## Ring residency and delayed registration
 
@@ -18,36 +19,37 @@ After the admission phase, a transition admitted at index `k` is resident exactl
 
     admitted_so_far - k <= buffer_capacity
 
-Segment residence follows that predicate for the admission index of the segment's
-first-admitted transition. A segment becomes *complete* on the first learner step whose
-admission phase has given every one of its transitions an admission index. Let `R` be
-the bundle `register_delay`. The segment may enter the priority ledger only on a later
-or equal step `s` satisfying `s >= complete_step + R`. Registration order among segments
-that become eligible on the same step is ascending by the admission index of the
-segment's last-admitted transition, then by the admission index of its first-admitted
-transition. The scoring epoch attached at registration is `e(s)` for the insert step.
+Segment residence follows that predicate for the admission index of the transition
+that first entered the buffer for that segment. A segment becomes *complete* on the
+first learner step whose admission phase has given every one of its transitions an
+admission index. Let `R` be the bundle `register_delay`. The segment may enter the
+priority ledger only on a later or equal step `s` satisfying
+`s >= complete_step + R`. Segments that become eligible in the same step are
+registered in the order their final transition was admitted, breaking ties by the
+order their first transition was admitted. The scoring epoch attached at registration
+is `e(s)` for the insert step.
 
 ## Scoring epoch attachment
 
 Each registered segment carries a scoring epoch fixed at ledger insert. Accepted draws
 evaluate values and current-policy log probabilities under that carried epoch. The
-reported `target_epoch` field for a step uses `e(s)` and does not rewrite carried epochs
-on drawable segments.
+reported `target_epoch` field for a step uses `e(s)` and does not rewrite carried
+epochs on drawable segments.
 
 ## Sampler lag and step snapshots
 
 Let `K` be `sampler_priority_lag`. When `K` is `0`, draws use the current pre-draw
-priority vector. When `K` is greater than `0`, draws use the priority vector as it stood
-after write-back of the previous learner step. If that lagged vector is shorter than the
-current ledger, extend it in ledger order by the current pre-draw priorities of the
-missing trailing rows.
+priority vector. When `K` is greater than `0`, draws use the priority vector as it
+stood after write-back of the previous learner step. If that lagged vector is shorter
+than the current ledger, extend it in ledger order by adopting, for each newly known
+trailing row, that row's current pre-draw priority.
 
-Before any draw, capture `N` as the number of registered ledger rows and `P` as the sum
-of current pre-draw priorities over those same rows, including rows that are no longer
-resident. Importance weights for accepted draws use those captured values. Candidate
-priority rewrites are committed after the step's entire batch has been resolved. When one
-ledger position is accepted more than once, the rewrite from the last such acceptance in
-draw order remains.
+Before any draw, capture ledger length `N` and pre-draw mass `P` over every registered
+row, including rows that are no longer resident. Importance weights for accepted draws
+use those captured values from the start of the draw phase. Candidate priority rewrites
+produced during the draw phase become part of the ledger only after every draw of the
+step has been resolved. When one ledger position is accepted more than once, the
+rewrite from the last such acceptance in draw order remains.
 
 ## Priority seeding
 
@@ -62,13 +64,14 @@ with current pre-draw priority `p`,
 
     w_raw = (N * (p / P)) ** (-beta)
 
-with the captured `N` and `P` from before the batch. Let `W` be the multiset of those raw
-weights from accepted draws only. If `W` is empty, `mean_is_weight` is `0.0`. Otherwise
-divide each member by `max(W)` and average.
+with the captured `N` and `P` from the start of the draw phase. Let `W` be the multiset
+of those raw weights from accepted draws only. If `W` is empty, `mean_is_weight` is
+`0.0`. Otherwise divide each member by `max(W)` and average.
 
 ## Segment and aggregate boundaries
 
-Termination bootstraps with zero. Truncation uses the recorded cut observation. A full
-window bootstraps from the next episode observation, and a window that would have to stop
-on the episode's final transition is not a segment at all. Floating fields round to six
-decimals only after reductions finish.
+Termination bootstraps with zero. A truncated segment bootstraps from the observation
+the environment recorded at the truncation cut. A full window bootstraps from the next
+episode observation, and a window that would have to stop on the episode's final
+transition is not a segment at all. Floating fields round to six decimals only after
+reductions finish.

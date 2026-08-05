@@ -96,7 +96,7 @@ with the bundle's `rho_bar` and `c_bar` as the two separate clip bounds. Choose 
 bootstrap from the cut kind alone:
 
 - `terminated`: there is no continuation to value
-- `truncated`: bootstrap from the observation the environment recorded at the cut
+- `truncated`: bootstrap from the observation recorded with the truncation cut
 - `window`: bootstrap from the observation of the next transition in that episode, whether
   or not that transition is currently admitted or resident
 

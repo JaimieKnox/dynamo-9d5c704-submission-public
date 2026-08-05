@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "dynamo/audit-replay-learner"
-description = "Repair near-correct async replay learner whose visibility lag, carried scoring epochs, and ledger-length IS weights disagree"
+description = "Repair near-correct async replay learner whose truncation bootstrap, draw-phase IS mass, and mid-batch write-back disagree under lag"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -25,34 +25,34 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 12
 difficulty_explanation = """
-The auditor runs and earliest-index residency, lagged sampler extension, and latest-first
-registration order are already contract-faithful. Graded ledgers still diverge because ingest
-ignores visibility_lag when deciding effective publication, accepted draws are scored under the
-live step target epoch rather than the epoch carried at ledger insert, and importance weights
-replace ledger length N with a resident-only count. Sample bundles set visibility_lag to zero,
-keep target_refresh_interval beyond the run, and use a large ring, so those interactions stay
-green there.
+The auditor runs and visibility lag, carried scoring epochs, and ledger-length importance weights
+are already contract-faithful. Graded ledgers still diverge because truncated segments bootstrap
+from the wrong observation, the ring residency boundary is off by one, and importance weights use
+the sampler draw mass while priority write-backs become visible mid-batch. Sample bundles set both
+delays to zero, keep a large ring, and use batch size one, so those interactions stay green there.
 
-The recordings are synthetic fixtures built to force lagged publication, carried-versus-live
-epochs, and eviction-time weight mass to interact across modules. An RL infrastructure engineer
-would perform this reconstruction when validating reproducibility of an asynchronous learner
-under publication lag and priority aging.
+The recordings are synthetic fixtures built to force truncation bootstrap choice, wrap-time
+residency, lagged-versus-current weight mass, and multi-draw write-back isolation to interact
+across modules. An RL infrastructure engineer would perform this reconstruction when validating
+reproducibility of an asynchronous learner under publication lag and priority aging.
 
-Solving requires tracing ingest effectiveness, carried scoring epochs across refresh boundaries,
-and ledger-length N under wrap as one state machine. Local patches that only restore residency
-index or registration sort order no longer reach the graded ledger.
+Solving requires tracing cut observations through V-trace, the inclusive residency predicate under
+ring wrap, and separating draw-vector mass from deferred write-back as one state machine. Local
+patches that only restore visibility lag or frozen-epoch scoring no longer reach the graded ledger.
 """
 solution_explanation = """
-Keep earliest-index residency, current-priority lag padding, and latest-first registration.
-Honor visibility_lag inside ingest watermark selection. Score accepted draws under the epoch
-carried by the ledger entry. Compute importance weights with ledger length N over every
-registered row. Install the fixed ingest, buffer, segments, and learner modules, then run the CLI.
+Keep visibility lag, carried insert-step epochs, and ledger-length importance weights. Bootstrap
+truncated segments from the observation recorded at the truncation cut. Keep the inclusive ring
+residency predicate. Compute importance weights from the captured pre-draw ledger mass even when
+draws used a lagged vector, and defer priority write-backs until after the whole batch resolves.
+Install the fixed ingest, buffer, segments, and learner modules, then run the CLI.
 """
 verification_explanation = """
 The verifier recomputes ledgers from sealed inputs with a reference package that follows the
 contract. Counts match exactly and floating aggregates match at six decimals. The oracle copies
-the four fixed modules and runs the CLI. A nop agent ignores visibility_lag, scores under the live
-step epoch, and uses resident-only N, so graded bundles diverge while samples stay green.
+the four fixed modules and runs the CLI. A nop agent keeps the wrong truncation bootstrap, a
+strict residency bound, sampler-mass importance weights, and eager in-batch write-back, so graded
+bundles diverge while samples stay green.
 """
 
 [verifier]

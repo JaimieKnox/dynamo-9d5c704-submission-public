@@ -24,7 +24,7 @@ class TransitionBuffer:
 
     def is_resident(self, index):
         """True while the transition admitted at `index` still owns its slot."""
-        return self.write_index - index <= self.capacity
+        return self.write_index - index < self.capacity
 
 
 class PriorityRegistry:

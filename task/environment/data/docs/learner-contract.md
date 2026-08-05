@@ -76,8 +76,8 @@ the epoch carried by that segment's ledger entry.
 
 ## 7. Sampling
 
-Let `N` be the number of registered segments. Let `P` be the sum of the current pre-draw
-priorities of all `N` ledger entries, resident or not. Draws are taken from the sampler
+Let `N` be the number of currently resident registered segments. Let `P` be the sum of
+the current pre-draw priorities of those resident entries only. Draws are taken from the sampler
 priority vector defined by `sampler_priority_lag` in `comparisons.md`. When that vector's
 mass is not greater than `0.0`, or when `N` is `0`, or when current `P` is not greater than
 `0.0`, the step makes no draws. Otherwise the step makes exactly `batch_size` draws using
@@ -85,8 +85,7 @@ the sampler in `/app/docs/sampler.md` on the sampler priority vector.
 
 Each draw is resolved in draw order against residency under the current ring. Rejected
 draws are counted, are not replaced, contribute nothing to aggregates, and leave priorities
-untouched. Accepted draws may repeat an entry. Importance weights use the captured `N` and
-`P` from before the batch, as fixed in `comparisons.md`.
+untouched. Accepted draws may repeat an entry. Importance weights use the resident-only length and mass captured at the start of the draw phase.md`.
 
 ## 8. Per segment quantities
 

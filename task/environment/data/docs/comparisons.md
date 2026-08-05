@@ -19,22 +19,20 @@ After the admission phase, a transition admitted at index `k` is resident exactl
 
     admitted_so_far - k <= buffer_capacity
 
-Segment residence follows that predicate for the admission index of the transition
-that first entered the buffer for that segment. A segment becomes *complete* on the
-first learner step whose admission phase has given every one of its transitions an
-admission index. Let `R` be the bundle `register_delay`. The segment may enter the
-priority ledger only on a later or equal step `s` satisfying
-`s >= complete_step + R`. Segments that become eligible in the same step are
-registered in the order their final transition was admitted, breaking ties by the
-order their first transition was admitted. The scoring epoch attached at registration
-is `e(s)` for the insert step.
+A segment is drawable only while the transition that completed it still owns its ring
+slot under that predicate. A segment becomes *complete* on the first learner step whose
+admission phase has given every one of its transitions an admission index. Let `R` be
+the bundle `register_delay`. The segment may enter the priority ledger only on a later
+or equal step `s` satisfying `s >= complete_step + R`. Segments that become eligible in
+the same step are registered in the order their final transition was admitted, breaking
+ties by the order their first transition was admitted.
 
 ## Scoring epoch attachment
 
-Each registered segment carries a scoring epoch fixed at ledger insert. Accepted draws
-evaluate values and current-policy log probabilities under that carried epoch. The
-reported `target_epoch` field for a step uses `e(s)` and does not rewrite carried
-epochs on drawable segments.
+When a segment becomes complete, it records the target epoch then in force. That
+recorded epoch is what later accepted draws use for values and current-policy log
+probabilities, even if ledger insert happens on a later learner step after
+`register_delay`. The reported `target_epoch` field for a step still uses `e(s)`.
 
 ## Sampler lag and step snapshots
 
@@ -44,9 +42,8 @@ stood after write-back of the previous learner step. If that lagged vector is sh
 than the current ledger, extend it in ledger order by adopting, for each newly known
 trailing row, that row's current pre-draw priority.
 
-Before any draw, capture ledger length `N` and pre-draw mass `P` over every registered
-row, including rows that are no longer resident. Importance weights for accepted draws
-use those captured values from the start of the draw phase. Candidate priority rewrites
+Before any draw, capture importance-weight length and mass from the ledger rows that
+are currently resident under the residency rule above. Candidate priority rewrites
 produced during the draw phase become part of the ledger only after every draw of the
 step has been resolved. When one ledger position is accepted more than once, the
 rewrite from the last such acceptance in draw order remains.
@@ -64,9 +61,9 @@ with current pre-draw priority `p`,
 
     w_raw = (N * (p / P)) ** (-beta)
 
-with the captured `N` and `P` from the start of the draw phase. Let `W` be the multiset
-of those raw weights from accepted draws only. If `W` is empty, `mean_is_weight` is
-`0.0`. Otherwise divide each member by `max(W)` and average.
+where `N` and `P` are the resident-only captures from the start of the draw phase. Let
+`W` be the multiset of those raw weights from accepted draws only. If `W` is empty,
+`mean_is_weight` is `0.0`. Otherwise divide each member by `max(W)` and average.
 
 ## Segment and aggregate boundaries
 

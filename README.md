@@ -10,8 +10,7 @@ bundle under `/app/runs` produces a contract-faithful audit document at
 
 ## Approach
 
-Visibility lag, carried scoring epochs, and ledger-length importance weights are already
-faithful. Graded failures come from truncated-segment bootstrap choice, using sampler
-draw mass for importance weights, and committing priority write-backs mid-batch. The
-oracle replaces ingest, buffer, segments, and learner, then runs the CLI. Sample bundles
-keep delays at zero and batch size one so those interactions stay silent.
+Visibility lag, truncation cut observation, and deferred write-back are already
+faithful. Graded failures come from completing-transition residency, completion-step
+epoch attachment under register_delay, and resident-only importance-weight mass. The
+oracle replaces ingest, buffer, segments, and learner, then runs the CLI.

@@ -100,7 +100,9 @@ def run_bundle(bundle_dir):
             step, manifest["target_refresh_interval"], len(epochs)
         )
         for segment in due:
-            segment.frozen_epoch = register_epoch
+            segment.frozen_epoch = params.epoch_for_step(
+                segment.ready_step, manifest["target_refresh_interval"], len(epochs)
+            )
             registry.insert(segment)
         unregistered = still_waiting
 
@@ -128,13 +130,22 @@ def run_bundle(bundle_dir):
                 manifest["sampler_seed"], step, manifest["batch_size"], draw_priorities, draw_total
             )
             total_draws += len(picks)
+            resident_positions = [
+                i
+                for i, segment_i in enumerate(registry.segments)
+                if buffer.is_resident(segment_i.residency_index)
+            ]
+            weight_n = len(resident_positions)
+            weight_p = sum(current_priorities[i] for i in resident_positions)
             for position in picks:
                 segment = registry.segments[position]
-                priority = current_priorities[position]
-                raw_weight = (size * (priority / current_total)) ** (-beta)
                 if not buffer.is_resident(segment.residency_index):
                     dropped += 1
                     continue
+                if weight_n <= 0 or weight_p <= 0.0:
+                    continue
+                priority = current_priorities[position]
+                raw_weight = (weight_n * (priority / weight_p)) ** (-beta)
                 ep_params = epochs[segment.frozen_epoch]
                 targets, advantages = segment_stats(
                     segment, feats, ep_params, gamma, rho_bar, c_bar

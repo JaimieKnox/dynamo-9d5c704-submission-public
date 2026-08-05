@@ -128,13 +128,10 @@ def run_bundle(bundle_dir):
                 manifest["sampler_seed"], step, manifest["batch_size"], draw_priorities, draw_total
             )
             total_draws += len(picks)
-            working_priorities = list(current_priorities)
-            working_total = draw_total
             for position in picks:
                 segment = registry.segments[position]
-                priority = working_priorities[position]
-                # Weight mass follows the sampler draw mass for this step.
-                raw_weight = (size * (priority / working_total)) ** (-beta)
+                priority = current_priorities[position]
+                raw_weight = (size * (priority / current_total)) ** (-beta)
                 if not buffer.is_resident(segment.residency_index):
                     dropped += 1
                     continue
@@ -149,10 +146,7 @@ def run_bundle(bundle_dir):
                 magnitude = 0.0
                 for value in advantages:
                     magnitude += abs(value)
-                new_priority = (magnitude / len(advantages) + priority_eps) ** alpha
-                working_priorities[position] = new_priority
-                registry.priorities[position] = new_priority
-                working_total = sum(working_priorities)
+                updates[position] = (magnitude / len(advantages) + priority_eps) ** alpha
                 total_accepted += 1
                 drawn.add(position)
 
@@ -163,6 +157,8 @@ def run_bundle(bundle_dir):
             mean_weight = 0.0
         mean_target = sum(target_pool) / len(target_pool) if target_pool else 0.0
         mean_advantage = sum(advantage_pool) / len(advantage_pool) if advantage_pool else 0.0
+        for position, priority in updates.items():
+            registry.priorities[position] = priority
         lagged_priorities = list(registry.priorities)
         step_records.append(
             {

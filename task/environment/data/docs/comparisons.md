@@ -40,11 +40,10 @@ Let `K` be `sampler_priority_lag`. When `K` is `0`, draws use the current pre-dr
 priority vector. When `K` is greater than `0`, draws use the priority vector as it stood
 after write-back of the previous learner step, extended with the current priorities of
 any ledger rows that did not yet exist then. Freezing that lag vector before write-back
-is wrong. Importance weights always use the current pre-draw priority of the drawn row
-together with registry length `N` and the ledger sum `P` defined for the draw gate in
-`learner-contract.md`. Do not substitute the lagged sampler vector's per-row values or
-that vector's summed mass for `p` or `P`, even when the draw itself was taken from the
-lagged vector.
+is wrong. Importance weights are a correction against the ledger state captured at the draw gate:
+the current pre-draw priority of the drawn row, registry length `N`, and the full-ledger
+sum `P` from `learner-contract.md`. Sampler lag may change which rows are proposed, but it
+does not redefine the correction distribution, and non-resident rows still contribute to `P`.
 
 Before any draw, capture `N` and that current `P`. Candidate priority rewrites become
 visible to later draws only after the step's entire batch has been resolved. Repeated

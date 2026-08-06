@@ -25,10 +25,9 @@ yet been admitted is admitted. The `k`-th transition ever admitted, counting fro
 receives admission index `k` and occupies slot `k mod buffer_capacity`. Admission overwrites
 whatever occupied that slot before, and nothing else ever clears or moves a slot.
 
-A segment is **resident**, meaning still drawable, only while the residency index defined
-in `comparisons.md` still satisfies the ring predicate. That index is the opening admission
-edge of the segment's covered span. Residency is settled after the step's admission phase
-and reused for the whole draw phase.
+A segment is **resident**, meaning still drawable, only while every admission index it
+covers still satisfies the ring predicate in `comparisons.md`. Residency is settled after
+the step's admission phase and reused for the whole draw phase.
 
 ## 4. Segments
 

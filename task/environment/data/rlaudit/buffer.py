@@ -26,6 +26,10 @@ class TransitionBuffer:
         """True while the transition admitted at `index` still owns its slot."""
         return self.write_index - index <= self.capacity
 
+    def segment_is_resident(self, segment):
+        """Whether the segment is still drawable under ring residency."""
+        return self.is_resident(segment.complete_index)
+
 
 class PriorityRegistry:
     """Append only registry of segments. Entries are never removed, only re-weighted."""
@@ -46,14 +50,17 @@ class PriorityRegistry:
         self.priorities.append(seed)
         return len(self.segments) - 1
 
-    def importance_mass(self, is_resident):
-        """Mass used for draw gating and IS weights over the full ledger."""
-        return sum(self.priorities)
+    def importance_mass(self, is_resident_segment):
+        total = 0.0
+        for segment, priority in zip(self.segments, self.priorities):
+            if is_resident_segment(segment):
+                total += priority
+        return total
 
-    def pre_draw_state(self, is_resident):
+    def pre_draw_state(self, is_resident_segment):
         """Shared pre-draw snapshot: N, P, and the current priority vector."""
         priorities = list(self.priorities)
-        return len(self.segments), self.importance_mass(is_resident), priorities
+        return len(self.segments), self.importance_mass(is_resident_segment), priorities
 
     def commit_accepts(self, ordered_updates):
         """Apply accepted rewrite candidates in draw order."""

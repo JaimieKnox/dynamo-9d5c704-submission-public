@@ -41,12 +41,12 @@ and learner modules. Replaying the previous pass@2 one-line edit list no longer 
 graded ledger.
 """
 solution_explanation = """
-Keep the inclusive ring predicate, inclusive delay eligibility, insert-time epoch stamping,
-full-ledger seeds and mass, accepted-only IS pooling, and ascending latest-then-earliest
-registration. Anchor segment residence on the opening admission index of its covered span.
-Bootstrap truncated segments from the environment-recorded cut continuation observation.
-Score importance weights from current pre-draw priorities and the captured current ledger
-sum P, not the sampler lag vector. Install the fixed modules and run the CLI.
+Keep inclusive ring and delay boundaries, insert-time epoch stamping, full-ledger seeds,
+accepted-only IS pooling, and ascending registration. Make segment residence require every
+covered admission index to still own its slot (not only the latest). Bootstrap truncated
+segments from the recorded cut continuation observation in both formation and V-trace.
+Score IS weights from current pre-draw priorities against the full-ledger mass P, with
+sampler lag snapshots taken only after write-back. Install the fixed modules and run the CLI.
 """
 verification_explanation = """
 The verifier seals oracle ledgers in a derive phase, removes the reference tree, then grades

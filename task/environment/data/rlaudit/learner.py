@@ -36,6 +36,8 @@ def segment_stats(segment, feats, ep_params, gamma, rho_bar, c_bar):
         rewards.append(row["reward"])
     if segment.cut == "terminated":
         boot = 0.0
+    elif segment.cut == "truncated":
+        boot = ep_params.value(feats[segment.rows[-1]["obs_id"]])
     else:
         boot = ep_params.value(feats[segment.boot_obs_id])
     return vtrace(rewards, values, boot, rhos, cs, gamma)
@@ -100,10 +102,10 @@ def run_bundle(bundle_dir):
             step, manifest["target_refresh_interval"], len(epochs)
         )
         for segment in due:
-            registry.insert(segment, epoch=register_epoch, is_resident=buffer.is_resident)
+            registry.insert(segment, epoch=register_epoch, is_resident=buffer.segment_is_resident)
         unregistered = still_waiting
 
-        size, current_total, current_priorities = registry.pre_draw_state(buffer.is_resident)
+        size, current_total, current_priorities = registry.pre_draw_state(buffer.segment_is_resident)
         lagged = registry.lagged_sampler_vector()
         if sampler_priority_lag <= 0 or not lagged:
             draw_priorities = list(current_priorities)
@@ -129,7 +131,7 @@ def run_bundle(bundle_dir):
                 segment = registry.segments[position]
                 priority = draw_priorities[position]
                 raw_weight = (size * (priority / draw_total)) ** (-beta)
-                if not buffer.is_resident(segment.residency_index):
+                if not buffer.segment_is_resident(segment):
                     dropped += 1
                     continue
                 ep_params = epochs[segment.frozen_epoch]
@@ -172,7 +174,7 @@ def run_bundle(bundle_dir):
         )
     evicted = 0
     for segment in registry.segments:
-        if not buffer.is_resident(segment.residency_index):
+        if not buffer.segment_is_resident(segment):
             evicted += 1
     return {
         "bundle": manifest["bundle"],

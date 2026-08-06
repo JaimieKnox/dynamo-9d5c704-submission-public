@@ -14,10 +14,9 @@ class Segment:
         self.frozen_epoch = None
         self.ready_step = None
 
-    @property
-    def residency_index(self):
-        """Admission index that decides whether the segment is still drawable."""
-        return self.complete_index
+    def covered_indices(self):
+        """Every admission index spanned by this segment's transitions."""
+        return [row["_index"] for row in self.rows]
 
     def mark_complete(self, step, epoch=None):
         """Record completion indices. Scoring epoch is stamped at ledger insert."""

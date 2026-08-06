@@ -95,8 +95,7 @@ sampler in `/app/docs/sampler.md` on the sampler priority vector.
 Each draw is resolved in draw order against residency under the current ring. Rejected
 draws are counted, are not replaced, contribute nothing to aggregates, and leave priorities
 untouched. Accepted draws may repeat an entry. Importance weights use the captured `N` and `P` from before the batch together with
-each accepted row's current pre-draw priority. Neither `p` nor `P` may be taken from the
-sampler lag vector or from that vector's summed mass.
+each accepted row's current pre-draw priority under that same captured ledger snapshot.
 
 ## 8. Per segment quantities
 
@@ -106,8 +105,8 @@ bundle's `rho_bar` and `c_bar` as the two separate clip bounds. Choose the boots
 the cut kind alone:
 
 - `terminated`: there is no continuation to value
-- `truncated`: bootstrap from the continuation observation the environment recorded at
-  the cut, which is distinct from the truncated transition's own observation
+- `truncated`: bootstrap from the observation field the bundle format attaches to a
+  time-limit cut on the stopping transition
 - `window`: bootstrap from the observation of the next transition in that episode, whether
   or not that transition is currently admitted or resident
 

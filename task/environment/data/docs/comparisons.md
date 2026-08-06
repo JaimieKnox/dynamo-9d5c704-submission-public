@@ -17,9 +17,9 @@ sentinel `-1` and nothing is admitted. File order in `ingest.json` is not a time
 
 A transition remains drawable until the ring has advanced one full capacity past its
 admission index. The admission itself still owns its slot at the inclusive capacity
-boundary; dropping it one revolution early is wrong. Segment residence applies that ring
-predicate to the admission index that anchors the segment under the contract: the opening
-edge of its covered span in admission order.
+boundary; dropping it one revolution early is wrong. A segment is drawable only when the
+ring predicate still holds for the admission indices that segment covers under the
+contract; if any covered admission has left the ring, the segment is not drawable.
 
 A segment becomes complete on the first learner step whose admission phase has given
 every one of its transitions an admission index. Let `R` be the bundle `register_delay`.
@@ -40,10 +40,10 @@ Let `K` be `sampler_priority_lag`. When `K` is `0`, draws use the current pre-dr
 priority vector. When `K` is greater than `0`, draws use the priority vector as it stood
 after write-back of the previous learner step, extended with the current priorities of
 any ledger rows that did not yet exist then. Freezing that lag vector before write-back
-is wrong. Importance weights are a correction against the ledger state captured at the draw gate:
-the current pre-draw priority of the drawn row, registry length `N`, and the full-ledger
-sum `P` from `learner-contract.md`. Sampler lag may change which rows are proposed, but it
-does not redefine the correction distribution, and non-resident rows still contribute to `P`.
+is wrong. Importance weights correct draws against the ledger state captured at the draw
+gate (`N`, `P`, and the drawn row's current pre-draw priority from `learner-contract.md`).
+The sampler lag vector only selects proposals; the correction distribution stays the
+captured ledger snapshot, including rows that are no longer drawable.
 
 Before any draw, capture `N` and that current `P`. Candidate priority rewrites become
 visible to later draws only after the step's entire batch has been resolved. Repeated
@@ -69,8 +69,8 @@ only. If `W` is empty, `mean_is_weight` is `0.0`. Otherwise divide each member b
 
 ## Segment and aggregate boundaries
 
-Termination bootstraps with zero. Truncation bootstraps from the continuation observation
-the environment recorded at the cut — distinct from the truncated transition's own
-observation. A full window bootstraps from the next episode observation, and a window that
+Termination bootstraps with zero. Truncation bootstraps from the observation the
+bundle format records for a time-limit cut on that stopping transition (see
+`bundle-format.md`). A full window bootstraps from the next episode observation, and a window that
 would have to stop on the episode's final transition is not a segment at all. Floating
 fields round to six decimals only after reductions finish.

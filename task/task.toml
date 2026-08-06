@@ -37,8 +37,8 @@ values coincide on graded steps. An RL infrastructure engineer would perform thi
 when validating asynchronous learner reproducibility under publication lag and priority aging.
 
 Solving requires composing several phase rules as one state machine across buffer, segment,
-and learner modules. Replaying the previous pass@2 one-line edit list no longer reaches the
-graded ledger.
+and learner modules. Independent one-field patches that ignore cross-module interactions still
+leave graded ledgers divergent.
 """
 solution_explanation = """
 Keep inclusive ring and delay boundaries, insert-time epoch stamping, full-ledger seeds,

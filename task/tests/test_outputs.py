@@ -6,6 +6,7 @@ package therefore contributes observations only, never the values used as the or
 
 import json
 import os
+from pathlib import Path
 
 import pytest
 
@@ -15,6 +16,7 @@ SEALED_INPUTS = os.path.join(BASE, "inputs")
 OUTPUT_MOUNT = "/app/out"
 RUN_MOUNT = "/app/runs"
 ROUNDING_ERROR = 1e-6
+_OUTPUT_ROOT = Path(OUTPUT_MOUNT).resolve()
 
 ROW_INTEGERS = ("step", "target_epoch", "dropped_nonresident")
 ROW_DECIMALS = (
@@ -61,10 +63,22 @@ os.remove(SEAL_PATH)
 _outputs = {}
 
 
+def _require_ordinary_output(name):
+    """Reject symlinks and path escapes before any graded read (R190)."""
+    target = Path(OUTPUT_MOUNT) / ("%s.json" % name)
+    assert target.exists(), "expected output file is absent: %s" % target
+    assert not target.is_symlink(), "graded output must not be a symlink: %s" % target
+    assert target.is_file(), "graded output must be an ordinary file: %s" % target
+    resolved = target.resolve()
+    assert _OUTPUT_ROOT == resolved or _OUTPUT_ROOT in resolved.parents, (
+        "graded output escaped the output mount: %s" % resolved
+    )
+    return str(target)
+
+
 def _emitted(name):
     if name not in _outputs:
-        target = os.path.join(OUTPUT_MOUNT, "%s.json" % name)
-        assert os.path.isfile(target), "expected output file is absent: %s" % target
+        target = _require_ordinary_output(name)
         _outputs[name] = _decode(target)
     return _outputs[name]
 

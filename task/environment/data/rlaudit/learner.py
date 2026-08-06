@@ -93,7 +93,7 @@ def run_bundle(bundle_dir):
             if segment.ready_step is None:
                 still_waiting.append(segment)
                 continue
-            if step > segment.ready_step + register_delay:
+            if step >= segment.ready_step + register_delay:
                 due.append(segment)
             else:
                 still_waiting.append(segment)

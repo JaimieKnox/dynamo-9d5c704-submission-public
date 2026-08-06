@@ -15,28 +15,36 @@ sentinel `-1` and nothing is admitted. File order in `ingest.json` is not a time
 
 ## Ring residency and delayed registration
 
-After the admission phase, a transition admitted at index `k` is resident exactly when
+A transition remains drawable until the ring has advanced one full capacity past its
+admission index. The admission itself still owns its slot at the inclusive capacity
+boundary; dropping it one revolution early is wrong. Segment residence applies that ring
+predicate to the admission index that anchors the segment under the contract: the opening
+edge of its covered span in admission order.
 
-    admitted_so_far - k <= buffer_capacity
+A segment becomes complete on the first learner step whose admission phase has given
+every one of its transitions an admission index. Let `R` be the bundle `register_delay`.
+The segment may enter the priority ledger only after exactly `R` full learner steps have
+elapsed from that completion step, counting the completion step as step zero of the wait
+(so when `R` is `0` the segment may register on the completion step itself). Among segments
+that become eligible on the same step, register in ascending order of the latest admission
+index, breaking ties by ascending earliest admission index. The smaller latest-admission
+index registers first; descending latest-admission order is wrong.
 
-Segment residence follows that predicate for the admission index that first enters
-the buffer for the segment's covered transitions. A segment becomes complete on the first learner step whose admission
-phase has given every one of its transitions an admission index. Let `R` be the bundle
-`register_delay`. The segment may enter the priority ledger only on a step `s` satisfying
-`s >= complete_step + R`. Among segments that become eligible on the same step, register in ascending order of the
-latest admission index, breaking ties by ascending earliest admission index. The smaller latest-admission index registers first; descending latest-admission order is wrong.
-
-The scoring epoch attached to a segment is `e(s)` for the learner step on which that
-segment enters the priority ledger under the delay rule above.
+The scoring epoch attached to a segment is the reported target epoch of the learner step
+on which that segment actually enters the priority ledger under the delay rule above.
+Completing the segment on an earlier step must not freeze its scoring epoch.
 
 ## Sampler lag and step snapshots
 
 Let `K` be `sampler_priority_lag`. When `K` is `0`, draws use the current pre-draw
 priority vector. When `K` is greater than `0`, draws use the priority vector as it stood
 after write-back of the previous learner step, extended with the current priorities of
-any ledger rows that did not yet exist then. Importance weights always use the current pre-draw priority of the drawn row together
-with registry length `N` and the ledger sum `P` defined for the draw gate in
-`learner-contract.md`.
+any ledger rows that did not yet exist then. Freezing that lag vector before write-back
+is wrong. Importance weights always use the current pre-draw priority of the drawn row
+together with registry length `N` and the ledger sum `P` defined for the draw gate in
+`learner-contract.md`. Do not substitute the lagged sampler vector's per-row values or
+that vector's summed mass for `p` or `P`, even when the draw itself was taken from the
+lagged vector.
 
 Before any draw, capture `N` and that current `P`. Candidate priority rewrites become
 visible to later draws only after the step's entire batch has been resolved. Repeated
@@ -62,7 +70,8 @@ only. If `W` is empty, `mean_is_weight` is `0.0`. Otherwise divide each member b
 
 ## Segment and aggregate boundaries
 
-Termination bootstraps with zero. Truncation uses the recorded cut observation. A full
-window bootstraps from the next episode observation, and a window that would have to stop
-on the episode's final transition is not a segment at all. Floating fields round to six
-decimals only after reductions finish.
+Termination bootstraps with zero. Truncation bootstraps from the continuation observation
+the environment recorded at the cut — distinct from the truncated transition's own
+observation. A full window bootstraps from the next episode observation, and a window that
+would have to stop on the episode's final transition is not a segment at all. Floating
+fields round to six decimals only after reductions finish.

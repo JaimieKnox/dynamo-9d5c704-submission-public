@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "dynamo/audit-replay-learner"
-description = "Repair near-correct async replay learner whose ring residency bound, delayed registration eligibility, and rejected-draw IS pooling disagree under wrap"
+description = "Repair near-correct async replay learner whose residency anchor, truncation bootstrap, and lagged IS mass disagree under wrap"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -25,36 +25,35 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 12
 difficulty_explanation = """
-The auditor already stamps insert-time epochs, uses full-ledger seed and draw mass, reads current
-priorities for importance numerators, commits then snapshots lag, and registers same-step due
-segments in ascending latest-then-earliest order. Graded ledgers still diverge because residency
-uses a strict capacity bound that drops the oldest live transition one step early, because
-registration delay uses a strict inequality that postpones insert by an extra step, and because
-rejected draws still contribute raw weights to the importance normalization pool. Sample bundles
-keep delay at zero and a huge ring, so those interactions stay green there.
+The auditor already keeps inclusive ring and delay boundaries, insert-time epoch stamping,
+full-ledger seeds, accepted-only IS pooling, and ascending same-step registration. Graded
+ledgers still diverge under ring wrap, sampler lag, and truncated episode cuts: sampled slots,
+dropped-nonresident counts, V-trace means, and mean IS weights drift together on the same
+learner steps even though sample bundles with a huge ring, zero lag, zero delay, and no
+truncations stay green.
 
-The recordings are synthetic fixtures built so ring wrap sits exactly on the capacity boundary,
-delayed registration crosses epoch boundaries, and batches mix resident accepts with nonresident
-rejects. An RL infrastructure engineer would perform this reconstruction when validating
-asynchronous learner reproducibility under publication lag and priority aging.
+The recordings are synthetic fixtures built so wrap, lag padding, and truncated continuation
+values coincide on graded steps. An RL infrastructure engineer would perform this reconstruction
+when validating asynchronous learner reproducibility under publication lag and priority aging.
 
-Solving requires composing the inclusive ring predicate, inclusive delay eligibility, and
-accepted-only IS pooling as one state machine. Replaying the previous pass@2 edit list no longer
-reaches the graded ledger.
+Solving requires composing several phase rules as one state machine across buffer, segment,
+and learner modules. Replaying the previous pass@2 one-line edit list no longer reaches the
+graded ledger.
 """
 solution_explanation = """
-Keep insert-time epoch stamping, full-ledger seed and mass, current-priority IS numerators,
-post-commit lag snapshots, and ascending latest-then-earliest registration. Use an inclusive ring
-residency check (`admitted_so_far - k <= capacity`). Treat a segment as registrable when
-`step >= complete_step + register_delay`. Keep rejected draws out of the importance-weight
-normalization pool. Install the fixed modules and run the CLI.
+Keep the inclusive ring predicate, inclusive delay eligibility, insert-time epoch stamping,
+full-ledger seeds and mass, accepted-only IS pooling, and ascending latest-then-earliest
+registration. Anchor segment residence on the opening admission index of its covered span.
+Bootstrap truncated segments from the environment-recorded cut continuation observation.
+Score importance weights from current pre-draw priorities and the captured current ledger
+sum P, not the sampler lag vector. Install the fixed modules and run the CLI.
 """
 verification_explanation = """
-The verifier seals oracle ledgers in a derive phase, removes the reference tree, then grades agent
-outputs against the sealed bundle with no oracle import. Counts match exactly and floating
-aggregates match at six decimals. The oracle copies fixed modules and runs the CLI. A nop agent
-keeps the strict ring bound, strict delay inequality, and rejected-draw IS pooling, so graded
-bundles diverge while samples stay green.
+The verifier seals oracle ledgers in a derive phase, removes the reference tree, then grades
+agent outputs against the sealed bundle with no oracle import. Counts match exactly and
+floating aggregates match at six decimals. The oracle copies fixed modules and runs the CLI.
+A nop agent keeps the closing-edge residency anchor, cut-transition truncation bootstrap, and
+lagged IS mass, so graded bundles diverge while samples stay green.
 """
 
 [verifier]

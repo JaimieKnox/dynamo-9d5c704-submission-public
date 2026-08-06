@@ -1,111 +1,111 @@
-{"action": 1, "actor_id": 1, "behavior_logp": -1.218595, "cut_obs_id": null, "episode_id": "a1-e00", "obs_id": "o00112", "reward": -1.331588, "seq": 1, "t": 0, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.8896, "cut_obs_id": null, "episode_id": "a1-e00", "obs_id": "o00113", "reward": 1.389042, "seq": 2, "t": 1, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.150822, "cut_obs_id": null, "episode_id": "a1-e00", "obs_id": "o00114", "reward": -0.254256, "seq": 9, "t": 2, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.089831, "cut_obs_id": null, "episode_id": "a1-e00", "obs_id": "o00115", "reward": -1.22403, "seq": 10, "t": 3, "terminated": false, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -1.481783, "cut_obs_id": null, "episode_id": "a1-e00", "obs_id": "o00116", "reward": 0.610572, "seq": 12, "t": 4, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.478359, "cut_obs_id": null, "episode_id": "a1-e00", "obs_id": "o00117", "reward": -0.961727, "seq": 18, "t": 5, "terminated": false, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -0.908212, "cut_obs_id": null, "episode_id": "a1-e00", "obs_id": "o00118", "reward": 0.169948, "seq": 19, "t": 6, "terminated": false, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -1.869196, "cut_obs_id": null, "episode_id": "a1-e00", "obs_id": "o00119", "reward": -0.328795, "seq": 21, "t": 7, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.148401, "cut_obs_id": null, "episode_id": "a1-e00", "obs_id": "o00120", "reward": 0.182388, "seq": 22, "t": 8, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.129082, "cut_obs_id": null, "episode_id": "a1-e00", "obs_id": "o00121", "reward": 0.076558, "seq": 25, "t": 9, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.244026, "cut_obs_id": null, "episode_id": "a1-e00", "obs_id": "o00122", "reward": 1.753208, "seq": 26, "t": 10, "terminated": true, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.168392, "cut_obs_id": null, "episode_id": "a1-e01", "obs_id": "o00123", "reward": -0.252296, "seq": 29, "t": 0, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.170049, "cut_obs_id": null, "episode_id": "a1-e01", "obs_id": "o00124", "reward": -1.200978, "seq": 30, "t": 1, "terminated": false, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -1.017256, "cut_obs_id": null, "episode_id": "a1-e01", "obs_id": "o00125", "reward": 0.938508, "seq": 33, "t": 2, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.275263, "cut_obs_id": null, "episode_id": "a1-e01", "obs_id": "o00126", "reward": 0.721592, "seq": 38, "t": 3, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.43332, "cut_obs_id": null, "episode_id": "a1-e01", "obs_id": "o00127", "reward": -0.186981, "seq": 39, "t": 4, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.147126, "cut_obs_id": null, "episode_id": "a1-e01", "obs_id": "o00128", "reward": 0.412005, "seq": 40, "t": 5, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.245583, "cut_obs_id": null, "episode_id": "a1-e01", "obs_id": "o00129", "reward": -0.081706, "seq": 47, "t": 6, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.138104, "cut_obs_id": null, "episode_id": "a1-e01", "obs_id": "o00130", "reward": -0.384785, "seq": 48, "t": 7, "terminated": false, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -1.273496, "cut_obs_id": null, "episode_id": "a1-e01", "obs_id": "o00131", "reward": 1.85809, "seq": 51, "t": 8, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.727127, "cut_obs_id": null, "episode_id": "a1-e01", "obs_id": "o00132", "reward": -1.197869, "seq": 53, "t": 9, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.182417, "cut_obs_id": null, "episode_id": "a1-e01", "obs_id": "o00133", "reward": -0.642109, "seq": 55, "t": 10, "terminated": false, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -1.574565, "cut_obs_id": null, "episode_id": "a1-e01", "obs_id": "o00134", "reward": -0.354211, "seq": 58, "t": 11, "terminated": true, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.421981, "cut_obs_id": null, "episode_id": "a1-e02", "obs_id": "o00135", "reward": -0.256478, "seq": 59, "t": 0, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.311192, "cut_obs_id": null, "episode_id": "a1-e02", "obs_id": "o00136", "reward": 0.101202, "seq": 60, "t": 1, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.058724, "cut_obs_id": null, "episode_id": "a1-e02", "obs_id": "o00137", "reward": -0.284267, "seq": 62, "t": 2, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.075663, "cut_obs_id": null, "episode_id": "a1-e02", "obs_id": "o00138", "reward": -0.693854, "seq": 64, "t": 3, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.575807, "cut_obs_id": null, "episode_id": "a1-e02", "obs_id": "o00139", "reward": 0.037018, "seq": 65, "t": 4, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.367414, "cut_obs_id": null, "episode_id": "a1-e02", "obs_id": "o00140", "reward": -0.51779, "seq": 67, "t": 5, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.787567, "cut_obs_id": null, "episode_id": "a1-e02", "obs_id": "o00141", "reward": -0.14981, "seq": 74, "t": 6, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.783075, "cut_obs_id": null, "episode_id": "a1-e02", "obs_id": "o00142", "reward": 0.545028, "seq": 76, "t": 7, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.503431, "cut_obs_id": null, "episode_id": "a1-e02", "obs_id": "o00143", "reward": -0.481725, "seq": 78, "t": 8, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.717398, "cut_obs_id": null, "episode_id": "a1-e02", "obs_id": "o00144", "reward": -0.405829, "seq": 85, "t": 9, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.454671, "cut_obs_id": null, "episode_id": "a1-e02", "obs_id": "o00145", "reward": 0.680608, "seq": 89, "t": 10, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.355124, "cut_obs_id": null, "episode_id": "a1-e02", "obs_id": "o00146", "reward": 0.651987, "seq": 92, "t": 11, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.755562, "cut_obs_id": null, "episode_id": "a1-e02", "obs_id": "o00147", "reward": -0.165837, "seq": 93, "t": 12, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.437451, "cut_obs_id": null, "episode_id": "a1-e02", "obs_id": "o00148", "reward": 0.567238, "seq": 96, "t": 13, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.314847, "cut_obs_id": null, "episode_id": "a1-e02", "obs_id": "o00149", "reward": -1.410615, "seq": 97, "t": 14, "terminated": true, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.706145, "cut_obs_id": null, "episode_id": "a1-e03", "obs_id": "o00150", "reward": 1.530809, "seq": 99, "t": 0, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -0.707757, "cut_obs_id": null, "episode_id": "a1-e03", "obs_id": "o00151", "reward": 1.148908, "seq": 101, "t": 1, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -2.110546, "cut_obs_id": null, "episode_id": "a1-e03", "obs_id": "o00152", "reward": 1.358089, "seq": 105, "t": 2, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.189507, "cut_obs_id": null, "episode_id": "a1-e03", "obs_id": "o00153", "reward": -1.037838, "seq": 111, "t": 3, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.393948, "cut_obs_id": null, "episode_id": "a1-e03", "obs_id": "o00154", "reward": 0.542737, "seq": 119, "t": 4, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.381004, "cut_obs_id": null, "episode_id": "a1-e03", "obs_id": "o00155", "reward": 0.370218, "seq": 120, "t": 5, "terminated": true, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.40694, "cut_obs_id": null, "episode_id": "a1-e04", "obs_id": "o00156", "reward": -0.31163, "seq": 124, "t": 0, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.396683, "cut_obs_id": null, "episode_id": "a1-e04", "obs_id": "o00157", "reward": 0.823691, "seq": 127, "t": 1, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.684665, "cut_obs_id": null, "episode_id": "a1-e04", "obs_id": "o00158", "reward": -1.326243, "seq": 128, "t": 2, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.503097, "cut_obs_id": null, "episode_id": "a1-e04", "obs_id": "o00159", "reward": 0.254276, "seq": 129, "t": 3, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.214829, "cut_obs_id": null, "episode_id": "a1-e04", "obs_id": "o00160", "reward": -1.237313, "seq": 130, "t": 4, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.53506, "cut_obs_id": null, "episode_id": "a1-e04", "obs_id": "o00161", "reward": -1.984251, "seq": 133, "t": 5, "terminated": false, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -1.221253, "cut_obs_id": null, "episode_id": "a1-e04", "obs_id": "o00162", "reward": -0.429726, "seq": 138, "t": 6, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.539711, "cut_obs_id": null, "episode_id": "a1-e04", "obs_id": "o00163", "reward": 0.168395, "seq": 140, "t": 7, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.361173, "cut_obs_id": null, "episode_id": "a1-e04", "obs_id": "o00164", "reward": 2.625001, "seq": 142, "t": 8, "terminated": false, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -1.430048, "cut_obs_id": null, "episode_id": "a1-e04", "obs_id": "o00165", "reward": 0.985978, "seq": 144, "t": 9, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.341825, "cut_obs_id": null, "episode_id": "a1-e04", "obs_id": "o00166", "reward": 1.248638, "seq": 147, "t": 10, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.087995, "cut_obs_id": null, "episode_id": "a1-e04", "obs_id": "o00167", "reward": 0.257913, "seq": 150, "t": 11, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.336765, "cut_obs_id": null, "episode_id": "a1-e04", "obs_id": "o00168", "reward": -0.422315, "seq": 159, "t": 12, "terminated": true, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -1.710025, "cut_obs_id": null, "episode_id": "a1-e05", "obs_id": "o00169", "reward": 1.360901, "seq": 160, "t": 0, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.386408, "cut_obs_id": null, "episode_id": "a1-e05", "obs_id": "o00170", "reward": 1.463808, "seq": 163, "t": 1, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.614699, "cut_obs_id": null, "episode_id": "a1-e05", "obs_id": "o00171", "reward": -0.257216, "seq": 172, "t": 2, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -0.888991, "cut_obs_id": null, "episode_id": "a1-e05", "obs_id": "o00172", "reward": 1.559056, "seq": 175, "t": 3, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -0.8717, "cut_obs_id": null, "episode_id": "a1-e05", "obs_id": "o00173", "reward": 0.643808, "seq": 178, "t": 4, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.349018, "cut_obs_id": null, "episode_id": "a1-e05", "obs_id": "o00174", "reward": -1.012197, "seq": 180, "t": 5, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.536713, "cut_obs_id": null, "episode_id": "a1-e05", "obs_id": "o00175", "reward": -1.608101, "seq": 181, "t": 6, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.209856, "cut_obs_id": null, "episode_id": "a1-e05", "obs_id": "o00176", "reward": -1.022798, "seq": 182, "t": 7, "terminated": false, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -1.874429, "cut_obs_id": null, "episode_id": "a1-e05", "obs_id": "o00177", "reward": 0.109097, "seq": 183, "t": 8, "terminated": true, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.329161, "cut_obs_id": null, "episode_id": "a1-e06", "obs_id": "o00178", "reward": -0.529477, "seq": 185, "t": 0, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.200177, "cut_obs_id": null, "episode_id": "a1-e06", "obs_id": "o00179", "reward": -0.220008, "seq": 187, "t": 1, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.556002, "cut_obs_id": null, "episode_id": "a1-e06", "obs_id": "o00180", "reward": -0.095157, "seq": 189, "t": 2, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.194393, "cut_obs_id": null, "episode_id": "a1-e06", "obs_id": "o00181", "reward": -0.47214, "seq": 190, "t": 3, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.326919, "cut_obs_id": null, "episode_id": "a1-e06", "obs_id": "o00182", "reward": -0.099187, "seq": 191, "t": 4, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -0.892069, "cut_obs_id": null, "episode_id": "a1-e06", "obs_id": "o00183", "reward": -0.461603, "seq": 192, "t": 5, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.579044, "cut_obs_id": null, "episode_id": "a1-e06", "obs_id": "o00184", "reward": 0.074756, "seq": 194, "t": 6, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.298822, "cut_obs_id": null, "episode_id": "a1-e06", "obs_id": "o00185", "reward": 1.12439, "seq": 196, "t": 7, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.214141, "cut_obs_id": null, "episode_id": "a1-e06", "obs_id": "o00186", "reward": -0.483199, "seq": 207, "t": 8, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -2.143814, "cut_obs_id": null, "episode_id": "a1-e06", "obs_id": "o00187", "reward": 0.244022, "seq": 212, "t": 9, "terminated": false, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -1.981462, "cut_obs_id": null, "episode_id": "a1-e06", "obs_id": "o00188", "reward": 1.022719, "seq": 214, "t": 10, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.74508, "cut_obs_id": null, "episode_id": "a1-e06", "obs_id": "o00189", "reward": -1.055258, "seq": 216, "t": 11, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.446793, "cut_obs_id": null, "episode_id": "a1-e06", "obs_id": "o00190", "reward": 0.631817, "seq": 217, "t": 12, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.024271, "cut_obs_id": null, "episode_id": "a1-e06", "obs_id": "o00191", "reward": 0.461876, "seq": 220, "t": 13, "terminated": false, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -0.711237, "cut_obs_id": null, "episode_id": "a1-e06", "obs_id": "o00192", "reward": 0.255163, "seq": 224, "t": 14, "terminated": true, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -1.057402, "cut_obs_id": null, "episode_id": "a1-e07", "obs_id": "o00193", "reward": -0.009642, "seq": 226, "t": 0, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.227943, "cut_obs_id": null, "episode_id": "a1-e07", "obs_id": "o00194", "reward": 0.372643, "seq": 227, "t": 1, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.713552, "cut_obs_id": null, "episode_id": "a1-e07", "obs_id": "o00195", "reward": -0.643251, "seq": 228, "t": 2, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.311825, "cut_obs_id": null, "episode_id": "a1-e07", "obs_id": "o00196", "reward": -0.575962, "seq": 229, "t": 3, "terminated": false, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -1.098272, "cut_obs_id": null, "episode_id": "a1-e07", "obs_id": "o00197", "reward": 0.112558, "seq": 230, "t": 4, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -2.008725, "cut_obs_id": null, "episode_id": "a1-e07", "obs_id": "o00198", "reward": 2.925761, "seq": 231, "t": 5, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -0.937929, "cut_obs_id": null, "episode_id": "a1-e07", "obs_id": "o00199", "reward": -1.32592, "seq": 239, "t": 6, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.180684, "cut_obs_id": null, "episode_id": "a1-e07", "obs_id": "o00200", "reward": -1.274415, "seq": 244, "t": 7, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -0.768676, "cut_obs_id": null, "episode_id": "a1-e07", "obs_id": "o00201", "reward": 0.163964, "seq": 246, "t": 8, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.643426, "cut_obs_id": null, "episode_id": "a1-e07", "obs_id": "o00202", "reward": -1.713233, "seq": 254, "t": 9, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.278242, "cut_obs_id": null, "episode_id": "a1-e07", "obs_id": "o00203", "reward": 0.294922, "seq": 256, "t": 10, "terminated": false, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -1.52705, "cut_obs_id": null, "episode_id": "a1-e07", "obs_id": "o00204", "reward": -0.561184, "seq": 259, "t": 11, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.44844, "cut_obs_id": null, "episode_id": "a1-e07", "obs_id": "o00205", "reward": 0.616248, "seq": 261, "t": 12, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.155226, "cut_obs_id": null, "episode_id": "a1-e07", "obs_id": "o00206", "reward": -1.82623, "seq": 263, "t": 13, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.012686, "cut_obs_id": null, "episode_id": "a1-e07", "obs_id": "o00207", "reward": -0.090788, "seq": 265, "t": 14, "terminated": true, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -1.534637, "cut_obs_id": null, "episode_id": "a1-e08", "obs_id": "o00208", "reward": -0.171013, "seq": 266, "t": 0, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.652142, "cut_obs_id": null, "episode_id": "a1-e08", "obs_id": "o00209", "reward": 0.999529, "seq": 267, "t": 1, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.276427, "cut_obs_id": null, "episode_id": "a1-e08", "obs_id": "o00210", "reward": -0.97158, "seq": 268, "t": 2, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.620764, "cut_obs_id": null, "episode_id": "a1-e08", "obs_id": "o00211", "reward": 0.310328, "seq": 269, "t": 3, "terminated": false, "truncated": false}
-{"action": 1, "actor_id": 1, "behavior_logp": -1.21838, "cut_obs_id": null, "episode_id": "a1-e08", "obs_id": "o00212", "reward": 0.329245, "seq": 272, "t": 4, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.59732, "cut_obs_id": null, "episode_id": "a1-e08", "obs_id": "o00213", "reward": -0.538989, "seq": 277, "t": 5, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.084512, "cut_obs_id": null, "episode_id": "a1-e08", "obs_id": "o00214", "reward": -0.618528, "seq": 282, "t": 6, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.569323, "cut_obs_id": null, "episode_id": "a1-e08", "obs_id": "o00215", "reward": 1.164052, "seq": 291, "t": 7, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.082549, "cut_obs_id": null, "episode_id": "a1-e08", "obs_id": "o00216", "reward": -0.077688, "seq": 295, "t": 8, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.759791, "cut_obs_id": null, "episode_id": "a1-e08", "obs_id": "o00217", "reward": -0.766239, "seq": 297, "t": 9, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.492865, "cut_obs_id": null, "episode_id": "a1-e08", "obs_id": "o00218", "reward": -1.14569, "seq": 299, "t": 10, "terminated": false, "truncated": false}
-{"action": 3, "actor_id": 1, "behavior_logp": -1.98412, "cut_obs_id": null, "episode_id": "a1-e08", "obs_id": "o00219", "reward": 1.066615, "seq": 302, "t": 11, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.68502, "cut_obs_id": null, "episode_id": "a1-e08", "obs_id": "o00220", "reward": -0.437606, "seq": 303, "t": 12, "terminated": false, "truncated": false}
-{"action": 0, "actor_id": 1, "behavior_logp": -1.890566, "cut_obs_id": null, "episode_id": "a1-e08", "obs_id": "o00221", "reward": 0.192786, "seq": 304, "t": 13, "terminated": false, "truncated": false}
-{"action": 2, "actor_id": 1, "behavior_logp": -1.198744, "cut_obs_id": null, "episode_id": "a1-e08", "obs_id": "o00222", "reward": -2.257431, "seq": 305, "t": 14, "terminated": true, "truncated": false}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.218595,"cut_obs_id": null,"episode_id": "a1-e00","obs_id": "o00112","reward": -1.331588,"seq": 1,"t": 0,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.8896,"cut_obs_id": null,"episode_id": "a1-e00","obs_id": "o00113","reward": 1.389042,"seq": 2,"t": 1,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.150822,"cut_obs_id": null,"episode_id": "a1-e00","obs_id": "o00114","reward": -0.254256,"seq": 9,"t": 2,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.089831,"cut_obs_id": null,"episode_id": "a1-e00","obs_id": "o00115","reward": -1.22403,"seq": 10,"t": 3,"terminated": false,"truncated": false}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.481783,"cut_obs_id": null,"episode_id": "a1-e00","obs_id": "o00116","reward": 0.610572,"seq": 12,"t": 4,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.478359,"cut_obs_id": null,"episode_id": "a1-e00","obs_id": "o00117","reward": -0.961727,"seq": 18,"t": 5,"terminated": false,"truncated": false}
+{"action": 1,"actor_id": 1,"behavior_logp": -0.908212,"cut_obs_id": null,"episode_id": "a1-e00","obs_id": "o00118","reward": 0.169948,"seq": 19,"t": 6,"terminated": false,"truncated": false}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.869196,"cut_obs_id": null,"episode_id": "a1-e00","obs_id": "o00119","reward": -0.328795,"seq": 21,"t": 7,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.148401,"cut_obs_id": null,"episode_id": "a1-e00","obs_id": "o00120","reward": 0.182388,"seq": 22,"t": 8,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.129082,"cut_obs_id": null,"episode_id": "a1-e00","obs_id": "o00121","reward": 0.076558,"seq": 25,"t": 9,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.244026,"cut_obs_id": "cut-o00122","episode_id": "a1-e00","obs_id": "o00122","reward": 1.753208,"seq": 26,"t": 10,"terminated": false,"truncated": true}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.168392,"cut_obs_id": null,"episode_id": "a1-e01","obs_id": "o00123","reward": -0.252296,"seq": 29,"t": 0,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.170049,"cut_obs_id": null,"episode_id": "a1-e01","obs_id": "o00124","reward": -1.200978,"seq": 30,"t": 1,"terminated": false,"truncated": false}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.017256,"cut_obs_id": null,"episode_id": "a1-e01","obs_id": "o00125","reward": 0.938508,"seq": 33,"t": 2,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.275263,"cut_obs_id": null,"episode_id": "a1-e01","obs_id": "o00126","reward": 0.721592,"seq": 38,"t": 3,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.43332,"cut_obs_id": null,"episode_id": "a1-e01","obs_id": "o00127","reward": -0.186981,"seq": 39,"t": 4,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.147126,"cut_obs_id": null,"episode_id": "a1-e01","obs_id": "o00128","reward": 0.412005,"seq": 40,"t": 5,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.245583,"cut_obs_id": null,"episode_id": "a1-e01","obs_id": "o00129","reward": -0.081706,"seq": 47,"t": 6,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.138104,"cut_obs_id": null,"episode_id": "a1-e01","obs_id": "o00130","reward": -0.384785,"seq": 48,"t": 7,"terminated": false,"truncated": false}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.273496,"cut_obs_id": null,"episode_id": "a1-e01","obs_id": "o00131","reward": 1.85809,"seq": 51,"t": 8,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.727127,"cut_obs_id": null,"episode_id": "a1-e01","obs_id": "o00132","reward": -1.197869,"seq": 53,"t": 9,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.182417,"cut_obs_id": null,"episode_id": "a1-e01","obs_id": "o00133","reward": -0.642109,"seq": 55,"t": 10,"terminated": false,"truncated": false}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.574565,"cut_obs_id": "cut-o00134","episode_id": "a1-e01","obs_id": "o00134","reward": -0.354211,"seq": 58,"t": 11,"terminated": false,"truncated": true}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.421981,"cut_obs_id": null,"episode_id": "a1-e02","obs_id": "o00135","reward": -0.256478,"seq": 59,"t": 0,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.311192,"cut_obs_id": null,"episode_id": "a1-e02","obs_id": "o00136","reward": 0.101202,"seq": 60,"t": 1,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.058724,"cut_obs_id": null,"episode_id": "a1-e02","obs_id": "o00137","reward": -0.284267,"seq": 62,"t": 2,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.075663,"cut_obs_id": null,"episode_id": "a1-e02","obs_id": "o00138","reward": -0.693854,"seq": 64,"t": 3,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.575807,"cut_obs_id": null,"episode_id": "a1-e02","obs_id": "o00139","reward": 0.037018,"seq": 65,"t": 4,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.367414,"cut_obs_id": null,"episode_id": "a1-e02","obs_id": "o00140","reward": -0.51779,"seq": 67,"t": 5,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.787567,"cut_obs_id": null,"episode_id": "a1-e02","obs_id": "o00141","reward": -0.14981,"seq": 74,"t": 6,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.783075,"cut_obs_id": null,"episode_id": "a1-e02","obs_id": "o00142","reward": 0.545028,"seq": 76,"t": 7,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.503431,"cut_obs_id": null,"episode_id": "a1-e02","obs_id": "o00143","reward": -0.481725,"seq": 78,"t": 8,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.717398,"cut_obs_id": null,"episode_id": "a1-e02","obs_id": "o00144","reward": -0.405829,"seq": 85,"t": 9,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.454671,"cut_obs_id": null,"episode_id": "a1-e02","obs_id": "o00145","reward": 0.680608,"seq": 89,"t": 10,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.355124,"cut_obs_id": null,"episode_id": "a1-e02","obs_id": "o00146","reward": 0.651987,"seq": 92,"t": 11,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.755562,"cut_obs_id": null,"episode_id": "a1-e02","obs_id": "o00147","reward": -0.165837,"seq": 93,"t": 12,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.437451,"cut_obs_id": null,"episode_id": "a1-e02","obs_id": "o00148","reward": 0.567238,"seq": 96,"t": 13,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.314847,"cut_obs_id": "cut-o00149","episode_id": "a1-e02","obs_id": "o00149","reward": -1.410615,"seq": 97,"t": 14,"terminated": false,"truncated": true}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.706145,"cut_obs_id": null,"episode_id": "a1-e03","obs_id": "o00150","reward": 1.530809,"seq": 99,"t": 0,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -0.707757,"cut_obs_id": null,"episode_id": "a1-e03","obs_id": "o00151","reward": 1.148908,"seq": 101,"t": 1,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -2.110546,"cut_obs_id": null,"episode_id": "a1-e03","obs_id": "o00152","reward": 1.358089,"seq": 105,"t": 2,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.189507,"cut_obs_id": null,"episode_id": "a1-e03","obs_id": "o00153","reward": -1.037838,"seq": 111,"t": 3,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.393948,"cut_obs_id": null,"episode_id": "a1-e03","obs_id": "o00154","reward": 0.542737,"seq": 119,"t": 4,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.381004,"cut_obs_id": "cut-o00155","episode_id": "a1-e03","obs_id": "o00155","reward": 0.370218,"seq": 120,"t": 5,"terminated": false,"truncated": true}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.40694,"cut_obs_id": null,"episode_id": "a1-e04","obs_id": "o00156","reward": -0.31163,"seq": 124,"t": 0,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.396683,"cut_obs_id": null,"episode_id": "a1-e04","obs_id": "o00157","reward": 0.823691,"seq": 127,"t": 1,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.684665,"cut_obs_id": null,"episode_id": "a1-e04","obs_id": "o00158","reward": -1.326243,"seq": 128,"t": 2,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.503097,"cut_obs_id": null,"episode_id": "a1-e04","obs_id": "o00159","reward": 0.254276,"seq": 129,"t": 3,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.214829,"cut_obs_id": null,"episode_id": "a1-e04","obs_id": "o00160","reward": -1.237313,"seq": 130,"t": 4,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.53506,"cut_obs_id": null,"episode_id": "a1-e04","obs_id": "o00161","reward": -1.984251,"seq": 133,"t": 5,"terminated": false,"truncated": false}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.221253,"cut_obs_id": null,"episode_id": "a1-e04","obs_id": "o00162","reward": -0.429726,"seq": 138,"t": 6,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.539711,"cut_obs_id": null,"episode_id": "a1-e04","obs_id": "o00163","reward": 0.168395,"seq": 140,"t": 7,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.361173,"cut_obs_id": null,"episode_id": "a1-e04","obs_id": "o00164","reward": 2.625001,"seq": 142,"t": 8,"terminated": false,"truncated": false}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.430048,"cut_obs_id": null,"episode_id": "a1-e04","obs_id": "o00165","reward": 0.985978,"seq": 144,"t": 9,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.341825,"cut_obs_id": null,"episode_id": "a1-e04","obs_id": "o00166","reward": 1.248638,"seq": 147,"t": 10,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.087995,"cut_obs_id": null,"episode_id": "a1-e04","obs_id": "o00167","reward": 0.257913,"seq": 150,"t": 11,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.336765,"cut_obs_id": "cut-o00168","episode_id": "a1-e04","obs_id": "o00168","reward": -0.422315,"seq": 159,"t": 12,"terminated": false,"truncated": true}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.710025,"cut_obs_id": null,"episode_id": "a1-e05","obs_id": "o00169","reward": 1.360901,"seq": 160,"t": 0,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.386408,"cut_obs_id": null,"episode_id": "a1-e05","obs_id": "o00170","reward": 1.463808,"seq": 163,"t": 1,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.614699,"cut_obs_id": null,"episode_id": "a1-e05","obs_id": "o00171","reward": -0.257216,"seq": 172,"t": 2,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -0.888991,"cut_obs_id": null,"episode_id": "a1-e05","obs_id": "o00172","reward": 1.559056,"seq": 175,"t": 3,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -0.8717,"cut_obs_id": null,"episode_id": "a1-e05","obs_id": "o00173","reward": 0.643808,"seq": 178,"t": 4,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.349018,"cut_obs_id": null,"episode_id": "a1-e05","obs_id": "o00174","reward": -1.012197,"seq": 180,"t": 5,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.536713,"cut_obs_id": null,"episode_id": "a1-e05","obs_id": "o00175","reward": -1.608101,"seq": 181,"t": 6,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.209856,"cut_obs_id": null,"episode_id": "a1-e05","obs_id": "o00176","reward": -1.022798,"seq": 182,"t": 7,"terminated": false,"truncated": false}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.874429,"cut_obs_id": "cut-o00177","episode_id": "a1-e05","obs_id": "o00177","reward": 0.109097,"seq": 183,"t": 8,"terminated": false,"truncated": true}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.329161,"cut_obs_id": null,"episode_id": "a1-e06","obs_id": "o00178","reward": -0.529477,"seq": 185,"t": 0,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.200177,"cut_obs_id": null,"episode_id": "a1-e06","obs_id": "o00179","reward": -0.220008,"seq": 187,"t": 1,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.556002,"cut_obs_id": null,"episode_id": "a1-e06","obs_id": "o00180","reward": -0.095157,"seq": 189,"t": 2,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.194393,"cut_obs_id": null,"episode_id": "a1-e06","obs_id": "o00181","reward": -0.47214,"seq": 190,"t": 3,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.326919,"cut_obs_id": null,"episode_id": "a1-e06","obs_id": "o00182","reward": -0.099187,"seq": 191,"t": 4,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -0.892069,"cut_obs_id": null,"episode_id": "a1-e06","obs_id": "o00183","reward": -0.461603,"seq": 192,"t": 5,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.579044,"cut_obs_id": null,"episode_id": "a1-e06","obs_id": "o00184","reward": 0.074756,"seq": 194,"t": 6,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.298822,"cut_obs_id": null,"episode_id": "a1-e06","obs_id": "o00185","reward": 1.12439,"seq": 196,"t": 7,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.214141,"cut_obs_id": null,"episode_id": "a1-e06","obs_id": "o00186","reward": -0.483199,"seq": 207,"t": 8,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -2.143814,"cut_obs_id": null,"episode_id": "a1-e06","obs_id": "o00187","reward": 0.244022,"seq": 212,"t": 9,"terminated": false,"truncated": false}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.981462,"cut_obs_id": null,"episode_id": "a1-e06","obs_id": "o00188","reward": 1.022719,"seq": 214,"t": 10,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.74508,"cut_obs_id": null,"episode_id": "a1-e06","obs_id": "o00189","reward": -1.055258,"seq": 216,"t": 11,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.446793,"cut_obs_id": null,"episode_id": "a1-e06","obs_id": "o00190","reward": 0.631817,"seq": 217,"t": 12,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.024271,"cut_obs_id": null,"episode_id": "a1-e06","obs_id": "o00191","reward": 0.461876,"seq": 220,"t": 13,"terminated": false,"truncated": false}
+{"action": 1,"actor_id": 1,"behavior_logp": -0.711237,"cut_obs_id": "cut-o00192","episode_id": "a1-e06","obs_id": "o00192","reward": 0.255163,"seq": 224,"t": 14,"terminated": false,"truncated": true}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.057402,"cut_obs_id": null,"episode_id": "a1-e07","obs_id": "o00193","reward": -0.009642,"seq": 226,"t": 0,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.227943,"cut_obs_id": null,"episode_id": "a1-e07","obs_id": "o00194","reward": 0.372643,"seq": 227,"t": 1,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.713552,"cut_obs_id": null,"episode_id": "a1-e07","obs_id": "o00195","reward": -0.643251,"seq": 228,"t": 2,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.311825,"cut_obs_id": null,"episode_id": "a1-e07","obs_id": "o00196","reward": -0.575962,"seq": 229,"t": 3,"terminated": false,"truncated": false}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.098272,"cut_obs_id": null,"episode_id": "a1-e07","obs_id": "o00197","reward": 0.112558,"seq": 230,"t": 4,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -2.008725,"cut_obs_id": null,"episode_id": "a1-e07","obs_id": "o00198","reward": 2.925761,"seq": 231,"t": 5,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -0.937929,"cut_obs_id": null,"episode_id": "a1-e07","obs_id": "o00199","reward": -1.32592,"seq": 239,"t": 6,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.180684,"cut_obs_id": null,"episode_id": "a1-e07","obs_id": "o00200","reward": -1.274415,"seq": 244,"t": 7,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -0.768676,"cut_obs_id": null,"episode_id": "a1-e07","obs_id": "o00201","reward": 0.163964,"seq": 246,"t": 8,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.643426,"cut_obs_id": null,"episode_id": "a1-e07","obs_id": "o00202","reward": -1.713233,"seq": 254,"t": 9,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.278242,"cut_obs_id": null,"episode_id": "a1-e07","obs_id": "o00203","reward": 0.294922,"seq": 256,"t": 10,"terminated": false,"truncated": false}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.52705,"cut_obs_id": null,"episode_id": "a1-e07","obs_id": "o00204","reward": -0.561184,"seq": 259,"t": 11,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.44844,"cut_obs_id": null,"episode_id": "a1-e07","obs_id": "o00205","reward": 0.616248,"seq": 261,"t": 12,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.155226,"cut_obs_id": null,"episode_id": "a1-e07","obs_id": "o00206","reward": -1.82623,"seq": 263,"t": 13,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.012686,"cut_obs_id": "cut-o00207","episode_id": "a1-e07","obs_id": "o00207","reward": -0.090788,"seq": 265,"t": 14,"terminated": false,"truncated": true}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.534637,"cut_obs_id": null,"episode_id": "a1-e08","obs_id": "o00208","reward": -0.171013,"seq": 266,"t": 0,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.652142,"cut_obs_id": null,"episode_id": "a1-e08","obs_id": "o00209","reward": 0.999529,"seq": 267,"t": 1,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.276427,"cut_obs_id": null,"episode_id": "a1-e08","obs_id": "o00210","reward": -0.97158,"seq": 268,"t": 2,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.620764,"cut_obs_id": null,"episode_id": "a1-e08","obs_id": "o00211","reward": 0.310328,"seq": 269,"t": 3,"terminated": false,"truncated": false}
+{"action": 1,"actor_id": 1,"behavior_logp": -1.21838,"cut_obs_id": null,"episode_id": "a1-e08","obs_id": "o00212","reward": 0.329245,"seq": 272,"t": 4,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.59732,"cut_obs_id": null,"episode_id": "a1-e08","obs_id": "o00213","reward": -0.538989,"seq": 277,"t": 5,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.084512,"cut_obs_id": null,"episode_id": "a1-e08","obs_id": "o00214","reward": -0.618528,"seq": 282,"t": 6,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.569323,"cut_obs_id": null,"episode_id": "a1-e08","obs_id": "o00215","reward": 1.164052,"seq": 291,"t": 7,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.082549,"cut_obs_id": null,"episode_id": "a1-e08","obs_id": "o00216","reward": -0.077688,"seq": 295,"t": 8,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.759791,"cut_obs_id": null,"episode_id": "a1-e08","obs_id": "o00217","reward": -0.766239,"seq": 297,"t": 9,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.492865,"cut_obs_id": null,"episode_id": "a1-e08","obs_id": "o00218","reward": -1.14569,"seq": 299,"t": 10,"terminated": false,"truncated": false}
+{"action": 3,"actor_id": 1,"behavior_logp": -1.98412,"cut_obs_id": null,"episode_id": "a1-e08","obs_id": "o00219","reward": 1.066615,"seq": 302,"t": 11,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.68502,"cut_obs_id": null,"episode_id": "a1-e08","obs_id": "o00220","reward": -0.437606,"seq": 303,"t": 12,"terminated": false,"truncated": false}
+{"action": 0,"actor_id": 1,"behavior_logp": -1.890566,"cut_obs_id": null,"episode_id": "a1-e08","obs_id": "o00221","reward": 0.192786,"seq": 304,"t": 13,"terminated": false,"truncated": false}
+{"action": 2,"actor_id": 1,"behavior_logp": -1.198744,"cut_obs_id": "cut-o00222","episode_id": "a1-e08","obs_id": "o00222","reward": -2.257431,"seq": 305,"t": 14,"terminated": false,"truncated": true}

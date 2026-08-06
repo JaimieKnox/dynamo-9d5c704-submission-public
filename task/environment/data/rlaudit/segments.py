@@ -17,7 +17,7 @@ class Segment:
     @property
     def residency_index(self):
         """Admission index that decides whether the segment is still drawable."""
-        return self.start_index
+        return self.complete_index
 
     def mark_complete(self, step, epoch=None):
         """Record completion indices. Scoring epoch is stamped at ledger insert."""
@@ -62,7 +62,7 @@ def build_segments(episodes, n_step):
             if cut == "terminated":
                 boot = None
             elif cut == "truncated":
-                boot = rows[last]["cut_obs_id"]
+                boot = rows[last]["obs_id"]
             else:
                 if last + 1 >= count:
                     continue

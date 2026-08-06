@@ -26,8 +26,9 @@ receives admission index `k` and occupies slot `k mod buffer_capacity`. Admissio
 whatever occupied that slot before, and nothing else ever clears or moves a slot.
 
 A segment is **resident**, meaning still drawable, only while the residency index defined
-in `comparisons.md` still satisfies the ring predicate. Residency is settled after the
-step's admission phase and reused for the whole draw phase.
+in `comparisons.md` still satisfies the ring predicate. That index is the opening admission
+edge of the segment's covered span. Residency is settled after the step's admission phase
+and reused for the whole draw phase.
 
 ## 4. Segments
 
@@ -95,7 +96,8 @@ sampler in `/app/docs/sampler.md` on the sampler priority vector.
 Each draw is resolved in draw order against residency under the current ring. Rejected
 draws are counted, are not replaced, contribute nothing to aggregates, and leave priorities
 untouched. Accepted draws may repeat an entry. Importance weights use the captured `N` and `P` from before the batch together with
-each accepted row's current pre-draw priority, not the sampler lag vector's entry.
+each accepted row's current pre-draw priority. Neither `p` nor `P` may be taken from the
+sampler lag vector or from that vector's summed mass.
 
 ## 8. Per segment quantities
 
@@ -105,7 +107,8 @@ bundle's `rho_bar` and `c_bar` as the two separate clip bounds. Choose the boots
 the cut kind alone:
 
 - `terminated`: there is no continuation to value
-- `truncated`: bootstrap from the observation the environment recorded at the cut
+- `truncated`: bootstrap from the continuation observation the environment recorded at
+  the cut, which is distinct from the truncated transition's own observation
 - `window`: bootstrap from the observation of the next transition in that episode, whether
   or not that transition is currently admitted or resident
 
@@ -156,3 +159,14 @@ At the end of the run the document reports:
 - `unique_segments_drawn`: how many distinct ledger positions were accepted at least once
 - `priority_sum_final`: the sum of every ledger priority after the final step, rounded to six
   decimal places
+
+
+## Epoch attach and priority seed (normative reminders)
+
+The scoring epoch for a segment is the reported epoch in force on the learner step when the segment enters the priority ledger after `register_delay`. Completing the segment on an earlier step does not freeze its scoring epoch. If completion and registration fall on different steps, those steps may disagree on `e(s)`, and only the registration step's epoch is stored.
+
+A newly inserted ledger row is seeded from the largest priority already present anywhere in the ledger, including rows whose transitions are no longer resident.
+
+## Sampler lag freeze (normative reminder)
+
+When `sampler_priority_lag` is greater than zero, the lagged vector is the full priority ledger as it existed after the previous step's accepted rewrite commit. Capturing the vector before that commit leaves the next step drawing from pre-rewrite priorities.

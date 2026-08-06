@@ -91,8 +91,7 @@ def run_bundle(bundle_dir):
             if segment.ready_step is None:
                 still_waiting.append(segment)
                 continue
-            delay_needed = register_delay + (1 if register_delay > 0 else 0)
-            if step >= segment.ready_step + delay_needed:
+            if step >= segment.ready_step + register_delay:
                 due.append(segment)
             else:
                 still_waiting.append(segment)
@@ -128,10 +127,9 @@ def run_bundle(bundle_dir):
             total_draws += len(picks)
             for position in picks:
                 segment = registry.segments[position]
-                priority = current_priorities[position]
-                raw_weight = (size * (priority / current_total)) ** (-beta)
+                priority = draw_priorities[position]
+                raw_weight = (size * (priority / draw_total)) ** (-beta)
                 if not buffer.is_resident(segment.residency_index):
-                    weights.append(raw_weight)
                     dropped += 1
                     continue
                 ep_params = epochs[segment.frozen_epoch]

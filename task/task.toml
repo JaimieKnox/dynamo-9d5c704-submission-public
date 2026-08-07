@@ -8,11 +8,14 @@ artifacts = [
   "/app/artifacts/g04.json",
   "/app/artifacts/g05.json",
   "/app/artifacts/g06.json",
+  "/app/artifacts/g07.json",
+  "/app/artifacts/g08.json",
+  "/app/artifacts/g09.json",
 ]
 
 [task]
 name = "dynamo/timeout-cut-returns"
-description = "Repair near-correct ?-return ledger whose cut masks, final-horizon bootstrap, dual-flag precedence, and summary mass disagree under mixed episode cuts"
+description = "Repair near-correct λ-return ledger whose cut masks, final-horizon bootstrap, dual-flag precedence, and summary mass disagree under mixed episode cuts"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -25,7 +28,7 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-The ledger already walks a reverse-time ?-return recurrence and writes per-step
+The ledger already walks a reverse-time λ-return recurrence and writes per-step
 advantages. Graded reports still diverge when cut masks must keep bootstrap values for
 timeout cuts (including the final index, which has no stored successor value), when
 dual-flag rows must prefer termination over truncation, and when summary means must drop
@@ -38,7 +41,7 @@ hits this when validating advantage pipelines under environment timeouts.
 solution_explanation = """
 Build next-value and non-terminal masks in a dedicated cut-mask module: termination
 zeros both; timeout cuts bootstrap from the next stored value or from meta bootstrap_value
-at the final index; dual-flag rows follow termination. Run the ?-return recurrence on those
+at the final index; dual-flag rows follow termination. Run the λ-return recurrence on those
 masks. Average summary means over non-terminated indices only, with a full-horizon fallback
 when every index is terminated. Mark bootstrapped only when truncated and not terminated.
 Install the fixed modules and run the CLI.

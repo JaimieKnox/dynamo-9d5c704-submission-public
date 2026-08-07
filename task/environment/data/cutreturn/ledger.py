@@ -25,15 +25,17 @@ def run_pack(pack_dir):
     terminated = [bool(r["terminated"]) for r in rows]
     truncated = [bool(r["truncated"]) for r in rows]
     values = [float(r["value"]) for r in rows]
+    segments = [int(r.get("segment", 0)) for r in rows]
+    weights = [float(r.get("is_weight", 1.0)) for r in rows]
     bootstrap_value = float(meta["bootstrap_value"])
     gamma = float(meta["gamma"])
     lam = float(meta["lambda"])
     next_v, next_nonterminal = build_cut_masks(
         terminated, truncated, values, bootstrap_value
     )
-    adv, ret = compute_gae(rewards, next_v, next_nonterminal, values, gamma, lam)
-    # Seeded defect: drops truncated indices from the mean mass and, if none remain,
-    # collapses to index 0 instead of using the all-terminated full-horizon fallback.
+    adv, ret = compute_gae(
+        rewards, next_v, next_nonterminal, values, gamma, lam, segments
+    )
     idxs = [i for i in range(len(rewards)) if not truncated[i]]
     if not idxs:
         idxs = [0]
@@ -45,7 +47,6 @@ def run_pack(pack_dir):
             "index": t,
             "advantage": _round6(adv[t]),
             "return": _round6(ret[t]),
-            # Seeded defect: marks dual-flag rows bootstrapped when truncated is set.
             "bootstrapped": bool(truncated[t]),
         })
     return {

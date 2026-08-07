@@ -25,18 +25,23 @@ def run_pack(pack_dir):
     terminated = [bool(r["terminated"]) for r in rows]
     truncated = [bool(r["truncated"]) for r in rows]
     values = [float(r["value"]) for r in rows]
+    segments = [int(r.get("segment", 0)) for r in rows]
+    weights = [float(r.get("is_weight", 1.0)) for r in rows]
     bootstrap_value = float(meta["bootstrap_value"])
     gamma = float(meta["gamma"])
     lam = float(meta["lambda"])
     next_v, next_nonterminal = build_cut_masks(
         terminated, truncated, values, bootstrap_value
     )
-    adv, ret = compute_gae(rewards, next_v, next_nonterminal, values, gamma, lam)
+    adv, ret = compute_gae(
+        rewards, next_v, next_nonterminal, values, gamma, lam, segments
+    )
     idxs = [i for i in range(len(rewards)) if not terminated[i]]
     if not idxs:
         idxs = list(range(len(rewards)))
-    mean_adv = sum(adv[i] for i in idxs) / len(idxs)
-    mean_ret = sum(ret[i] for i in idxs) / len(idxs)
+    wsum = sum(weights[i] for i in idxs)
+    mean_adv = sum(weights[i] * adv[i] for i in idxs) / wsum
+    mean_ret = sum(weights[i] * ret[i] for i in idxs) / wsum
     steps = []
     for t in range(len(rewards)):
         steps.append({

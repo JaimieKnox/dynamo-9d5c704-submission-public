@@ -2,6 +2,6 @@
   "pack": "g06",
   "gamma": 0.99,
   "lambda": 0.95,
-  "bootstrap_value": 1.491652,
+  "bootstrap_value": 0.39566,
   "horizon": 22
 }

@@ -2,6 +2,6 @@
   "pack": "g08",
   "gamma": 0.99,
   "lambda": 0.95,
-  "bootstrap_value": 0.22488,
+  "bootstrap_value": 0.476064,
   "horizon": 12
 }

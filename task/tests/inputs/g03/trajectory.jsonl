@@ -1,18 +1,18 @@
-{"index": 0, "reward": -0.187141, "terminated": false, "truncated": false, "value": -0.465309}
-{"index": 1, "reward": -0.164085, "terminated": false, "truncated": false, "value": 1.868239}
-{"index": 2, "reward": -0.20126, "terminated": false, "truncated": false, "value": -1.762004}
-{"index": 3, "reward": 0.40622, "terminated": false, "truncated": false, "value": -1.253812}
-{"index": 4, "reward": 0.036017, "terminated": false, "truncated": false, "value": 0.669253}
-{"index": 5, "reward": 0.035645, "terminated": false, "truncated": false, "value": 0.231334}
-{"index": 6, "reward": -1.155474, "terminated": false, "truncated": false, "value": 0.04156}
-{"index": 7, "reward": 0.016072, "terminated": false, "truncated": false, "value": -1.31288}
-{"index": 8, "reward": -0.103684, "terminated": false, "truncated": false, "value": 0.396306}
-{"index": 9, "reward": -0.096015, "terminated": false, "truncated": false, "value": 0.831438}
-{"index": 10, "reward": -0.996595, "terminated": false, "truncated": false, "value": -1.307007}
-{"index": 11, "reward": 0.925057, "terminated": false, "truncated": false, "value": -1.539853}
-{"index": 12, "reward": -0.749688, "terminated": false, "truncated": false, "value": -0.572937}
-{"index": 13, "reward": 0.439646, "terminated": false, "truncated": false, "value": -0.183159}
-{"index": 14, "reward": 1.003497, "terminated": false, "truncated": false, "value": -1.587797}
-{"index": 15, "reward": -1.191506, "terminated": false, "truncated": false, "value": 1.469668}
-{"index": 16, "reward": -0.319855, "terminated": false, "truncated": false, "value": -1.751111}
-{"index": 17, "reward": 1.029784, "terminated": false, "truncated": true, "value": -1.563605}
+{"index": 0, "is_weight": 0.867055, "reward": 1.110937, "segment": 0, "terminated": false, "truncated": false, "value": -0.595407}
+{"index": 1, "is_weight": 1.191653, "reward": 0.473674, "segment": 0, "terminated": false, "truncated": false, "value": 0.16685}
+{"index": 2, "is_weight": 1.372323, "reward": -0.251712, "segment": 0, "terminated": false, "truncated": false, "value": 1.399389}
+{"index": 3, "is_weight": 0.515593, "reward": 0.419887, "segment": 0, "terminated": false, "truncated": false, "value": -1.721278}
+{"index": 4, "is_weight": 0.51689, "reward": -0.239182, "segment": 0, "terminated": false, "truncated": false, "value": 0.45384}
+{"index": 5, "is_weight": 0.856839, "reward": -0.510732, "segment": 0, "terminated": false, "truncated": false, "value": 1.977764}
+{"index": 6, "is_weight": 0.664416, "reward": -0.239471, "segment": 0, "terminated": false, "truncated": false, "value": -1.58842}
+{"index": 7, "is_weight": 0.522606, "reward": -0.174371, "segment": 0, "terminated": false, "truncated": false, "value": -0.605412}
+{"index": 8, "is_weight": 0.662489, "reward": -1.091147, "segment": 0, "terminated": false, "truncated": false, "value": -1.70742}
+{"index": 9, "is_weight": 1.063819, "reward": -0.15384, "segment": 0, "terminated": false, "truncated": false, "value": 0.321773}
+{"index": 10, "is_weight": 1.44133, "reward": -0.502498, "segment": 0, "terminated": false, "truncated": false, "value": 0.964627}
+{"index": 11, "is_weight": 1.142096, "reward": 0.066586, "segment": 0, "terminated": false, "truncated": false, "value": 0.204226}
+{"index": 12, "is_weight": 0.906417, "reward": -0.486777, "segment": 0, "terminated": false, "truncated": false, "value": 0.375093}
+{"index": 13, "is_weight": 0.529721, "reward": -0.50197, "segment": 0, "terminated": false, "truncated": false, "value": -0.775143}
+{"index": 14, "is_weight": 0.724116, "reward": 0.736927, "segment": 0, "terminated": false, "truncated": false, "value": 0.50687}
+{"index": 15, "is_weight": 1.223296, "reward": -0.601499, "segment": 0, "terminated": false, "truncated": false, "value": 0.05658}
+{"index": 16, "is_weight": 1.535625, "reward": -0.175901, "segment": 0, "terminated": false, "truncated": false, "value": 1.752426}
+{"index": 17, "is_weight": 2.220267, "reward": -0.103469, "segment": 0, "terminated": false, "truncated": true, "value": 0.316121}

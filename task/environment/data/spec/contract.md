@@ -2,26 +2,26 @@
 
 The package rebuilds timeout-aware λ-returns and advantages for offline trajectory packs.
 
-## Flags
+## Flags and successors
 
-- `terminated=true` ends the episode with no bootstrap value. The next value is zero and
-  the non-terminal multiplier is zero for that index.
-- `truncated=true` with `terminated=false` is a timeout cut. The next value is the following
-  stored value when the cut is not the final index, otherwise `bootstrap_value` from meta.
-  The non-terminal multiplier stays one so the λ-return uses that bootstrap rather than hard zero.
-- When both `terminated` and `truncated` are true on the same index, termination wins: next
-  value and non-terminal multiplier are both zero. `bootstrapped` in the report is true only
-  when `truncated` is true and `terminated` is false.
+- `terminated=true` ends the episode with no bootstrap. Successor value and non-terminal
+  multiplier are both zero for that index.
+- When `terminated=false`, the successor value is `value[t+1]` if `t+1` is inside the
+  horizon, otherwise `bootstrap_value` from `meta.json`. The non-terminal multiplier is one.
+- When both `terminated` and `truncated` are true, termination wins for successors.
+- Report field `bootstrapped` is true only when `truncated` is true and `terminated` is false.
 
-## Horizon values
+Successor resolution lives in the package's successor helper; cut masks must consume it.
 
-Per-index `value` entries cover indices `0 .. horizon-1` only. There is no stored
-`value[horizon]`. The reverse-time step that needs a successor value past the final index
-must read `bootstrap_value` from `meta.json`.
+## Segments
+
+Each trajectory row carries integer `segment`. The reverse-time λ accumulator must reset to
+zero when moving from index `t+1` to `t` if `segment[t] != segment[t+1]`. Flag-driven
+non-terminal multipliers still apply inside a segment.
 
 ## Recurrence
 
-For each index `t` from the end of the horizon to the start:
+For each index `t` from the end of the horizon to the start (after any required segment reset):
 
 `delta_t = r_t + gamma * V_next_t * next_nonterminal_t - V_t`
 
@@ -29,10 +29,12 @@ For each index `t` from the end of the horizon to the start:
 
 `R_t = A_t + V_t`
 
-`V_next_t` and `next_nonterminal_t` follow the flag rules above.
-
 ## Summary mass
 
-`mean_advantage` and `mean_return` average over every index where `terminated` is false.
-Truncated indices remain in the mass. If every index is terminated, fall back to the full
-horizon.
+`mean_advantage` and `mean_return` are importance-weighted averages over every index where
+`terminated` is false, using each row's `is_weight`:
+
+`mean = sum_i (is_weight_i * x_i) / sum_i is_weight_i`
+
+Truncated indices remain in the mass when not terminated. If every index is terminated, fall
+back to the full horizon with the same weighted formula.

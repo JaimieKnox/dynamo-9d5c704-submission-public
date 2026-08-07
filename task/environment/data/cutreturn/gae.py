@@ -1,6 +1,6 @@
-"""λ-return core using cut masks."""
+"""Return core using cut masks and segment boundaries."""
 
-def compute_gae(rewards, next_v, next_nonterminal, values, gamma, lam):
+def compute_gae(rewards, next_v, next_nonterminal, values, gamma, lam, segments):
     T = len(rewards)
     adv = [0.0] * T
     ret = [0.0] * T

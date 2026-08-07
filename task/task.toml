@@ -31,7 +31,18 @@ difficulty_explanation = """
 Graded artifacts diverge when asymmetric lagged critics, segment reward scales, segment-edge bootstraps, reverse-time resets, and clip-then-renormalize IS mass interact. Specs are split under /app/spec, so matching only the short contract still leaves packs wrong. Fixtures are synthetic packs generated for this task, not production logs. An RL training engineer hits this when validating advantage pipelines under environment timeouts and offline importance weights.
 """
 solution_explanation = """
-Repair the installed cutreturn package until every graded artifact matches the normative files under /app/spec. Install the fixed modules and run the CLI.
+The installed cutreturn tree is near-correct but diverges from /app/spec on interacting edges.
+Restore lagged dual-stream registration in register.py: critic_a uses lag_a/init_a for V_t and
+critic_b uses lag_b/init_b for the bootstrap stream (the buggy tree ignores lag fill and reuses
+critic_a for both). In successor.py, zero successors only on terminated rows; pure truncation,
+final-horizon steps, and segment edges must bootstrap with meta.bootstrap_value and nonterminal
+one (the buggy tree also zeros truncated rows and drops final/segment-edge bootstrap). In gae.py,
+clear the reverse-time lambda accumulator on segment changes and scale rewards by
+segment_scales[segment[t]] before the TD residual. In ledger.py, build summary mass over
+non-terminated indices (full-horizon fallback if every index terminated), clip is_weight into
+[is_clip_low, is_clip_high], renormalize clipped weights, and set bootstrapped only when
+truncated and not terminated. Copy the fixed modules from solution/fixed into /app/cutreturn and
+run the CLI over /app/traces into /app/artifacts.
 """
 verification_explanation = """
 The verifier seals oracle reports into tests/inputs/sealed_expectations.json, then

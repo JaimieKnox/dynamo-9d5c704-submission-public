@@ -43,6 +43,7 @@ def _packs(parent):
 
 @pytest.mark.parametrize("name", _packs("/tests/inputs"))
 def test_artifact_envelope(name):
+    """Requirement 1: JSON envelope with pack, steps, and summary."""
     doc = _emitted(name)
     assert set(("pack", "steps", "summary")).issubset(doc)
     assert doc["pack"] == name
@@ -50,6 +51,7 @@ def test_artifact_envelope(name):
 
 @pytest.mark.parametrize("name", _packs("/tests/inputs"))
 def test_summary_matches_sealed(name):
+    """Requirement 3: summary horizon/counts/means match sealed expectations."""
     produced = _emitted(name)["summary"]
     baseline = SEALED[name]["summary"]
     for key in ("horizon", "truncation_count", "termination_count"):
@@ -59,7 +61,15 @@ def test_summary_matches_sealed(name):
 
 @pytest.mark.parametrize("name", _packs("/tests/inputs"))
 def test_per_index_values_match(name):
-    for produced, baseline in zip(_emitted(name)["steps"], SEALED[name]["steps"]):
+    """Requirement 2: one ascending steps row per index with sealed values."""
+    produced_steps = _emitted(name)["steps"]
+    baseline_steps = SEALED[name]["steps"]
+    horizon = SEALED[name]["summary"]["horizon"]
+    assert len(produced_steps) == horizon
+    assert len(produced_steps) == len(baseline_steps)
+    indices = [row["index"] for row in produced_steps]
+    assert indices == list(range(horizon))
+    for produced, baseline in zip(produced_steps, baseline_steps):
         assert produced["index"] == baseline["index"]
         assert produced["bootstrapped"] == baseline["bootstrapped"]
         assert produced["advantage"] == pytest.approx(baseline["advantage"], abs=ROUNDING_ERROR)

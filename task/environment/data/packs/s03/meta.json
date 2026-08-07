@@ -1,0 +1,7 @@
+{
+  "pack": "s03",
+  "gamma": 0.99,
+  "lambda": 0.95,
+  "bootstrap_value": -1.908196,
+  "horizon": 12
+}

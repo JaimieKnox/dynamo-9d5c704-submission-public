@@ -1,26 +1,19 @@
-The package at `/app/opulse` rebuilds an offline importance-corrected pulse ledger
-from asynchronous actor shards. The tree runs end to end, but graded ledgers diverge
-when residency across a formed segment's covered admissions, truncated-cut bootstrap
-choice, importance mass under sampler lag, and publication-quarantine eligibility
-interact on the same learner ticks. Repair the implementation so those interactions
-match the specification.
+The package at `/app/gaegrid` rebuilds generalized advantage estimates for offline
+trajectory packs. The tree runs end to end, but graded reports diverge when timeout
+truncations, true terminations, and summary mass interact on the same horizon. Repair
+the implementation so those interactions match the specification.
 
-Each directory under `/app/recordings` is one recording pack.
-`/app/spec/recording-format.md`, `/app/spec/pulse-contract.md`,
-`/app/spec/decision-tables.md`, `/app/spec/draw-engine.md`, and
-`/app/spec/ledger-schema.md` are normative and together state every rule that decides
-a pulse ledger.
+Each directory under `/app/packs` is one trajectory pack. `/app/spec/contract.md`,
+`/app/spec/pack-format.md`, and `/app/spec/report-schema.md` are normative.
 
-Write one pulse ledger per pack to `/app/ledgers/<pack>.json`, using the pack
-directory name. For every pack under `/app/recordings`:
+Write one report per pack to `/app/reports/<pack>.json` using the pack directory name.
+For every pack under `/app/packs`:
 
-1. The ledger exists, parses as JSON, and carries `recording`, `ticks`, and `summary`.
-2. `ticks` has one correctly typed entry per learner tick in ascending order.
-3. `active_epoch` is the reported epoch in force for that tick.
-4. `accepted_slots` is the exact ordered slot sequence of accepted draws, repeats included.
-5. `rejected_count` is the exact rejected-draw count.
-6. The four per-tick floating aggregates match the contract to six decimal places.
-7. `summary` contains the six exact counts and rounded final priority mass.
+1. The report exists, parses as JSON, and carries `pack`, `steps`, and `summary`.
+2. `steps` has one typed entry per index in ascending order.
+3. Per-step `advantage` and `return` match the contract to six decimal places.
+4. `bootstrapped` is true exactly on truncated indices.
+5. Summary counts and means match the contract to six decimal places.
 
-No pack ships an expected ledger. Only `/app/ledgers` is graded. You may replace
-anything under `/app/opulse`.
+No pack ships an expected report. Only `/app/reports` is graded. You may replace
+anything under `/app/gaegrid`.

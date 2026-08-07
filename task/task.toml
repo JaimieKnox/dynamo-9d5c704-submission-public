@@ -15,7 +15,7 @@ artifacts = [
 
 [task]
 name = "dynamo/timeout-cut-returns"
-description = "Repair near-correct λ-return ledger whose successors, segment resets, dual-flag precedence, and IS-weighted summary mass disagree under mixed episode cuts"
+description = "Repair near-correct λ-return ledger whose asymmetric critics, pack-specific lags, and clipped IS mass disagree under mixed episode cuts"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -28,18 +28,16 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-Graded artifacts diverge when successor values, segment-boundary accumulator resets,
-dual-flag precedence, and IS-weighted summary mass interact on shared horizons. Sample packs
-can look almost right while multi-segment, final-horizon, dual-flag, and all-terminated packs
-still miss. An RL training engineer hits this when validating advantage pipelines under
-environment timeouts and offline importance weights.
+Graded artifacts diverge when pack-specific critic lag, asymmetric raw-versus-registered
+successors at intra-segment truncations, segment-edge bootstrap, and clipped IS-weighted
+summary mass interact. Specs are split across /app/spec files and do not repeat each other.
 Fixtures are synthetic packs generated for this task, not production logs.
 """
 solution_explanation = """
-Resolve successors in a dedicated helper, feed them through cut masks, reset the
-λ accumulator across segment changes, prefer termination on dual-flag rows, and compute
-summary means as IS-weighted averages over non-terminated indices with a full-horizon
-fallback. Install the fixed modules and run the CLI.
+Compose the split specs: register baselines with each pack's value_lag, choose successors
+from raw or registered critics depending on truncation versus continuation and segment edges,
+reset the reverse-time accumulator across segments, and form clipped IS-weighted means over
+non-terminated indices with a full-horizon fallback. Install fixed modules and run the CLI.
 """
 verification_explanation = """
 The verifier seals oracle reports into tests/inputs/sealed_expectations.json, then
@@ -48,7 +46,7 @@ Per-index advantage and return, plus summary mean_advantage and mean_return, use
 pytest.approx(..., abs=1e-6). That absolute band matches the instruction contract of
 six-decimal equality after both sides round with the shared _round6 helper, so
 floating noise below the last graded digit cannot flip the reward while a wrong
-successor, segment reset, dual-flag, or weighted-mass patch still fails.
+asymmetric successor, lag, or clipped-mass patch still fails.
 Schema, bootstrapped flags, and summary counts are exact.
 """
 

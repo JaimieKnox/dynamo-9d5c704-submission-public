@@ -1,9 +1,8 @@
 Repair `/app/cutreturn` so offline trajectory traces produce contract-true timeout-aware
-λ-return reports. The installed tree already finishes every trace, but graded artifacts diverge
-from the contract under mixed episode cuts, segment boundaries, and weighted summary mass.
+λ-return reports. The installed tree finishes every trace, but graded artifacts still diverge
+from the normative specs under mixed cuts and pack-specific critic lags.
 
-Normative sources: `/app/spec/contract.md`, `/app/spec/pack-format.md`, and
-`/app/spec/report-schema.md`. Trace directories live under `/app/traces`.
+Read every file under `/app/spec/`. Trace directories live under `/app/traces`.
 
 Emit `/app/artifacts/<trace>.json` for each trace directory name. Every artifact must:
 

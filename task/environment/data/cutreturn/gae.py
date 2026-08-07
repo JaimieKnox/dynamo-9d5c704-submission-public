@@ -6,7 +6,6 @@ def compute_gae(rewards, next_v, next_nonterminal, values, gamma, lam, segments,
     ret = [0.0] * T
     gae = 0.0
     for t in reversed(range(T)):
-        # Seeded defects: no segment reset; ignores segment_scales.
         delta = rewards[t] + gamma * next_v[t] * next_nonterminal[t] - values[t]
         gae = delta + gamma * lam * next_nonterminal[t] * gae
         adv[t] = gae

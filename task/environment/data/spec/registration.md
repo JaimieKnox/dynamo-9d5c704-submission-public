@@ -1,12 +1,10 @@
 # Critic registration (normative)
 
-Trajectory rows store a raw `value` column. Baseline critics in the recurrence use a
-registered series defined by meta `value_lag` and `init_value`:
+Each trajectory row stores two raw critic columns: `critic_a` and `critic_b`.
 
-- For index `t >= value_lag`, `V_t = value[t - value_lag]`
-- For index `t < value_lag`, `V_t = init_value`
+Register a stream with lag `L` and fill `init` as:
+- For index `t >= L`, registered[t] = raw[t - L]
+- For index `t < L`, registered[t] = init
 
-`value_lag` may differ across packs. Do not hardcode a single lag for every trace.
-
-Successor selection is not uniformly lagged. See `segments.md` for which successor path
-reads the raw column versus the registered series versus `bootstrap_value`.
+Use `lag_a` / `init_a` for the `critic_a` stream and `lag_b` / `init_b` for the `critic_b`
+stream. Packs may choose different lags. Do not hardcode one lag for every trace.

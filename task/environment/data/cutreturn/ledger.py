@@ -24,7 +24,6 @@ def run_pack(pack_dir):
     rewards = [float(r["reward"]) for r in rows]
     terminated = [bool(r["terminated"]) for r in rows]
     truncated = [bool(r["truncated"]) for r in rows]
-    # Seeded defect: uses critic_a for both streams and ignores lag_b/init_b.
     critic_a = [float(r["critic_a"]) for r in rows]
     segments = [int(r["segment"]) for r in rows]
     weights = [float(r["is_weight"]) for r in rows]
@@ -38,14 +37,22 @@ def run_pack(pack_dir):
         rewards, next_v, next_nt, values, float(meta["gamma"]), float(meta["lambda"]), segments, scales
     )
     idxs = list(range(len(rewards)))
-    mean_adv=sum(weights[i]*adv[i] for i in idxs)/sum(weights[i] for i in idxs)
-    mean_ret=sum(weights[i]*ret[i] for i in idxs)/sum(weights[i] for i in idxs)
-    steps=[{"index":t,"advantage":_round6(adv[t]),"return":_round6(ret[t]),
-            "bootstrapped": bool(truncated[t])} for t in range(len(rewards))]
-    return {"pack": meta["pack"], "steps": steps, "summary": {
-        "horizon": int(meta["horizon"]),
-        "truncation_count": sum(1 for x in truncated if x),
-        "termination_count": sum(1 for x in terminated if x),
-        "mean_advantage": _round6(mean_adv),
-        "mean_return": _round6(mean_ret),
-    }}
+    mean_adv = sum(weights[i] * adv[i] for i in idxs) / sum(weights[i] for i in idxs)
+    mean_ret = sum(weights[i] * ret[i] for i in idxs) / sum(weights[i] for i in idxs)
+    steps = [{
+        "index": t,
+        "advantage": _round6(adv[t]),
+        "return": _round6(ret[t]),
+        "bootstrapped": bool(truncated[t]),
+    } for t in range(len(rewards))]
+    return {
+        "pack": meta["pack"],
+        "steps": steps,
+        "summary": {
+            "horizon": int(meta["horizon"]),
+            "truncation_count": sum(1 for x in truncated if x),
+            "termination_count": sum(1 for x in terminated if x),
+            "mean_advantage": _round6(mean_adv),
+            "mean_return": _round6(mean_ret),
+        },
+    }

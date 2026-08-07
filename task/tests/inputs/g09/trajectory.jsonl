@@ -1,0 +1,16 @@
+{"index": 0, "reward": -0.551164, "terminated": false, "truncated": false, "value": 0.568}
+{"index": 1, "reward": 0.981825, "terminated": false, "truncated": false, "value": -0.971649}
+{"index": 2, "reward": 0.81485, "terminated": false, "truncated": false, "value": -0.936027}
+{"index": 3, "reward": 0.841274, "terminated": false, "truncated": false, "value": -0.673003}
+{"index": 4, "reward": 0.35059, "terminated": false, "truncated": false, "value": 0.414952}
+{"index": 5, "reward": -0.050473, "terminated": false, "truncated": false, "value": 1.369461}
+{"index": 6, "reward": -0.9646, "terminated": false, "truncated": false, "value": -1.034252}
+{"index": 7, "reward": -0.931511, "terminated": false, "truncated": false, "value": -0.568335}
+{"index": 8, "reward": -0.491474, "terminated": false, "truncated": false, "value": -0.696919}
+{"index": 9, "reward": -0.414203, "terminated": false, "truncated": false, "value": 1.752761}
+{"index": 10, "reward": 0.983396, "terminated": false, "truncated": false, "value": 1.274335}
+{"index": 11, "reward": 0.234787, "terminated": false, "truncated": false, "value": 0.021364}
+{"index": 12, "reward": 0.289728, "terminated": false, "truncated": false, "value": -0.421828}
+{"index": 13, "reward": -0.030788, "terminated": false, "truncated": false, "value": -0.947035}
+{"index": 14, "reward": -0.054452, "terminated": false, "truncated": false, "value": -1.218202}
+{"index": 15, "reward": 0.023844, "terminated": false, "truncated": true, "value": -1.155834}

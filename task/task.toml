@@ -12,7 +12,7 @@ artifacts = [
 
 [task]
 name = "dynamo/timeout-cut-returns"
-description = "Repair near-correct λ-return ledger whose truncation bootstrap and summary mass disagree under mixed episode cuts"
+description = "Repair near-correct ?-return ledger whose cut masks, final-horizon bootstrap, dual-flag precedence, and summary mass disagree under mixed episode cuts"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -25,19 +25,23 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-The ledger already walks a reverse-time GAE recurrence and writes per-step advantages.
-Graded reports still diverge when timeout truncations must bootstrap from the pack value
-while true terminations must zero the next value, and when summary means must drop only
-terminated indices. The no-cut sample pack stays green while single-cut and mixed-cut packs still diverge. Synthetic fixtures place
-truncations and terminations on shared horizons so an independent one-line patch that
-fixes only bootstrap or only mean mass still leaves graded means wrong. An RL training
-engineer hits this when validating advantage pipelines under environment timeouts.
+The ledger already walks a reverse-time ?-return recurrence and writes per-step
+advantages. Graded reports still diverge when cut masks must keep bootstrap values for
+timeout cuts (including the final index, which has no stored successor value), when
+dual-flag rows must prefer termination over truncation, and when summary means must drop
+only terminated indices with an all-terminated fallback. The no-cut sample pack stays green
+while single-cut, dual-flag, final-truncation, and all-terminated packs still diverge.
+Synthetic fixtures place those cuts on shared horizons so a patch that only edits the GAE
+loop or only edits mean mass still leaves graded artifacts wrong. An RL training engineer
+hits this when validating advantage pipelines under environment timeouts.
 """
 solution_explanation = """
-Bootstrap truncated indices from the next value (including meta bootstrap_value at the
-final cut) while keeping non-terminal=1; zero both next value and non-terminal on true
-terminations; average summary means over non-terminated indices only. Install fixed
-modules and run the CLI.
+Build next-value and non-terminal masks in a dedicated cut-mask module: termination
+zeros both; timeout cuts bootstrap from the next stored value or from meta bootstrap_value
+at the final index; dual-flag rows follow termination. Run the ?-return recurrence on those
+masks. Average summary means over non-terminated indices only, with a full-horizon fallback
+when every index is terminated. Mark bootstrapped only when truncated and not terminated.
+Install the fixed modules and run the CLI.
 """
 verification_explanation = """
 The verifier seals oracle reports into tests/inputs/sealed_expectations.json, then
@@ -46,7 +50,7 @@ Per-index advantage and return, plus summary mean_advantage and mean_return, use
 pytest.approx(..., abs=1e-6). That absolute band matches the instruction contract of
 six-decimal equality after both sides round with the shared _round6 helper, so
 floating noise below the last graded digit cannot flip the reward while a wrong
-bootstrap or mean-mass patch still fails.
+cut-mask, final-horizon bootstrap, dual-flag, or mean-mass patch still fails.
 Schema, bootstrapped flags, and summary counts are exact.
 """
 

@@ -6,23 +6,30 @@ The package rebuilds timeout-aware λ-returns and advantages for offline traject
 
 - `terminated=true` ends the episode with no bootstrap value. The next value is zero and
   the non-terminal multiplier is zero for that index.
-- `truncated=true` (and `terminated=false`) is a timeout cut. The next value is the following
-  value entry (or `bootstrap_value` from meta when the cut is the final index). The
-  non-terminal multiplier stays one so the λ-return uses that bootstrap rather than hard zero.
+- `truncated=true` with `terminated=false` is a timeout cut. The next value is the following
+  stored value when the cut is not the final index, otherwise `bootstrap_value` from meta.
+  The non-terminal multiplier stays one so the λ-return uses that bootstrap rather than hard zero.
+- When both `terminated` and `truncated` are true on the same index, termination wins: next
+  value and non-terminal multiplier are both zero. `bootstrapped` in the report is true only
+  when `truncated` is true and `terminated` is false.
 
+## Horizon values
 
-For a truncated index that is not the final horizon index, the following step's stored value is the bootstrap source.
+Per-index `value` entries cover indices `0 .. horizon-1` only. There is no stored
+`value[horizon]`. The reverse-time step that needs a successor value past the final index
+must read `bootstrap_value` from `meta.json`.
+
 ## Recurrence
 
 For each index `t` from the end of the horizon to the start:
 
-`delta_t = r_t + gamma * V_{t+1} * next_nonterminal_t - V_t`
+`delta_t = r_t + gamma * V_next_t * next_nonterminal_t - V_t`
 
 `A_t = delta_t + gamma * lambda * next_nonterminal_t * A_{t+1}`
 
 `R_t = A_t + V_t`
 
-`V_{horizon}` is `bootstrap_value` from `meta.json`.
+`V_next_t` and `next_nonterminal_t` follow the flag rules above.
 
 ## Summary mass
 

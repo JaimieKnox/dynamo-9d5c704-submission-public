@@ -1,6 +1,7 @@
 """Build reports from trajectory packs."""
 import json
 import os
+from .cutmask import build_cut_masks
 from .gae import compute_gae
 
 def _round6(x):
@@ -23,10 +24,15 @@ def run_pack(pack_dir):
     rewards = [float(r["reward"]) for r in rows]
     terminated = [bool(r["terminated"]) for r in rows]
     truncated = [bool(r["truncated"]) for r in rows]
-    values = [float(r["value"]) for r in rows] + [float(meta["bootstrap_value"])]
+    values = [float(r["value"]) for r in rows]
+    bootstrap_value = float(meta["bootstrap_value"])
     gamma = float(meta["gamma"])
     lam = float(meta["lambda"])
-    adv, ret = compute_gae(rewards, values, terminated, truncated, gamma, lam)
+    next_v, next_nonterminal = build_cut_masks(
+        terminated, truncated, values, bootstrap_value
+    )
+    adv, ret = compute_gae(rewards, next_v, next_nonterminal, values, gamma, lam)
+    # Seeded defect: full-horizon mean mass (no terminated exclusion / fallback).
     idxs = list(range(len(rewards)))
     mean_adv = sum(adv[i] for i in idxs) / len(idxs)
     mean_ret = sum(ret[i] for i in idxs) / len(idxs)
@@ -36,6 +42,7 @@ def run_pack(pack_dir):
             "index": t,
             "advantage": _round6(adv[t]),
             "return": _round6(ret[t]),
+            # Seeded defect: marks dual-flag rows bootstrapped when truncated is set.
             "bootstrapped": bool(truncated[t]),
         })
     return {

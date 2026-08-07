@@ -1,1 +1,1 @@
-"""timeout-cut return ledger package."""
+"""Timeout-cut return ledger package."""

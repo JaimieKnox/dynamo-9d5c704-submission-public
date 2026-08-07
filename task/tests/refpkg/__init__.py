@@ -1,1 +1,1 @@
-"""Reference reconstruction helpers."""
+"""Oracle reference package."""

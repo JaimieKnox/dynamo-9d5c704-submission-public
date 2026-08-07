@@ -69,6 +69,14 @@ def _require_ordinary_output(name):
     assert target.exists(), "expected output file is absent: %s" % target
     assert not target.is_symlink(), "graded output must not be a symlink: %s" % target
     assert target.is_file(), "graded output must be an ordinary file: %s" % target
+    cursor = target
+    while True:
+        assert not cursor.is_symlink(), "graded output path traverses a symlink: %s" % cursor
+        if cursor == cursor.parent:
+            break
+        if cursor == _OUTPUT_ROOT:
+            break
+        cursor = cursor.parent
     resolved = target.resolve()
     assert _OUTPUT_ROOT == resolved or _OUTPUT_ROOT in resolved.parents, (
         "graded output escaped the output mount: %s" % resolved

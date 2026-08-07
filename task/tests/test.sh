@@ -1,7 +1,8 @@
 #!/bin/bash
 mkdir -p /logs/verifier
 cd /tests
-# Verifier imports stay on /tests only (R193): never leave agent-writable /app on sys.path.
+# R193: never inherit Dockerfile/agent PYTHONPATH onto /app. Verifier imports stay on /tests.
+unset PYTHONPATH
 export PYTHONPATH=/tests
 python3 /tests/derive_expectations.py
 python3 -m pytest --ctrf /logs/verifier/ctrf.json /tests/test_outputs.py -rA

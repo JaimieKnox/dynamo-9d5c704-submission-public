@@ -31,33 +31,42 @@ def run_pack(pack_dir):
     critic_b = [float(r["critic_b"]) for r in rows]
     segments = [int(r["segment"]) for r in rows]
     weights = [float(r["is_weight"]) for r in rows]
-    lag_a = int(meta["lag_a"]); lag_b = int(meta["lag_b"])
-    init_a = float(meta["init_a"]); init_b = float(meta["init_b"])
-    values = registered_stream(critic_a, lag_a, init_a)
-    boot_values = registered_stream(critic_b, lag_b, init_b)
+    values = registered_stream(critic_a, int(meta["lag_a"]), float(meta["init_a"]))
+    boot_values = registered_stream(critic_b, int(meta["lag_b"]), float(meta["init_b"]))
     scales = [float(x) for x in meta["segment_scales"]]
     next_v, next_nt = build_cut_masks(
         terminated, truncated, boot_values, float(meta["bootstrap_value"]), segments
     )
     adv, ret = compute_gae(
-        rewards, next_v, next_nt, values, float(meta["gamma"]), float(meta["lambda"]), segments, scales
+        rewards, next_v, next_nt, values, float(meta["gamma"]), float(meta["lambda"]),
+        segments, scales, truncated,
     )
     idxs = [i for i in range(len(rewards)) if not terminated[i]]
     if not idxs:
         idxs = list(range(len(rewards)))
-    lo=float(meta["is_clip_low"]); hi=float(meta["is_clip_high"])
-    clipped=[_clip(weights[i], lo, hi) for i in idxs]
-    denom=sum(clipped) or float(len(idxs))
+    power = float(meta["is_power"])
+    lo = float(meta["is_clip_low"]); hi = float(meta["is_clip_high"])
+    powered = [weights[i] ** power for i in idxs]
+    clipped = [_clip(w, lo, hi) for w in powered]
+    denom = sum(clipped) or float(len(idxs))
     if denom <= 0:
-        clipped=[1.0]*len(idxs); denom=float(len(idxs))
-    mean_adv=sum(clipped[j]*adv[idxs[j]] for j in range(len(idxs)))/denom
-    mean_ret=sum(clipped[j]*ret[idxs[j]] for j in range(len(idxs)))/denom
-    steps=[{"index":t,"advantage":_round6(adv[t]),"return":_round6(ret[t]),
-            "bootstrapped": bool(truncated[t]) and not bool(terminated[t])} for t in range(len(rewards))]
-    return {"pack": meta["pack"], "steps": steps, "summary": {
-        "horizon": int(meta["horizon"]),
-        "truncation_count": sum(1 for x in truncated if x),
-        "termination_count": sum(1 for x in terminated if x),
-        "mean_advantage": _round6(mean_adv),
-        "mean_return": _round6(mean_ret),
-    }}
+        clipped = [1.0] * len(idxs); denom = float(len(idxs))
+    mean_adv = sum(clipped[j] * adv[idxs[j]] for j in range(len(idxs))) / denom
+    mean_ret = sum(clipped[j] * ret[idxs[j]] for j in range(len(idxs))) / denom
+    steps = [{
+        "index": t,
+        "advantage": _round6(adv[t]),
+        "return": _round6(ret[t]),
+        "bootstrapped": bool(truncated[t]) and not bool(terminated[t]),
+    } for t in range(len(rewards))]
+    return {
+        "pack": meta["pack"],
+        "steps": steps,
+        "summary": {
+            "horizon": int(meta["horizon"]),
+            "truncation_count": sum(1 for x in truncated if x),
+            "termination_count": sum(1 for x in terminated if x),
+            "mean_advantage": _round6(mean_adv),
+            "mean_return": _round6(mean_ret),
+        },
+    }

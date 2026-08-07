@@ -11,6 +11,7 @@
   "segment_scales": [
     1.0
   ],
-  "is_clip_low": 0.5,
-  "is_clip_high": 2.0
+  "is_clip_low": 0.0,
+  "is_clip_high": 10.0,
+  "is_power": 1.0
 }

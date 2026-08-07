@@ -2,17 +2,18 @@
   "pack": "g02",
   "gamma": 0.99,
   "lambda": 0.95,
-  "bootstrap_value": 1.681238,
+  "bootstrap_value": 1.266901,
   "horizon": 20,
   "lag_a": 2,
   "lag_b": 1,
-  "init_a": 0.386326,
-  "init_b": -0.164673,
+  "init_a": 0.15013,
+  "init_b": -0.139449,
   "segment_scales": [
-    0.952492,
-    1.363005,
-    1.347817
+    0.968261,
+    1.005485,
+    0.994307
   ],
-  "is_clip_low": 0.5,
-  "is_clip_high": 2.0
+  "is_clip_low": 0.25,
+  "is_clip_high": 2.5,
+  "is_power": 1.4
 }

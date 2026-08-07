@@ -15,7 +15,7 @@ artifacts = [
 
 [task]
 name = "dynamo/timeout-cut-returns"
-description = "Repair near-correct lambda-return ledger whose asymmetric critics, segment scales, and clip-renorm IS mass disagree under mixed cuts"
+description = "Repair timeout-cut lambda returns under same-index timeout residency, eligibility cuts, and powered IS mass"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -28,21 +28,25 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-Graded artifacts diverge when asymmetric lagged critics, segment reward scales, segment-edge bootstraps, reverse-time resets, and clip-then-renormalize IS mass interact. Specs are split under /app/spec, so matching only the short contract still leaves packs wrong. Fixtures are synthetic packs generated for this task, not production logs. An RL training engineer hits this when validating advantage pipelines under environment timeouts and offline importance weights.
+Graded artifacts diverge when lagged asymmetric critics, mid-segment timeout residency on
+the same-index bootstrap critic, reverse-time eligibility cuts at timeouts, segment reward
+scales with accumulator resets, and power-then-clip-renormalize IS mass interact. Specs are
+split under /app/spec, so matching only one file still leaves packs wrong. Fixtures are
+synthetic packs generated for this task, not production logs. An RL training engineer hits
+this when validating advantage pipelines under environment timeouts and offline importance
+weights.
 """
 solution_explanation = """
-The installed cutreturn tree is near-correct but diverges from /app/spec on interacting edges.
-Restore lagged dual-stream registration in register.py: critic_a uses lag_a/init_a for V_t and
-critic_b uses lag_b/init_b for the bootstrap stream (the buggy tree ignores lag fill and reuses
-critic_a for both). In successor.py, zero successors only on terminated rows; pure truncation,
-final-horizon steps, and segment edges must bootstrap with meta.bootstrap_value and nonterminal
-one (the buggy tree also zeros truncated rows and drops final/segment-edge bootstrap). In gae.py,
-clear the reverse-time lambda accumulator on segment changes and scale rewards by
-segment_scales[segment[t]] before the TD residual. In ledger.py, build summary mass over
-non-terminated indices (full-horizon fallback if every index terminated), clip is_weight into
-[is_clip_low, is_clip_high], renormalize clipped weights, and set bootstrapped only when
-truncated and not terminated. Copy the fixed modules from solution/fixed into /app/cutreturn and
-run the CLI over /app/traces into /app/artifacts.
+Restore lagged dual-stream registration so critic_a/lag_a/init_a builds V_t and
+critic_b/lag_b/init_b builds the bootstrap stream. In successor resolution, zero only on
+terminated rows; mid-segment pure truncation bootstraps from registered critic_b at the
+same index t, while final/segment-edge truncation and non-truncated edges use
+meta.bootstrap_value. In the reverse-time core, reset the lambda accumulator on segment
+changes, scale rewards by segment_scales, and set eligibility to zero on truncated rows
+while still using the timeout bootstrap inside the TD residual. In the ledger, average
+non-terminated mass after raising is_weight to is_power, clipping, and renormalizing, and
+set bootstrapped only for truncated non-terminated indices. Install solution/fixed modules
+and run the CLI.
 """
 verification_explanation = """
 The verifier seals oracle reports into tests/inputs/sealed_expectations.json, then

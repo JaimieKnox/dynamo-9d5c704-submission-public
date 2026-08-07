@@ -34,7 +34,8 @@ def run_pack(pack_dir):
         terminated, truncated, boot_values, float(meta["bootstrap_value"]), segments
     )
     adv, ret = compute_gae(
-        rewards, next_v, next_nt, values, float(meta["gamma"]), float(meta["lambda"]), segments, scales
+        rewards, next_v, next_nt, values, float(meta["gamma"]), float(meta["lambda"]),
+        segments, scales, truncated,
     )
     idxs = list(range(len(rewards)))
     mean_adv = sum(weights[i] * adv[i] for i in idxs) / sum(weights[i] for i in idxs)

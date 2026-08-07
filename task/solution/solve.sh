@@ -1,6 +1,5 @@
 #!/bin/bash
 set -eu
-cp /solution/fixed/register.py /app/cutreturn/register.py
 cp /solution/fixed/successor.py /app/cutreturn/successor.py
 cp /solution/fixed/cutmask.py /app/cutreturn/cutmask.py
 cp /solution/fixed/gae.py /app/cutreturn/gae.py

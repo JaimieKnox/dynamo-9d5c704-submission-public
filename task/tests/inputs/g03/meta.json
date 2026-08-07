@@ -2,10 +2,6 @@
   "pack": "g03",
   "gamma": 0.99,
   "lambda": 0.95,
-  "bootstrap_value": 0.578619,
-  "horizon": 18,
-  "value_lag": 1,
-  "init_value": 0.114675,
-  "is_clip_low": 0.5,
-  "is_clip_high": 2.0
+  "bootstrap_value": 1.050905,
+  "horizon": 18
 }

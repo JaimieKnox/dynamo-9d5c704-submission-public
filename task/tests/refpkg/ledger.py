@@ -3,17 +3,9 @@ import json
 import os
 from .cutmask import build_cut_masks
 from .gae import compute_gae
-from .register import registered_values
 
 def _round6(x):
     return float(f"{x:.6f}")
-
-def _clip(w, lo, hi):
-    if w < lo:
-        return lo
-    if w > hi:
-        return hi
-    return w
 
 def load_pack(pack_dir):
     with open(os.path.join(pack_dir, "meta.json")) as fh:
@@ -32,19 +24,14 @@ def run_pack(pack_dir):
     rewards = [float(r["reward"]) for r in rows]
     terminated = [bool(r["terminated"]) for r in rows]
     truncated = [bool(r["truncated"]) for r in rows]
-    raw_values = [float(r["value"]) for r in rows]
+    values = [float(r["value"]) for r in rows]
     segments = [int(r.get("segment", 0)) for r in rows]
     weights = [float(r.get("is_weight", 1.0)) for r in rows]
     bootstrap_value = float(meta["bootstrap_value"])
     gamma = float(meta["gamma"])
     lam = float(meta["lambda"])
-    lag = int(meta.get("value_lag", 0))
-    init_value = float(meta.get("init_value", 0.0))
-    clip_lo = float(meta.get("is_clip_low", 0.0))
-    clip_hi = float(meta.get("is_clip_high", 1e9))
-    values = registered_values(raw_values, lag, init_value)
     next_v, next_nonterminal = build_cut_masks(
-        terminated, truncated, values, bootstrap_value, segments
+        terminated, truncated, values, bootstrap_value
     )
     adv, ret = compute_gae(
         rewards, next_v, next_nonterminal, values, gamma, lam, segments
@@ -52,10 +39,9 @@ def run_pack(pack_dir):
     idxs = [i for i in range(len(rewards)) if not terminated[i]]
     if not idxs:
         idxs = list(range(len(rewards)))
-    cweights = [_clip(weights[i], clip_lo, clip_hi) for i in idxs]
-    wsum = sum(cweights)
-    mean_adv = sum(cweights[j] * adv[i] for j, i in enumerate(idxs)) / wsum
-    mean_ret = sum(cweights[j] * ret[i] for j, i in enumerate(idxs)) / wsum
+    wsum = sum(weights[i] for i in idxs)
+    mean_adv = sum(weights[i] * adv[i] for i in idxs) / wsum
+    mean_ret = sum(weights[i] * ret[i] for i in idxs) / wsum
     steps = []
     for t in range(len(rewards)):
         steps.append({

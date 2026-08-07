@@ -1,25 +1,26 @@
-The replay auditor in `/app/rlaudit` reconstructs what the learner of an asynchronous
-actor-learner training run did from recorded actor shards. The package runs end to end,
-but graded ledgers diverge when ring residency across a segment's covered admissions,
-truncated-cut bootstrap choice, importance-weight mass under sampler lag, and
-register-delay eligibility interact on the same learner steps. Repair the implementation so
-those interactions match the docs.
+The package at `/app/opulse` rebuilds an offline importance-corrected pulse ledger
+from asynchronous actor shards. The tree runs end to end, but graded ledgers diverge
+when residency across a formed segment's covered admissions, truncated-cut bootstrap
+choice, importance mass under sampler lag, and publication-quarantine eligibility
+interact on the same learner ticks. Repair the implementation so those interactions
+match the specification.
 
-Each directory under `/app/runs` is one recorded run bundle. `/app/docs/bundle-format.md`,
-`/app/docs/learner-contract.md`, `/app/docs/comparisons.md`, `/app/docs/sampler.md`, and
-`/app/docs/output-schema.md` are normative and together state every rule that decides an
-audit document.
+Each directory under `/app/recordings` is one recording pack.
+`/app/spec/recording-format.md`, `/app/spec/pulse-contract.md`,
+`/app/spec/decision-tables.md`, `/app/spec/draw-engine.md`, and
+`/app/spec/ledger-schema.md` are normative and together state every rule that decides
+a pulse ledger.
 
-Write one audit document per bundle to `/app/out/<bundle>.json`, using the bundle directory
-name. For every bundle under `/app/runs`:
+Write one pulse ledger per pack to `/app/ledgers/<pack>.json`, using the pack
+directory name. For every pack under `/app/recordings`:
 
-1. The document exists, parses as JSON, and carries `bundle`, `steps`, and `totals`.
-2. `steps` has one correctly typed entry per learner step in ascending order.
-3. `target_epoch` is the reported epoch in force for that step.
-4. `sampled` is the exact ordered slot sequence of accepted draws, repeats included.
-5. `dropped_nonresident` is the exact rejected-draw count.
-6. The four per-step floating aggregates match the contract to six decimal places.
-7. `totals` contains the six exact counts and rounded final priority sum.
+1. The ledger exists, parses as JSON, and carries `recording`, `ticks`, and `summary`.
+2. `ticks` has one correctly typed entry per learner tick in ascending order.
+3. `active_epoch` is the reported epoch in force for that tick.
+4. `accepted_slots` is the exact ordered slot sequence of accepted draws, repeats included.
+5. `rejected_count` is the exact rejected-draw count.
+6. The four per-tick floating aggregates match the contract to six decimal places.
+7. `summary` contains the six exact counts and rounded final priority mass.
 
-No bundle ships an expected audit document. Only `/app/out` is graded. You may replace
-anything under `/app/rlaudit`.
+No pack ships an expected ledger. Only `/app/ledgers` is graded. You may replace
+anything under `/app/opulse`.

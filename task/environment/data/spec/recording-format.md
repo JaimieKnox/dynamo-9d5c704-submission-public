@@ -1,13 +1,13 @@
-# Run bundle format (normative)
+# Recording pack format (normative)
 
-A run bundle records one asynchronous actor-learner training run. Every bundle directory
-under `/app/runs` holds the files below. This document is normative for field meanings.
+A recording pack records one asynchronous actor-learner training run. Every bundle directory
+under `/app/recordings` holds the files below. This document is normative for field meanings.
 
 ## `manifest.json`
 
 | field | meaning |
 | --- | --- |
-| `bundle` | bundle identifier, reproduced verbatim in the audit document |
+| `bundle` | bundle identifier, reproduced verbatim in the pulse ledger |
 | `gamma` | discount factor |
 | `n_step` | maximum segment length in transitions |
 | `n_actions` | size of the discrete action set, actions are integers in `[0, n_actions - 1]` |
@@ -71,7 +71,7 @@ highest `t`.
 
 ## `ingest.json`
 
-`{"admissions": [{"step": <int>, "seq_watermark": <int>}, ...]}`. Each entry records a
+`{"admissions": [{"t": <int>, "seq_watermark": <int>}, ...]}`. Each entry records a
 publication fact whose recorded `step` is the earliest learner step at which the fact
 is eligible to become effective after adding the bundle `visibility_lag`. Once effective,
 the learner can see every transition up to and including `seq_watermark`. Entries are not

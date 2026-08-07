@@ -1,7 +1,7 @@
 # Learner replay contract (normative)
 
-This document fixes every rule that decides an audit document. It applies to every bundle
-under `/app/runs`. Where an inequality appears it is the exact comparison the contract uses.
+This document fixes every rule that decides an pulse ledger. It applies to every bundle
+under `/app/recordings`. Where an inequality appears it is the exact comparison the contract uses.
 
 ## 1. Global admission order
 
@@ -16,7 +16,7 @@ The ingest log is an unordered history of cumulative publication facts. An entry
 eligible only after the learner has waited the bundle's configured publication lag past
 that entry's recorded step. Its watermark is inclusive. Replay combines every fact
 eligible for the current step. JSON position is not chronology. The empty-visibility
-sentinel and the watermark reduction are specified in `comparisons.md`.
+sentinel and the watermark reduction are specified in `decision-tables.md`.
 
 ## 3. Buffer admission and residency
 
@@ -26,7 +26,7 @@ receives admission index `k` and occupies slot `k mod buffer_capacity`. Admissio
 whatever occupied that slot before, and nothing else ever clears or moves a slot.
 
 A segment is **resident**, meaning still drawable, only while every admission index it
-covers still satisfies the ring predicate in `comparisons.md`. Residency is settled after
+covers still satisfies the ring predicate in `decision-tables.md`. Residency is settled after
 the step's admission phase and reused for the whole draw phase.
 
 ## 4. Segments
@@ -49,7 +49,7 @@ registered. Segment transitions are always the episode's own transitions at thos
 A segment becomes complete at the first learner step by whose admission phase every one of
 its transitions has been admitted. It becomes registrable only after the bundle
 `register_delay` additional learner steps have elapsed from that completion step, as
-detailed in `comparisons.md`. Same-step registration order is ascending by the latest covered admission index, then
+detailed in `decision-tables.md`. Same-step registration order is ascending by the latest covered admission index, then
 by the earliest covered admission index. Among segments that become eligible together,
 the segment with the smaller latest-admission index is registered earlier, so later
 same-step registrations can still see its seed contribution.
@@ -87,10 +87,10 @@ the epoch stored on that segment's ledger entry.
 Let `N` be the number of registered segments. Let `P` be the sum of the current pre-draw
 priorities over the full ledger of `N` entries. The same captured `N` and `P` gate the
 draw phase and normalize importance weights. Draws are taken from the sampler priority
-vector defined by `sampler_priority_lag` in `comparisons.md`. When that vector's mass is
+vector defined by `sampler_priority_lag` in `decision-tables.md`. When that vector's mass is
 not greater than `0.0`, or when `N` is `0`, or when current `P` is not greater than `0.0`,
 the step makes no draws. Otherwise the step makes exactly `batch_size` draws using the
-sampler in `/app/docs/sampler.md` on the sampler priority vector.
+sampler in `/app/spec/draw-engine.md` on the sampler priority vector.
 
 Each draw is resolved in draw order against residency under the current ring. Rejected
 draws are counted, are not replaced, contribute nothing to aggregates, and leave priorities
@@ -111,13 +111,13 @@ the cut kind alone:
   or not that transition is currently admitted or resident
 
 Value targets and policy-gradient advantages are exactly the truncated importance-weighted
-returns produced by `/app/rlaudit/vtrace.py` for that segment's rewards, values, bootstrap,
+returns produced by `/app/opulse/vtrace.py` for that segment's rewards, values, bootstrap,
 clipped ratios and the bundle's `gamma`. Do not re-derive a different recursion.
 
 ## 9. Importance sampling weight
 
 The step reports a normalized importance weight for its useful samples. Apply the formula
-and pool definition in `comparisons.md`. Rejected draws do not enter the importance-weight normalization pool and must not
+and pool definition in `decision-tables.md`. Rejected draws do not enter the importance-weight normalization pool and must not
 contribute raw weights to `max(W)` or the average.
 
 ## 10. Priority write back
@@ -128,7 +128,7 @@ Accepted draws produce candidate ledger rewrites of
 
 using the bundle's `alpha` and `priority_eps`. Rejected draws do not produce candidates.
 The pre-draw snapshot, batch commit timing, and repeated-entry commit ordering follow
-`comparisons.md`. The lagged sampler vector used when `sampler_priority_lag` is greater
+`decision-tables.md`. The lagged sampler vector used when `sampler_priority_lag` is greater
 than `0` is the priority vector as it stands after that step's write-back commits.
 
 ## 11. Per step aggregates

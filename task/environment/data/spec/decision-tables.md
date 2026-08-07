@@ -2,7 +2,7 @@
 
 This appendix is the source of truth whenever replay state depends on a boundary,
 ordering reduction, or normalization pool. Symbols below have the meanings assigned
-by `learner-contract.md`.
+by `pulse-contract.md`.
 
 ## Admission and visibility
 
@@ -41,7 +41,7 @@ priority vector. When `K` is greater than `0`, draws use the priority vector as 
 after write-back of the previous learner step, extended with the current priorities of
 any ledger rows that did not yet exist then. Freezing that lag vector before write-back
 is wrong. Importance weights correct draws against the ledger state captured at the draw
-gate (`N`, `P`, and the drawn row's current pre-draw priority from `learner-contract.md`).
+gate (`N`, `P`, and the drawn row's current pre-draw priority from `pulse-contract.md`).
 The sampler lag vector only selects proposals; the correction distribution stays the
 captured ledger snapshot, including rows that are no longer drawable.
 
@@ -71,6 +71,6 @@ only. If `W` is empty, `mean_is_weight` is `0.0`. Otherwise divide each member b
 
 Termination bootstraps with zero. Truncation bootstraps from the observation the
 bundle format records for a time-limit cut on that stopping transition (see
-`bundle-format.md`). A full window bootstraps from the next episode observation, and a window that
+`recording-format.md`). A full window bootstraps from the next episode observation, and a window that
 would have to stop on the episode's final transition is not a segment at all. Floating
 fields round to six decimals only after reductions finish.

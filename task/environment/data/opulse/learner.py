@@ -44,7 +44,7 @@ def segment_stats(segment, feats, ep_params, gamma, rho_bar, c_bar):
 
 
 def run_bundle(bundle_dir):
-    """Audit one run bundle."""
+    """Audit one recording pack."""
     with open(os.path.join(bundle_dir, "manifest.json")) as handle:
         manifest = json.load(handle)
     feats = _load_features(bundle_dir)
@@ -162,14 +162,14 @@ def run_bundle(bundle_dir):
         registry.snapshot_lag_after_commit()
         step_records.append(
             {
-                "step": step,
-                "target_epoch": epoch,
-                "sampled": sampled,
-                "dropped_nonresident": dropped,
-                "mean_vtrace_target": _round6(mean_target),
-                "mean_pg_advantage": _round6(mean_advantage),
-                "mean_is_weight": _round6(mean_weight),
-                "priority_sum_after": _round6(registry.total()),
+                "t": step,
+                "active_epoch": epoch,
+                "accepted_slots": sampled,
+                "rejected_count": dropped,
+                "mean_bootstrap_target": _round6(mean_target),
+                "mean_policy_advantage": _round6(mean_advantage),
+                "mean_importance": _round6(mean_weight),
+                "priority_mass_after": _round6(registry.total()),
             }
         )
     evicted = 0
@@ -177,15 +177,15 @@ def run_bundle(bundle_dir):
         if not buffer.segment_is_resident(segment):
             evicted += 1
     return {
-        "bundle": manifest["bundle"],
-        "steps": step_records,
-        "totals": {
-            "transitions_enqueued": buffer.enqueued,
-            "segments_registered": len(registry.segments),
-            "segments_evicted": evicted,
-            "draws": total_draws,
-            "draws_accepted": total_accepted,
-            "unique_segments_drawn": len(drawn),
-            "priority_sum_final": _round6(registry.total()),
+        "recording": manifest["bundle"],
+        "ticks": step_records,
+        "summary": {
+            "enqueued_transitions": buffer.enqueued,
+            "segments_formed": len(registry.segments),
+            "segments_dropped": evicted,
+            "draw_attempts": total_draws,
+            "draw_accepts": total_accepted,
+            "unique_segments_used": len(drawn),
+            "priority_mass_final": _round6(registry.total()),
         },
     }

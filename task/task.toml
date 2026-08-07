@@ -1,18 +1,18 @@
 artifacts = [
-  "/app/out/s01.json",
-  "/app/out/s02.json",
-  "/app/out/s03.json",
-  "/app/out/g01.json",
-  "/app/out/g02.json",
-  "/app/out/g03.json",
-  "/app/out/g04.json",
-  "/app/out/g05.json",
-  "/app/out/g06.json",
+  "/app/ledgers/s01.json",
+  "/app/ledgers/s02.json",
+  "/app/ledgers/s03.json",
+  "/app/ledgers/g01.json",
+  "/app/ledgers/g02.json",
+  "/app/ledgers/g03.json",
+  "/app/ledgers/g04.json",
+  "/app/ledgers/g05.json",
+  "/app/ledgers/g06.json",
 ]
 
 [task]
-name = "dynamo/audit-replay-learner"
-description = "Repair near-correct async replay learner whose residency anchor, truncation bootstrap, and lagged IS mass disagree under wrap"
+name = "dynamo/offpolicy-pulse-ledger"
+description = "Repair near-correct off-policy pulse ledger whose residency span, truncation bootstrap, and lagged importance mass disagree under wrap"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -25,35 +25,38 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 12
 difficulty_explanation = """
-The auditor already keeps inclusive ring and delay boundaries, insert-time epoch stamping,
-full-ledger seeds, accepted-only IS pooling, and ascending same-step registration. Graded
-ledgers still diverge under ring wrap, sampler lag, and truncated episode cuts: sampled slots,
-dropped-nonresident counts, V-trace means, and mean IS weights drift together on the same
-learner steps even though sample bundles with a huge ring, zero lag, zero delay, and no
-truncations stay green.
+The pulse ledger already keeps inclusive ring and quarantine boundaries, insert-time
+epoch stamping, full-ledger seeds, accepted-only importance pooling, and ascending
+same-tick registration. Graded ledgers still diverge under ring wrap, sampler lag,
+and truncated episode cuts: accepted slots, rejected counts, bootstrap means, and
+mean importance drift together on the same learner ticks even though sample packs
+with a huge ring, zero lag, zero quarantine, and no truncations stay green.
 
-The recordings are synthetic fixtures built so wrap, lag padding, and truncated continuation
-values coincide on graded steps. An RL infrastructure engineer would perform this reconstruction
-when validating asynchronous learner reproducibility under publication lag and priority aging.
+The recordings are synthetic fixtures built so wrap, lag padding, and truncated
+continuation values coincide on graded ticks. An RL infrastructure engineer would
+perform this reconstruction when validating asynchronous off-policy reproducibility
+under publication lag and priority aging.
 
-Solving requires composing several phase rules as one state machine across buffer, segment,
-and learner modules. Independent one-field patches that ignore cross-module interactions still
-leave graded ledgers divergent.
+Solving requires composing several phase rules as one state machine across buffer,
+segment, and learner modules. Independent one-field patches that ignore cross-module
+interactions still leave graded ledgers divergent.
 """
 solution_explanation = """
-Keep inclusive ring and delay boundaries, insert-time epoch stamping, full-ledger seeds,
-accepted-only IS pooling, and ascending registration. Make segment residence require every
-covered admission index to still own its slot (not only the latest). Bootstrap truncated
-segments from the recorded cut continuation observation in both formation and V-trace.
-Score IS weights from current pre-draw priorities against the full-ledger mass P, with
-sampler lag snapshots taken only after write-back. Install the fixed modules and run the CLI.
+Keep inclusive ring and quarantine boundaries, insert-time epoch stamping, full-ledger
+seeds, accepted-only importance pooling, and ascending registration. Make segment
+residence require every covered admission index to still own its slot (not only the
+latest). Bootstrap truncated segments from the recorded cut continuation observation
+in both formation and bootstrap targets. Score importance weights from current
+pre-draw priorities against the full-ledger mass P, with sampler lag snapshots taken
+only after write-back. Install the fixed modules and run the CLI.
 """
 verification_explanation = """
-The verifier seals oracle ledgers in a derive phase, removes the reference tree, then grades
-agent outputs against the sealed bundle with no oracle import. Counts match exactly and
-floating aggregates match at six decimals. The oracle copies fixed modules and runs the CLI.
-A nop agent keeps the closing-edge residency anchor, cut-transition truncation bootstrap, and
-lagged IS mass, so graded bundles diverge while samples stay green.
+The verifier seals oracle ledgers in a derive phase, removes the reference tree, then
+grades agent outputs against the sealed pack with no oracle import. Counts match
+exactly and floating aggregates match at six decimals. The oracle copies fixed
+modules and runs the CLI. A nop agent keeps the closing-edge residency anchor,
+cut-transition truncation bootstrap, and lagged importance mass, so graded packs
+diverge while samples stay green.
 """
 
 [verifier]

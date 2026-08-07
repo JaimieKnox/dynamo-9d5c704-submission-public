@@ -1,4 +1,4 @@
-"""Replay auditor for asynchronous actor-learner run bundles."""
+"""Off-policy pulse ledger for asynchronous actor-learner recording packs."""
 
 __all__ = [
     "buffer",

@@ -13,25 +13,25 @@ import pytest
 BASE = os.path.dirname(os.path.abspath(__file__))
 SEAL_PATH = os.path.join(BASE, "sealed_expectations.json")
 SEALED_INPUTS = os.path.join(BASE, "inputs")
-OUTPUT_MOUNT = "/app/out"
-RUN_MOUNT = "/app/runs"
+OUTPUT_MOUNT = "/app/ledgers"
+RUN_MOUNT = "/app/recordings"
 ROUNDING_ERROR = 1e-6
 _OUTPUT_ROOT = Path(OUTPUT_MOUNT).resolve()
 
-ROW_INTEGERS = ("step", "target_epoch", "dropped_nonresident")
+ROW_INTEGERS = ("t", "active_epoch", "rejected_count")
 ROW_DECIMALS = (
-    "mean_vtrace_target",
-    "mean_pg_advantage",
-    "mean_is_weight",
-    "priority_sum_after",
+    "mean_bootstrap_target",
+    "mean_policy_advantage",
+    "mean_importance",
+    "priority_mass_after",
 )
 FINAL_COUNTS = (
-    "transitions_enqueued",
-    "segments_registered",
-    "segments_evicted",
-    "draws",
-    "draws_accepted",
-    "unique_segments_drawn",
+    "enqueued_transitions",
+    "segments_formed",
+    "segments_dropped",
+    "draw_attempts",
+    "draw_accepts",
+    "unique_segments_used",
 )
 
 
@@ -112,7 +112,7 @@ class ReplayCase:
         return _decode(os.path.join(self.input_dir, "manifest.json"))["learner_steps"]
 
     def row_pairs(self):
-        return zip(self.output["steps"], self.model["steps"])
+        return zip(self.output["ticks"], self.model["ticks"])
 
 
 CASES = [
@@ -132,7 +132,7 @@ def test_measurements_reproduce_replayed_values():
                     "%s step %d has %s=%r; replay gives %r"
                     % (
                         case.name,
-                        baseline["step"],
+                        baseline["t"],
                         key,
                         produced[key],
                         baseline[key],
@@ -150,22 +150,22 @@ def test_each_mounted_run_has_a_well_formed_envelope():
     for name in mounted_names:
         result = _emitted(name)
         assert isinstance(result, dict), "%s result is not an object" % name
-        assert set(("bundle", "steps", "totals")).issubset(result), (
+        assert set(("recording", "ticks", "summary")).issubset(result), (
             "%s result is missing a required root member" % name
         )
-        assert result["bundle"] == name, "%s result is labelled %r" % (
+        assert result["recording"] == name, "%s result is labelled %r" % (
             name,
-            result["bundle"],
+            result["recording"],
         )
-        assert isinstance(result["steps"], list), "%s steps is not a list" % name
-        assert isinstance(result["totals"], dict), "%s totals is not an object" % name
+        assert isinstance(result["ticks"], list), "%s steps is not a list" % name
+        assert isinstance(result["summary"], dict), "%s totals is not an object" % name
 
 
 def test_final_accounting_reproduces_replay():
     """Compare all exact run counters plus the rounded terminal priority mass."""
     for case in CASES:
-        produced = case.output["totals"]
-        baseline = case.model["totals"]
+        produced = case.output["summary"]
+        baseline = case.model["summary"]
         for key in FINAL_COUNTS:
             assert key in produced, "%s totals is missing %s" % (case.name, key)
             assert int(produced[key]) == baseline[key], (
@@ -173,17 +173,17 @@ def test_final_accounting_reproduces_replay():
                 % (case.name, key, produced[key], baseline[key])
             )
 
-        assert "priority_sum_final" in produced, (
+        assert "priority_mass_final" in produced, (
             "%s totals is missing priority_sum_final" % case.name
         )
-        assert produced["priority_sum_final"] == pytest.approx(
-            baseline["priority_sum_final"], abs=ROUNDING_ERROR
+        assert produced["priority_mass_final"] == pytest.approx(
+            baseline["priority_mass_final"], abs=ROUNDING_ERROR
         ), (
             "%s terminal priority sum is %r; replay gives %r"
             % (
                 case.name,
-                produced["priority_sum_final"],
-                baseline["priority_sum_final"],
+                produced["priority_mass_final"],
+                baseline["priority_mass_final"],
             )
         )
 
@@ -191,7 +191,7 @@ def test_final_accounting_reproduces_replay():
 def test_row_table_is_complete_ordered_and_typed():
     """Validate manifest length, ordinal continuity, and each schema value category."""
     for case in CASES:
-        table = case.output["steps"]
+        table = case.output["ticks"]
         assert len(table) == case.declared_steps, (
             "%s has %d rows but declares %d steps"
             % (case.name, len(table), case.declared_steps)
@@ -201,10 +201,10 @@ def test_row_table_is_complete_ordered_and_typed():
                 case.name,
                 ordinal,
             )
-            assert row.get("step") == ordinal, "%s row %d reports ordinal %r" % (
+            assert row.get("t") == ordinal, "%s row %d reports ordinal %r" % (
                 case.name,
                 ordinal,
-                row.get("step"),
+                row.get("t"),
             )
             for key in ROW_INTEGERS:
                 assert _looks_integral(row.get(key)), (
@@ -212,7 +212,7 @@ def test_row_table_is_complete_ordered_and_typed():
                     % (case.name, ordinal, key, row.get(key))
                 )
 
-            accepted = row.get("sampled")
+            accepted = row.get("accepted_slots")
             assert isinstance(accepted, list), "%s row %d sampled is not a list" % (
                 case.name,
                 ordinal,
@@ -233,13 +233,13 @@ def test_target_epoch_timeline_reproduces_replay():
     """Compare the selected target generation at every ordinal."""
     for case in CASES:
         for produced, baseline in case.row_pairs():
-            assert int(produced["target_epoch"]) == baseline["target_epoch"], (
+            assert int(produced["active_epoch"]) == baseline["active_epoch"], (
                 "%s step %d selects target %r; replay selects %d"
                 % (
                     case.name,
-                    baseline["step"],
-                    produced["target_epoch"],
-                    baseline["target_epoch"],
+                    baseline["t"],
+                    produced["active_epoch"],
+                    baseline["active_epoch"],
                 )
             )
 
@@ -248,14 +248,14 @@ def test_accepted_slot_stream_reproduces_replay():
     """Preserve accepted slot identity, order, and multiplicity for each batch."""
     for case in CASES:
         for produced, baseline in case.row_pairs():
-            actual_stream = [int(slot) for slot in produced["sampled"]]
-            assert actual_stream == baseline["sampled"], (
+            actual_stream = [int(slot) for slot in produced["accepted_slots"]]
+            assert actual_stream == baseline["accepted_slots"], (
                 "%s step %d sampled %r; replay sampled %r"
                 % (
                     case.name,
-                    baseline["step"],
+                    baseline["t"],
                     actual_stream,
-                    baseline["sampled"],
+                    baseline["accepted_slots"],
                 )
             )
 
@@ -264,13 +264,13 @@ def test_rejected_draw_timeline_reproduces_replay():
     """Compare the count of nonresident selections discarded at every step."""
     for case in CASES:
         for produced, baseline in case.row_pairs():
-            actual_count = int(produced["dropped_nonresident"])
-            assert actual_count == baseline["dropped_nonresident"], (
+            actual_count = int(produced["rejected_count"])
+            assert actual_count == baseline["rejected_count"], (
                 "%s step %d drops %d selections; replay drops %d"
                 % (
                     case.name,
-                    baseline["step"],
+                    baseline["t"],
                     actual_count,
-                    baseline["dropped_nonresident"],
+                    baseline["rejected_count"],
                 )
             )

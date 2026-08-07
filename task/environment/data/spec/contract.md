@@ -10,6 +10,8 @@ The package rebuilds generalized advantage estimates for offline trajectory pack
   value entry (or `bootstrap_value` from meta when the cut is the final index). The
   non-terminal multiplier stays one so the λ-return uses that bootstrap rather than hard zero.
 
+
+For a truncated index that is not the final horizon index, the following step's stored value is the bootstrap source.
 ## Recurrence
 
 For each index `t` from the end of the horizon to the start:

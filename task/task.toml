@@ -31,7 +31,7 @@ difficulty_explanation = """
 Graded artifacts diverge when pack-specific critic lag, asymmetric raw-versus-registered
 successors at intra-segment truncations, segment-edge bootstrap, and clipped IS-weighted
 summary mass interact. Specs are split across /app/spec files and do not repeat each other.
-Fixtures are synthetic packs generated for this task, not production logs.
+Fixtures are synthetic packs generated for this task, not production logs. An RL training engineer hits this when validating advantage pipelines under environment timeouts.
 """
 solution_explanation = """
 Compose the split specs: register baselines with each pack's value_lag, choose successors

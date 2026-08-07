@@ -1,8 +1,8 @@
-{"critic_a": -1.864841, "critic_b": -0.623482, "index": 0, "is_weight": 2.043945, "reward": 0.308994, "segment": 0, "terminated": false, "truncated": false}
-{"critic_a": 1.999597, "critic_b": 0.947764, "index": 1, "is_weight": 2.802119, "reward": -0.803251, "segment": 0, "terminated": false, "truncated": false}
-{"critic_a": -1.866528, "critic_b": 1.306488, "index": 2, "is_weight": 2.725079, "reward": -0.647403, "segment": 0, "terminated": false, "truncated": false}
-{"critic_a": 1.43792, "critic_b": 1.268953, "index": 3, "is_weight": 1.513497, "reward": 0.609713, "segment": 0, "terminated": false, "truncated": false}
-{"critic_a": 1.554825, "critic_b": 0.945832, "index": 4, "is_weight": 1.168054, "reward": -0.976223, "segment": 0, "terminated": false, "truncated": false}
-{"critic_a": -1.495804, "critic_b": -0.250757, "index": 5, "is_weight": 1.906785, "reward": 0.312341, "segment": 0, "terminated": false, "truncated": false}
-{"critic_a": -1.564739, "critic_b": 1.353262, "index": 6, "is_weight": 2.700672, "reward": -0.871149, "segment": 0, "terminated": false, "truncated": false}
-{"critic_a": -1.051969, "critic_b": 0.662568, "index": 7, "is_weight": 2.652439, "reward": -0.13731, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": -1.864841, "critic_b": -1.864841, "index": 0, "is_weight": 1.0, "reward": 0.308994, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": 1.999597, "critic_b": 1.999597, "index": 1, "is_weight": 1.0, "reward": -0.803251, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": -1.866528, "critic_b": -1.866528, "index": 2, "is_weight": 1.0, "reward": -0.647403, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": 1.43792, "critic_b": 1.43792, "index": 3, "is_weight": 1.0, "reward": 0.609713, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": 1.554825, "critic_b": 1.554825, "index": 4, "is_weight": 1.0, "reward": -0.976223, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": -1.495804, "critic_b": -1.495804, "index": 5, "is_weight": 1.0, "reward": 0.312341, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": -1.564739, "critic_b": -1.564739, "index": 6, "is_weight": 1.0, "reward": -0.871149, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": -1.051969, "critic_b": -1.051969, "index": 7, "is_weight": 1.0, "reward": -0.13731, "segment": 0, "terminated": false, "truncated": false}

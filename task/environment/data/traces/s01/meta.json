@@ -9,7 +9,7 @@
   "init_a": -0.039861,
   "init_b": 0.359473,
   "segment_scales": [
-    0.948533
+    1.0
   ],
   "is_clip_low": 0.0,
   "is_clip_high": 10.0

@@ -1,19 +1,14 @@
 """Build reports from trajectory packs."""
-import json
-import os
+import json, os
 from .cutmask import build_cut_masks
 from .gae import compute_gae
-from .register import registered_values
+from .register import registered_stream
 
 def _round6(x):
     return float(f"{x:.6f}")
 
 def _clip(w, lo, hi):
-    if w < lo:
-        return lo
-    if w > hi:
-        return hi
-    return w
+    return lo if w < lo else hi if w > hi else w
 
 def load_pack(pack_dir):
     with open(os.path.join(pack_dir, "meta.json")) as fh:
@@ -32,46 +27,37 @@ def run_pack(pack_dir):
     rewards = [float(r["reward"]) for r in rows]
     terminated = [bool(r["terminated"]) for r in rows]
     truncated = [bool(r["truncated"]) for r in rows]
-    raw_values = [float(r["value"]) for r in rows]
-    segments = [int(r.get("segment", 0)) for r in rows]
-    weights = [float(r.get("is_weight", 1.0)) for r in rows]
-    bootstrap_value = float(meta["bootstrap_value"])
-    gamma = float(meta["gamma"])
-    lam = float(meta["lambda"])
-    lag = int(meta.get("value_lag", 0))
-    init_value = float(meta.get("init_value", 0.0))
-    clip_lo = float(meta.get("is_clip_low", 0.0))
-    clip_hi = float(meta.get("is_clip_high", 1e9))
-    registered = registered_values(raw_values, lag, init_value)
-    next_v, next_nonterminal = build_cut_masks(
-        terminated, truncated, registered, raw_values, bootstrap_value, segments
+    critic_a = [float(r["critic_a"]) for r in rows]
+    critic_b = [float(r["critic_b"]) for r in rows]
+    segments = [int(r["segment"]) for r in rows]
+    weights = [float(r["is_weight"]) for r in rows]
+    lag_a = int(meta["lag_a"]); lag_b = int(meta["lag_b"])
+    init_a = float(meta["init_a"]); init_b = float(meta["init_b"])
+    values = registered_stream(critic_a, lag_a, init_a)
+    boot_values = registered_stream(critic_b, lag_b, init_b)
+    scales = [float(x) for x in meta["segment_scales"]]
+    next_v, next_nt = build_cut_masks(
+        terminated, truncated, boot_values, float(meta["bootstrap_value"]), segments
     )
     adv, ret = compute_gae(
-        rewards, next_v, next_nonterminal, registered, gamma, lam, segments
+        rewards, next_v, next_nt, values, float(meta["gamma"]), float(meta["lambda"]), segments, scales
     )
     idxs = [i for i in range(len(rewards)) if not terminated[i]]
     if not idxs:
         idxs = list(range(len(rewards)))
-    cweights = [_clip(weights[i], clip_lo, clip_hi) for i in idxs]
-    wsum = sum(cweights)
-    mean_adv = sum(cweights[j] * adv[i] for j, i in enumerate(idxs)) / wsum
-    mean_ret = sum(cweights[j] * ret[i] for j, i in enumerate(idxs)) / wsum
-    steps = []
-    for t in range(len(rewards)):
-        steps.append({
-            "index": t,
-            "advantage": _round6(adv[t]),
-            "return": _round6(ret[t]),
-            "bootstrapped": bool(truncated[t]) and not bool(terminated[t]),
-        })
-    return {
-        "pack": meta["pack"],
-        "steps": steps,
-        "summary": {
-            "horizon": int(meta["horizon"]),
-            "truncation_count": sum(1 for x in truncated if x),
-            "termination_count": sum(1 for x in terminated if x),
-            "mean_advantage": _round6(mean_adv),
-            "mean_return": _round6(mean_ret),
-        },
-    }
+    lo=float(meta["is_clip_low"]); hi=float(meta["is_clip_high"])
+    clipped=[_clip(weights[i], lo, hi) for i in idxs]
+    denom=sum(clipped) or float(len(idxs))
+    if denom <= 0:
+        clipped=[1.0]*len(idxs); denom=float(len(idxs))
+    mean_adv=sum(clipped[j]*adv[idxs[j]] for j in range(len(idxs)))/denom
+    mean_ret=sum(clipped[j]*ret[idxs[j]] for j in range(len(idxs)))/denom
+    steps=[{"index":t,"advantage":_round6(adv[t]),"return":_round6(ret[t]),
+            "bootstrapped": bool(truncated[t]) and not bool(terminated[t])} for t in range(len(rewards))]
+    return {"pack": meta["pack"], "steps": steps, "summary": {
+        "horizon": int(meta["horizon"]),
+        "truncation_count": sum(1 for x in truncated if x),
+        "termination_count": sum(1 for x in terminated if x),
+        "mean_advantage": _round6(mean_adv),
+        "mean_return": _round6(mean_ret),
+    }}

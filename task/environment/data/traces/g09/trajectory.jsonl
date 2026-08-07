@@ -1,16 +1,16 @@
-{"index": 0, "is_weight": 2.749342, "reward": 0.482859, "segment": 0, "terminated": false, "truncated": false, "value": -0.529952}
-{"index": 1, "is_weight": 1.069555, "reward": -0.033881, "segment": 0, "terminated": false, "truncated": false, "value": -0.3619}
-{"index": 2, "is_weight": 0.866042, "reward": 1.069486, "segment": 0, "terminated": false, "truncated": false, "value": 0.557621}
-{"index": 3, "is_weight": 2.108518, "reward": -0.93535, "segment": 0, "terminated": false, "truncated": false, "value": -1.182873}
-{"index": 4, "is_weight": 1.118034, "reward": -0.513944, "segment": 0, "terminated": false, "truncated": false, "value": -0.956308}
-{"index": 5, "is_weight": 2.781832, "reward": -0.099215, "segment": 0, "terminated": false, "truncated": false, "value": -0.175408}
-{"index": 6, "is_weight": 2.242262, "reward": 0.139712, "segment": 0, "terminated": false, "truncated": false, "value": 1.26858}
-{"index": 7, "is_weight": 2.010796, "reward": 1.080114, "segment": 0, "terminated": false, "truncated": true, "value": -1.400822}
-{"index": 8, "is_weight": 2.006014, "reward": 0.68389, "segment": 1, "terminated": false, "truncated": false, "value": 1.718421}
-{"index": 9, "is_weight": 2.505556, "reward": -0.961557, "segment": 1, "terminated": false, "truncated": false, "value": 0.505102}
-{"index": 10, "is_weight": 1.975276, "reward": 0.452046, "segment": 1, "terminated": false, "truncated": true, "value": -1.976793}
-{"index": 11, "is_weight": 1.175888, "reward": -0.721921, "segment": 1, "terminated": false, "truncated": false, "value": -1.905883}
-{"index": 12, "is_weight": 2.04141, "reward": 0.156378, "segment": 1, "terminated": false, "truncated": false, "value": -1.348372}
-{"index": 13, "is_weight": 2.467192, "reward": 0.929015, "segment": 1, "terminated": false, "truncated": false, "value": 1.838657}
-{"index": 14, "is_weight": 2.379825, "reward": 0.545838, "segment": 1, "terminated": false, "truncated": false, "value": -0.791066}
-{"index": 15, "is_weight": 3.639303, "reward": 0.59083, "segment": 1, "terminated": false, "truncated": false, "value": 1.619656}
+{"critic_a": 1.046104, "critic_b": 1.331514, "index": 0, "is_weight": 2.261181, "reward": -0.604999, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": 0.068865, "critic_b": -1.131872, "index": 1, "is_weight": 2.521543, "reward": 0.495951, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": -0.596942, "critic_b": -1.963768, "index": 2, "is_weight": 1.263107, "reward": -0.83016, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": -1.517421, "critic_b": -1.963499, "index": 3, "is_weight": 1.784603, "reward": 0.095468, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": 0.503153, "critic_b": -0.914841, "index": 4, "is_weight": 0.659122, "reward": -0.060846, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": -1.922536, "critic_b": -0.826184, "index": 5, "is_weight": 2.714423, "reward": -1.062654, "segment": 1, "terminated": false, "truncated": false}
+{"critic_a": 1.685862, "critic_b": -1.854353, "index": 6, "is_weight": 2.176434, "reward": -0.060237, "segment": 1, "terminated": false, "truncated": false}
+{"critic_a": -0.05789, "critic_b": -0.446014, "index": 7, "is_weight": 2.890321, "reward": 0.116504, "segment": 1, "terminated": false, "truncated": false}
+{"critic_a": -0.356711, "critic_b": 0.642842, "index": 8, "is_weight": 2.963056, "reward": -0.629115, "segment": 1, "terminated": false, "truncated": false}
+{"critic_a": -1.382684, "critic_b": 1.757186, "index": 9, "is_weight": 0.34263, "reward": -0.437372, "segment": 1, "terminated": false, "truncated": false}
+{"critic_a": -1.924699, "critic_b": 1.404883, "index": 10, "is_weight": 1.392852, "reward": 0.183098, "segment": 2, "terminated": false, "truncated": false}
+{"critic_a": 1.352457, "critic_b": 0.895776, "index": 11, "is_weight": 0.55993, "reward": 0.456399, "segment": 2, "terminated": false, "truncated": false}
+{"critic_a": 1.654261, "critic_b": -0.598026, "index": 12, "is_weight": 0.163552, "reward": 0.30187, "segment": 2, "terminated": false, "truncated": false}
+{"critic_a": -0.309407, "critic_b": 0.427964, "index": 13, "is_weight": 2.177434, "reward": -0.984798, "segment": 2, "terminated": false, "truncated": false}
+{"critic_a": -1.371997, "critic_b": -0.643369, "index": 14, "is_weight": 2.200343, "reward": 0.657323, "segment": 2, "terminated": false, "truncated": false}
+{"critic_a": 1.633569, "critic_b": -1.755061, "index": 15, "is_weight": 2.532531, "reward": 0.724372, "segment": 2, "terminated": false, "truncated": true}

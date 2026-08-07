@@ -1,11 +1,9 @@
-"""Resolve registered critic values under meta lag."""
+"""Register lagged critic streams."""
 
-def registered_values(values, lag, init_value):
+def registered_stream(values, lag, init_value):
     T = len(values)
     out = [0.0] * T
     for t in range(T):
-        if t >= lag:
-            out[t] = float(values[t - lag])
-        else:
-            out[t] = float(init_value)
+        src = t - lag
+        out[t] = float(values[src]) if src >= 0 else float(init_value)
     return out

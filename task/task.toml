@@ -15,7 +15,7 @@ artifacts = [
 
 [task]
 name = "dynamo/timeout-cut-returns"
-description = "Repair near-correct λ-return ledger whose asymmetric critics, pack-specific lags, and clipped IS mass disagree under mixed episode cuts"
+description = "Repair near-correct lambda-return ledger whose asymmetric critics, segment scales, and clip-renorm IS mass disagree under mixed cuts"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -28,16 +28,10 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-Graded artifacts diverge when pack-specific critic lag, asymmetric raw-versus-registered
-successors at intra-segment truncations, segment-edge bootstrap, and clipped IS-weighted
-summary mass interact. Specs are split across /app/spec files and do not repeat each other.
-Fixtures are synthetic packs generated for this task, not production logs. An RL training engineer hits this when validating advantage pipelines under environment timeouts.
+Graded artifacts diverge when asymmetric lagged critics, segment reward scales, segment-edge bootstraps, reverse-time resets, and clip-then-renormalize IS mass interact. Specs are split under /app/spec, so matching only the short contract still leaves packs wrong. Fixtures are synthetic packs generated for this task, not production logs. An RL training engineer hits this when validating advantage pipelines under environment timeouts and offline importance weights.
 """
 solution_explanation = """
-Compose the split specs: register baselines with each pack's value_lag, choose successors
-from raw or registered critics depending on truncation versus continuation and segment edges,
-reset the reverse-time accumulator across segments, and form clipped IS-weighted means over
-non-terminated indices with a full-horizon fallback. Install fixed modules and run the CLI.
+Repair the installed cutreturn package until every graded artifact matches the normative files under /app/spec. Install the fixed modules and run the CLI.
 """
 verification_explanation = """
 The verifier seals oracle reports into tests/inputs/sealed_expectations.json, then

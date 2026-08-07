@@ -32,7 +32,7 @@ Graded artifacts diverge when successor values, segment-boundary accumulator res
 dual-flag precedence, and IS-weighted summary mass interact on shared horizons. Sample packs
 can look almost right while multi-segment, final-horizon, dual-flag, and all-terminated packs
 still miss. An RL training engineer hits this when validating advantage pipelines under
-environment timeouts and offline importance weights.
+environment timeouts and offline importance weights. Fixtures are synthetic packs generated for this task, not production logs.
 """
 solution_explanation = """
 Resolve successors in a dedicated helper, feed them through cut masks, reset the

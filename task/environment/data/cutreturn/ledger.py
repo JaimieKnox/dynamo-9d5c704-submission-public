@@ -32,8 +32,11 @@ def run_pack(pack_dir):
         terminated, truncated, values, bootstrap_value
     )
     adv, ret = compute_gae(rewards, next_v, next_nonterminal, values, gamma, lam)
-    # Seeded defect: full-horizon mean mass (no terminated exclusion / fallback).
-    idxs = list(range(len(rewards)))
+    # Seeded defect: drops truncated indices from the mean mass and, if none remain,
+    # collapses to index 0 instead of using the all-terminated full-horizon fallback.
+    idxs = [i for i in range(len(rewards)) if not truncated[i]]
+    if not idxs:
+        idxs = [0]
     mean_adv = sum(adv[i] for i in idxs) / len(idxs)
     mean_ret = sum(ret[i] for i in idxs) / len(idxs)
     steps = []

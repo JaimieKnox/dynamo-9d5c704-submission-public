@@ -5,4 +5,4 @@ def resolve_successor(t, horizon, terminated, truncated, boot_values, bootstrap_
         return 0.0, 0.0
     if t + 1 < horizon:
         return float(boot_values[t + 1]), 1.0
-    return 0.0, 0.0
+    return float(bootstrap_value), 1.0

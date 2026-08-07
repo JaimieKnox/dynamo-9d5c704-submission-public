@@ -1,1 +1,0 @@
-"""GAE truncation ledger package."""

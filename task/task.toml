@@ -1,18 +1,18 @@
 artifacts = [
-  "/app/reports/s01.json",
-  "/app/reports/s02.json",
-  "/app/reports/s03.json",
-  "/app/reports/g01.json",
-  "/app/reports/g02.json",
-  "/app/reports/g03.json",
-  "/app/reports/g04.json",
-  "/app/reports/g05.json",
-  "/app/reports/g06.json",
+  "/app/artifacts/s01.json",
+  "/app/artifacts/s02.json",
+  "/app/artifacts/s03.json",
+  "/app/artifacts/g01.json",
+  "/app/artifacts/g02.json",
+  "/app/artifacts/g03.json",
+  "/app/artifacts/g04.json",
+  "/app/artifacts/g05.json",
+  "/app/artifacts/g06.json",
 ]
 
 [task]
-name = "dynamo/gae-truncation-ledger"
-description = "Repair near-correct GAE-lambda ledger whose truncation bootstrap and summary mass disagree under mixed episode cuts"
+name = "dynamo/timeout-cut-returns"
+description = "Repair near-correct λ-return ledger whose truncation bootstrap and summary mass disagree under mixed episode cuts"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.

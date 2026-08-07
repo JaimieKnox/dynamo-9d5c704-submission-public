@@ -1,4 +1,4 @@
-"""GAE-lambda core (fixed)."""
+"""λ-return core (fixed)."""
 
 def compute_gae(rewards, values, terminated, truncated, gamma, lam):
     T = len(rewards)

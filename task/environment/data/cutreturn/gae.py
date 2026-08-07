@@ -1,4 +1,4 @@
-"""GAE-lambda core (buggy truncation / mean mass)."""
+"""λ-return core (buggy truncation / mean mass)."""
 
 def compute_gae(rewards, values, terminated, truncated, gamma, lam):
     T = len(rewards)

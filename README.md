@@ -1,7 +1,7 @@
-# GAE truncation ledger
+# Timeout-cut return ledger
 
-Harbor task: repair `/app/gaegrid` so offline trajectory packs emit contract-faithful
-GAE-lambda reports at `/app/reports/<pack>.json`.
+Harbor task: repair `/app/cutreturn` so offline traces emit contract-faithful
+timeout-aware λ-return artifacts at `/app/artifacts/<trace>.json`.
 
 Category: Model Training and ML Infrastructure.
 Subcategory: Reinforcement learning.

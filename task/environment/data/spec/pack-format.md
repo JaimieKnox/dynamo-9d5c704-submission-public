@@ -1,6 +1,6 @@
 # Pack format (normative)
 
-Each directory under `/app/packs` contains:
+Each directory under `/app/traces` contains:
 
 - `meta.json` with keys `pack`, `gamma`, `lambda`, `bootstrap_value`, `horizon`
 - `trajectory.jsonl` with one object per index and keys `index`, `reward`, `value`,

@@ -4,7 +4,7 @@ import json, os
 from pathlib import Path
 import pytest
 
-OUTPUT_MOUNT = "/app/reports"
+OUTPUT_MOUNT = "/app/artifacts"
 _OUTPUT_ROOT = Path(OUTPUT_MOUNT).resolve()
 SEAL_PATH = "/tests/sealed_expectations.json"
 ROUNDING_ERROR = 1e-6
@@ -42,14 +42,14 @@ def _packs(parent):
     return sorted(n for n in os.listdir(parent) if os.path.isfile(os.path.join(parent, n, "meta.json")))
 
 @pytest.mark.parametrize("name", _packs("/tests/inputs"))
-def test_envelope(name):
+def test_artifact_envelope(name):
     doc = _emitted(name)
     assert set(("pack", "steps", "summary")).issubset(doc)
     assert doc["pack"] == name
     assert isinstance(doc["steps"], list) and isinstance(doc["summary"], dict)
 
 @pytest.mark.parametrize("name", _packs("/tests/inputs"))
-def test_summary_matches(name):
+def test_summary_matches_sealed(name):
     produced = _emitted(name)["summary"]
     baseline = SEALED[name]["summary"]
     for key in ("horizon", "truncation_count", "termination_count"):
@@ -58,7 +58,7 @@ def test_summary_matches(name):
         assert produced[key] == pytest.approx(baseline[key], abs=ROUNDING_ERROR)
 
 @pytest.mark.parametrize("name", _packs("/tests/inputs"))
-def test_step_advantages_match(name):
+def test_per_index_values_match(name):
     for produced, baseline in zip(_emitted(name)["steps"], SEALED[name]["steps"]):
         assert produced["index"] == baseline["index"]
         assert produced["bootstrapped"] == baseline["bootstrapped"]

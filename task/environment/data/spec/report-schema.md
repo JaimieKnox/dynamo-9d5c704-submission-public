@@ -1,6 +1,6 @@
 # Report schema (normative)
 
-Write `/app/reports/<pack>.json` as UTF-8 JSON.
+Write `/app/artifacts/<pack>.json` as UTF-8 JSON.
 
 Top level keys: `pack` (string), `steps` (array), `summary` (object).
 

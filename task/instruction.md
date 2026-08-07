@@ -1,19 +1,18 @@
-The package at `/app/gaegrid` rebuilds generalized advantage estimates for offline
-trajectory packs. The tree runs end to end, but graded reports diverge when timeout
-truncations, true terminations, and summary mass interact on the same horizon. Repair
-the implementation so those interactions match the specification.
+Repair `/app/cutreturn` so offline trajectory traces produce contract-true timeout-aware
+λ-return reports. The installed tree already finishes every trace, but graded artifacts diverge
+when timeout cuts must keep a bootstrap value while true episode ends must not, and when
+summary means must ignore only terminated indices.
 
-Each directory under `/app/packs` is one trajectory pack. `/app/spec/contract.md`,
-`/app/spec/pack-format.md`, and `/app/spec/report-schema.md` are normative.
+Normative sources: `/app/spec/contract.md`, `/app/spec/pack-format.md`, and
+`/app/spec/report-schema.md`. Trace directories live under `/app/traces`.
 
-Write one report per pack to `/app/reports/<pack>.json` using the pack directory name.
-For every pack under `/app/packs`:
+Emit `/app/artifacts/<trace>.json` for each trace directory name. Every artifact must:
 
-1. The report exists, parses as JSON, and carries `pack`, `steps`, and `summary`.
-2. `steps` has one typed entry per index in ascending order.
-3. Per-step `advantage` and `return` match the contract to six decimal places.
-4. `bootstrapped` is true exactly on truncated indices.
-5. Summary counts and means match the contract to six decimal places.
+1. Parse as JSON with top-level `pack`, `steps`, and `summary`.
+2. Contain one ascending `steps` row per index.
+3. Match contract `advantage` and `return` values to six decimals.
+4. Set `bootstrapped` true only for truncated indices.
+5. Match summary counts and means to the contract (six decimals for means).
 
-No pack ships an expected report. Only `/app/reports` is graded. You may replace
-anything under `/app/gaegrid`.
+Do not expect goldens inside the traces. Only `/app/artifacts` is graded. You may rewrite
+`/app/cutreturn`.

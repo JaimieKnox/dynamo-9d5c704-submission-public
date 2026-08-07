@@ -1,6 +1,6 @@
-# GAE truncation ledger contract (normative)
+# timeout-cut return ledger contract (normative)
 
-The package rebuilds generalized advantage estimates for offline trajectory packs.
+The package rebuilds timeout-aware λ-returns and advantages for offline trajectory packs.
 
 ## Flags
 

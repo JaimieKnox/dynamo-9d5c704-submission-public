@@ -6,6 +6,6 @@ ENV PYTHONDONTWRITEBYTECODE=1
 RUN pip install --no-cache-dir pytest==8.4.1 pytest-json-ctrf==0.3.5
 
 COPY data/spec /app/spec
-COPY data/gaegrid /app/gaegrid
-COPY data/packs /app/packs
-RUN mkdir -p /app/reports
+COPY data/cutreturn /app/cutreturn
+COPY data/traces /app/traces
+RUN mkdir -p /app/artifacts

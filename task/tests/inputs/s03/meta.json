@@ -2,6 +2,10 @@
   "pack": "s03",
   "gamma": 0.99,
   "lambda": 0.95,
-  "bootstrap_value": 1.781587,
-  "horizon": 12
+  "bootstrap_value": 0.364608,
+  "horizon": 12,
+  "value_lag": 1,
+  "init_value": -0.335393,
+  "is_clip_low": 0.5,
+  "is_clip_high": 2.0
 }

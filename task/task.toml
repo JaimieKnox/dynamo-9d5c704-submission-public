@@ -15,7 +15,7 @@ artifacts = [
 
 [task]
 name = "dynamo/timeout-cut-returns"
-description = "Repair near-correct λ-return ledger whose successors, segment resets, dual-flag precedence, and IS-weighted summary mass disagree under mixed episode cuts"
+description = "Repair near-correct λ-return ledger whose lagged critics, segment-edge bootstraps, and clipped IS mass disagree under mixed episode cuts"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -28,17 +28,18 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-Graded artifacts diverge when successor values, segment-boundary accumulator resets,
-dual-flag precedence, and IS-weighted summary mass interact on shared horizons. Sample packs
-can look almost right while multi-segment, final-horizon, dual-flag, and all-terminated packs
-still miss. An RL training engineer hits this when validating advantage pipelines under
-environment timeouts and offline importance weights. Fixtures are synthetic packs generated for this task, not production logs.
+Graded artifacts diverge when lagged critic registration, segment-edge bootstrap
+successors, reverse-time segment resets, and clipped IS-weighted summary mass interact on
+shared horizons. Specs are split across multiple files under /app/spec, so a patch that only
+matches the main contract still leaves packs wrong. Fixtures are synthetic packs generated
+for this task, not production logs. An RL training engineer hits this when validating
+advantage pipelines under environment timeouts and offline importance weights.
 """
 solution_explanation = """
-Resolve successors in a dedicated helper, feed them through cut masks, reset the
-λ accumulator across segment changes, prefer termination on dual-flag rows, and compute
-summary means as IS-weighted averages over non-terminated indices with a full-horizon
-fallback. Install the fixed modules and run the CLI.
+Apply meta value_lag in a registration helper, resolve successors with segment-edge
+bootstrap_value, reset the lambda accumulator across segment changes, prefer termination on
+dual-flag rows, and compute summary means with clipped IS weights over non-terminated indices
+plus a full-horizon fallback. Install the fixed modules and run the CLI.
 """
 verification_explanation = """
 The verifier seals oracle reports into tests/inputs/sealed_expectations.json, then
@@ -47,7 +48,7 @@ Per-index advantage and return, plus summary mean_advantage and mean_return, use
 pytest.approx(..., abs=1e-6). That absolute band matches the instruction contract of
 six-decimal equality after both sides round with the shared _round6 helper, so
 floating noise below the last graded digit cannot flip the reward while a wrong
-successor, segment reset, dual-flag, or weighted-mass patch still fails.
+lag, segment-edge bootstrap, or clipped-mass patch still fails.
 Schema, bootstrapped flags, and summary counts are exact.
 """
 

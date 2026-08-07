@@ -2,6 +2,10 @@
   "pack": "g07",
   "gamma": 0.99,
   "lambda": 0.95,
-  "bootstrap_value": 1.704154,
-  "horizon": 20
+  "bootstrap_value": 1.750668,
+  "horizon": 20,
+  "value_lag": 1,
+  "init_value": 0.391172,
+  "is_clip_low": 0.5,
+  "is_clip_high": 2.0
 }

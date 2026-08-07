@@ -3,6 +3,7 @@ import json
 import os
 from .cutmask import build_cut_masks
 from .gae import compute_gae
+from .register import registered_values
 
 def _round6(x):
     return float(f"{x:.6f}")
@@ -24,14 +25,17 @@ def run_pack(pack_dir):
     rewards = [float(r["reward"]) for r in rows]
     terminated = [bool(r["terminated"]) for r in rows]
     truncated = [bool(r["truncated"]) for r in rows]
-    values = [float(r["value"]) for r in rows]
+    raw_values = [float(r["value"]) for r in rows]
     segments = [int(r.get("segment", 0)) for r in rows]
     weights = [float(r.get("is_weight", 1.0)) for r in rows]
     bootstrap_value = float(meta["bootstrap_value"])
     gamma = float(meta["gamma"])
     lam = float(meta["lambda"])
+    lag = int(meta.get("value_lag", 0))
+    init_value = float(meta.get("init_value", 0.0))
+    values = registered_values(raw_values, lag, init_value)
     next_v, next_nonterminal = build_cut_masks(
-        terminated, truncated, values, bootstrap_value
+        terminated, truncated, values, bootstrap_value, segments
     )
     adv, ret = compute_gae(
         rewards, next_v, next_nonterminal, values, gamma, lam, segments
@@ -39,15 +43,15 @@ def run_pack(pack_dir):
     idxs = [i for i in range(len(rewards)) if not truncated[i]]
     if not idxs:
         idxs = [0]
-    mean_adv = sum(adv[i] for i in idxs) / len(idxs)
-    mean_ret = sum(ret[i] for i in idxs) / len(idxs)
+    mean_adv = sum(weights[i] * adv[i] for i in idxs) / sum(weights[i] for i in idxs)
+    mean_ret = sum(weights[i] * ret[i] for i in idxs) / sum(weights[i] for i in idxs)
     steps = []
     for t in range(len(rewards)):
         steps.append({
             "index": t,
             "advantage": _round6(adv[t]),
             "return": _round6(ret[t]),
-            "bootstrapped": bool(truncated[t]),
+            "bootstrapped": bool(truncated[t]) and not bool(terminated[t]),
         })
     return {
         "pack": meta["pack"],

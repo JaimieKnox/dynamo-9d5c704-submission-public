@@ -1,27 +1,19 @@
 {
-  "bootstrap_value": -0.078219,
+  "bootstrap_value": 0.127467,
   "gamma": 0.99,
-  "horizon": 10,
-  "init_a": 0.232003,
-  "init_b": 0.33798,
+  "horizon": 14,
+  "init_a": 0.200598,
+  "init_b": 0.597191,
   "is_clip_high": 2.0,
   "is_clip_low": 0.5,
-  "is_power": 1.75,
+  "is_power": 1.25,
   "lag_a": 1,
-  "lag_b": 2,
+  "lag_b": 1,
   "lambda": 0.95,
   "pack": "g06",
-  "scale_lag": 0,
+  "scale_lag": 2,
   "segment_scales": [
-    0.936856,
-    1.022337,
-    0.720789,
-    1.237189,
-    0.737842,
-    1.201408,
-    0.891048,
-    1.156576,
-    1.252394,
-    0.582409
+    0.928915,
+    0.925245
   ]
 }

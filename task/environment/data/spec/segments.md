@@ -20,3 +20,6 @@ Reverse-time recurrence properties:
   scale.
 - Truncation leaves the bootstrap inside the TD residual, but the reverse-time eligibility
   factor for carrying the lambda state through a truncated index is zero.
+- An index whose `V_next` was resolved by the segment-open freeze path also zeros that same
+  reverse-time eligibility factor. This cut is independent of the truncation cut and applies
+  even when the non-terminal factor is one.

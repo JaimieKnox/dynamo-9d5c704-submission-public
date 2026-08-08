@@ -42,7 +42,7 @@ def run_pack(pack_dir):
     )
     adv, ret = compute_gae(
         rewards, next_v, next_nt, values, float(meta["gamma"]), float(meta["lambda"]),
-        segments, scales, truncated, int(meta.get("scale_lag", 0)),
+        segments, scales, truncated, int(meta.get("scale_lag", 0)), seam_edge,
     )
     T = len(rewards)
     lo = float(meta["is_clip_low"]); hi = float(meta["is_clip_high"])
@@ -70,8 +70,10 @@ def run_pack(pack_dir):
         denom = sum(clipped) or float(len(idxs))
         if denom <= 0:
             clipped = [1.0] * len(idxs); denom = float(len(idxs))
+    # R4-2: mean_advantage uses IS mass; mean_return is unweighted over non-terminated
     mean_adv = sum(clipped[j] * adv[idxs[j]] for j in range(len(idxs))) / denom
-    mean_ret = sum(clipped[j] * ret[idxs[j]] for j in range(len(idxs))) / denom
+    live = [i for i in range(T) if not terminated[i]] or list(range(T))
+    mean_ret = sum(ret[i] for i in live) / float(len(live))
     steps = [{
         "index": t,
         "advantage": _round6(adv[t]),

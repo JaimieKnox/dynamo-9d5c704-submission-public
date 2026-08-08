@@ -3,6 +3,7 @@ import json, os
 from .cutmask import build_cut_masks
 from .gae import compute_gae
 from .register import registered_stream
+from .seam import segment_opens
 
 def _round6(x):
     return float(f"{x:.6f}")
@@ -31,19 +32,32 @@ def run_pack(pack_dir):
     critic_b = [float(r["critic_b"]) for r in rows]
     segments = [int(r["segment"]) for r in rows]
     weights = [float(r["is_weight"]) for r in rows]
-    values = registered_stream(critic_a, int(meta["lag_a"]), float(meta["init_a"]))
-    boot_values = registered_stream(critic_b, int(meta["lag_b"]), float(meta["init_b"]))
+    lag_a = int(meta["lag_a"]); lag_b = int(meta["lag_b"])
+    values = registered_stream(critic_a, lag_a, float(meta["init_a"]), segments)
+    boot_values = registered_stream(critic_b, lag_b, float(meta["init_b"]), segments)
     scales = [float(x) for x in meta["segment_scales"]]
-    next_v, next_nt = build_cut_masks(
+    next_v, next_nt, seam_edge = build_cut_masks(
         terminated, truncated, boot_values, float(meta.get("bootstrap_value", 0.0)), segments
     )
     adv, ret = compute_gae(
         rewards, next_v, next_nt, values, float(meta["gamma"]), float(meta["lambda"]),
-        segments, scales,
+        segments, scales, truncated, int(meta.get("scale_lag", 0)), seam_edge,
     )
-    idxs = [i for i in range(len(rewards)) if not terminated[i]] or list(range(len(rewards)))
+    T = len(rewards)
     lo = float(meta["is_clip_low"]); hi = float(meta["is_clip_high"])
-    clipped = [_clip(weights[i], lo, hi) for i in idxs]
+    # near-correct mistakes: no is_power; exclude every seam_edge when lag_b>0 (private predicate);
+    # apply IS mass to BOTH means
+    w_snap = [_clip(weights[t], lo, hi) for t in range(T)]
+    idxs = []
+    for i in range(T):
+        if terminated[i]:
+            continue
+        if lag_b > 0 and seam_edge[i]:
+            continue
+        idxs.append(i)
+    if not idxs:
+        idxs = [i for i in range(T) if not terminated[i]] or list(range(T))
+    clipped = [w_snap[i] for i in idxs]
     denom = sum(clipped) or float(len(idxs))
     mean_adv = sum(clipped[j] * adv[idxs[j]] for j in range(len(idxs))) / denom
     mean_ret = sum(clipped[j] * ret[idxs[j]] for j in range(len(idxs))) / denom
@@ -52,7 +66,7 @@ def run_pack(pack_dir):
         "advantage": _round6(adv[t]),
         "return": _round6(ret[t]),
         "bootstrapped": bool(truncated[t]) and not bool(terminated[t]),
-    } for t in range(len(rewards))]
+    } for t in range(T)]
     return {"pack": meta["pack"], "steps": steps, "summary": {
         "horizon": int(meta["horizon"]),
         "truncation_count": sum(1 for x in truncated if x),

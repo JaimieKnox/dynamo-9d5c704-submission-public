@@ -13,11 +13,12 @@ artifacts = [
   "/app/artifacts/g09.json",
   "/app/artifacts/g10.json",
   "/app/artifacts/g11.json",
+  "/app/artifacts/g12.json",
 ]
 
 [task]
 name = "dynamo/timeout-cut-returns"
-description = "Repair timeout-cut lambda returns under invariant successors, scale_lag pads, and powered IS fallback"
+description = "Repair timeout-cut lambda returns under seam-edge eligibility cuts and split summary masses"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -30,18 +31,17 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-Graded packs diverge when open-freeze successors, truncation residency, scale_lag pads,
-eligibility cuts, powered mass, and empty-mass fallback interact on one horizon. Specs
-state invariants rather than a numbered patch recipe, so a single-pass transcription of
-one file still leaves packs wrong. Fixtures are synthetic packs generated for this task,
-not production logs. An RL training engineer hits this when validating advantage
-pipelines under environment timeouts and offline importance weights.
+Graded packs diverge when open-freeze seam-edge eligibility cuts, split advantage/return
+summary masses, powered IS membership, and scale_lag pads interact on one horizon. Specs
+scatter those invariants across segments, weighting, and report-schema so a one-file
+transcription still leaves means or per-index advantages wrong. Fixtures are synthetic.
+An RL training engineer hits this validating advantage pipelines under timeouts.
 """
 solution_explanation = """
 Graded artifacts still disagree with /app/spec on mixed cut packs: summary means shift
-when membership collapses, and per-index advantages drift when residency, scale pads, and
-open freezes co-occur. Align cutreturn to every normative file under /app/spec, install
-the repaired modules, and run the CLI over /app/traces into /app/artifacts.
+when advantage mass and return mass diverge, and per-index advantages drift when
+open-freeze eligibility cuts co-occur with residency and scale pads. Align cutreturn to
+every normative file under /app/spec, install the repaired modules, and run the CLI.
 """
 verification_explanation = """
 The verifier seals oracle reports into tests/inputs/sealed_expectations.json, then

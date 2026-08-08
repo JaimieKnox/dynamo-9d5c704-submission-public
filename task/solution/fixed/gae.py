@@ -2,11 +2,13 @@
 
 def compute_gae(
     rewards, next_v, next_nonterminal, values, gamma, lam, segments, segment_scales,
-    truncated=None, scale_lag=0,
+    truncated=None, scale_lag=0, seam_edge=None,
 ):
     T = len(rewards)
     if truncated is None:
         truncated = [False] * T
+    if seam_edge is None:
+        seam_edge = [False] * T
     opens = {}
     for t, seg in enumerate(segments):
         if seg not in opens:
@@ -19,7 +21,6 @@ def compute_gae(
             gae = 0.0
         seg = segments[t]
         t_open = opens[seg]
-        # scale_lag: first scale_lag steps of a segment inherit previous segment scale
         if scale_lag > 0 and (t - t_open) < scale_lag and t_open > 0:
             prev_seg = segments[t_open - 1]
             scale = float(segment_scales[prev_seg]) if prev_seg < len(segment_scales) else 1.0
@@ -27,7 +28,11 @@ def compute_gae(
             scale = float(segment_scales[seg]) if seg < len(segment_scales) else 1.0
         r = rewards[t] * scale
         delta = r + gamma * next_v[t] * next_nonterminal[t] - values[t]
-        elig = 0.0 if truncated[t] else float(next_nonterminal[t])
+        # R4-1: truncation OR open-freeze seam edge cuts reverse-time eligibility
+        if truncated[t] or seam_edge[t]:
+            elig = 0.0
+        else:
+            elig = float(next_nonterminal[t])
         gae = delta + gamma * lam * elig * gae
         adv[t] = gae
         ret[t] = adv[t] + values[t]

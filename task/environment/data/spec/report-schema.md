@@ -11,6 +11,5 @@ Each `steps[]` object has `index` (int), `advantage` (number, 6 dp), `return` (n
 `mean_advantage`, `mean_return` (numbers, 6 dp).
 
 `mean_advantage` follows the importance-mass rules in weighting.md.
-`mean_return` is the unweighted arithmetic mean of per-index returns over all non-terminated
-indices (or the full horizon if every index is terminated). Importance membership and `w_snap`
-do not apply to `mean_return`.
+`mean_return` follows the return-mass rules in weighting.md (unweighted arithmetic mean over
+the return-mass index set). Importance `w_snap` does not apply to `mean_return`.

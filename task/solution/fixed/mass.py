@@ -1,9 +1,8 @@
-"""Advantage-mass membership shared by the ledger (not recomputed ad hoc)."""
+"""Advantage-mass and return-mass membership shared by the ledger."""
 from .seam import open_used_cross_lag, segment_opens
 
 
 def advantage_mass_indices(terminated, seam_edge, scale_pad, lag_b, segments):
-    """Non-terminated indices surviving open-freeze cross-lag and scale-pad cuts."""
     opens = segment_opens(segments)
     idxs = []
     for i, term in enumerate(terminated):
@@ -15,6 +14,10 @@ def advantage_mass_indices(terminated, seam_edge, scale_pad, lag_b, segments):
             continue
         idxs.append(i)
     return idxs
+
+
+def return_mass_indices(terminated, scale_pad):
+    return [i for i, term in enumerate(terminated) if (not term) and (not scale_pad[i])]
 
 
 def fallback_mass_indices(terminated, horizon):

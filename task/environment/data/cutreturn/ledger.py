@@ -2,7 +2,7 @@
 import json, os
 from .cutmask import build_cut_masks
 from .gae import compute_gae
-from .mass import advantage_mass_indices, fallback_mass_indices
+from .mass import advantage_mass_indices, fallback_mass_indices, return_mass_indices
 from .register import registered_stream
 from .scale import scale_pad_mask
 from .seam import segment_opens
@@ -44,22 +44,26 @@ def run_pack(pack_dir):
     boot_values = registered_stream(critic_b, lag_b, float(meta["init_b"]), segments)
     scales = [float(x) for x in meta["segment_scales"]]
     scale_lag = int(meta.get("scale_lag", 0))
+    resid_lag = 0
+    gamma = float(meta["gamma"])
+    gamma_lambda = gamma
     next_v, next_nt, seam_edge = build_cut_masks(
         terminated, truncated, boot_values, float(meta.get("bootstrap_value", 0.0)),
-        segments, raw_boot=critic_b,
+        segments, raw_boot=critic_b, resid_lag=resid_lag,
     )
     adv, ret = compute_gae(
-        rewards, next_v, next_nt, values, float(meta["gamma"]), float(meta["lambda"]),
-        segments, scales, truncated, scale_lag, seam_edge,
+        rewards, next_v, next_nt, values, gamma, float(meta["lambda"]),
+        segments, scales, truncated, scale_lag, seam_edge, gamma_lambda=gamma_lambda,
     )
     T = len(rewards)
     lo = float(meta["is_clip_low"])
     hi = float(meta["is_clip_high"])
     power = float(meta.get("is_power", 1.0))
-    w_snap = [_clip((weights[t] ** power), lo, hi) for t in range(T)]
-    _pads = scale_pad_mask(segments, scale_lag)
-    zeros = [False] * T
-    idxs = advantage_mass_indices(terminated, seam_edge, zeros, lag_b, segments)
+    opens = segment_opens(segments)
+    open_w = {seg: float(weights[t0]) for seg, t0 in opens.items()}
+    w_snap = [_clip((open_w[segments[t]] ** power), lo, hi) for t in range(T)]
+    pads = scale_pad_mask(segments, scale_lag)
+    idxs = advantage_mass_indices(terminated, seam_edge, pads, lag_b, segments)
     used_fallback = False
     if not idxs:
         used_fallback = True
@@ -74,8 +78,10 @@ def run_pack(pack_dir):
             clipped = [1.0] * len(idxs)
             denom = float(len(idxs))
     mean_adv = sum(clipped[j] * adv[idxs[j]] for j in range(len(idxs))) / denom
-    live = [i for i in range(T) if not terminated[i]] or list(range(T))
-    mean_ret = sum(ret[i] for i in live) / float(len(live))
+    ret_idxs = return_mass_indices(terminated, pads)
+    if not ret_idxs:
+        ret_idxs = fallback_mass_indices(terminated, T)
+    mean_ret = sum(ret[i] for i in ret_idxs) / float(len(ret_idxs))
     steps = [{
         "index": t,
         "advantage": _round6(adv[t]),

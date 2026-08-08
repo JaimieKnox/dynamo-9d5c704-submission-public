@@ -1,0 +1,21 @@
+{
+  "pack": "g17",
+  "gamma": 0.9,
+  "gamma_lambda": 0.5,
+  "lambda": 0.8,
+  "horizon": 8,
+  "lag_a": 2,
+  "lag_b": 2,
+  "init_a": 0.2,
+  "init_b": 0.3,
+  "segment_scales": [
+    0.5,
+    2.0,
+    1.0
+  ],
+  "is_clip_low": 0.25,
+  "is_clip_high": 1.75,
+  "is_power": 2.0,
+  "scale_lag": 2,
+  "resid_lag": 1
+}

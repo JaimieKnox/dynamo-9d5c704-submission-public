@@ -16,11 +16,14 @@ artifacts = [
   "/app/artifacts/g12.json",
   "/app/artifacts/g13.json",
   "/app/artifacts/g14.json",
+  "/app/artifacts/g17.json",
+  "/app/artifacts/g16.json",
+  "/app/artifacts/g15.json",
 ]
 
 [task]
 name = "dynamo/timeout-cut-returns"
-description = "Repair timeout-cut lambda returns under raw trunc residency, open-frozen IS, and scale-pad mass"
+description = "Repair timeout-cut lambda returns under dual discounts, trunc residency lags, and split return mass"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -33,11 +36,11 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-Graded packs diverge when mid-segment trunc residency, open-frozen IS weights,
-scale-lag pad eligibility, and seam-aware mass membership interact on one horizon.
-Normative constraints are split across helpers and spec files so a single-module
-transcription still leaves means or per-index advantages wrong. Fixtures are synthetic.
-An RL training engineer hits this validating advantage pipelines under timeouts.
+Synthetic offline packs under /app/traces stress timeout-cut lambda returns for an RL
+training engineer validating advantage pipelines. Agents must assemble a multi-file ledger
+where TD and reverse-time discounts can diverge, truncation residency is not the live raw
+index, and summary means use distinct membership rules for advantages versus returns under
+scale pads and seams.
 """
 solution_explanation = """
 Graded artifacts still disagree with /app/spec on mixed cut packs: summary means shift

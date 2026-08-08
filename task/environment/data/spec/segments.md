@@ -8,8 +8,9 @@ Termination: if `terminated[t]` then `V_next[t] = 0` and the successor non-termi
 Termination dominates truncation.
 
 Pure mid-segment truncation: when `truncated[t]` holds, the next index exists, and that next
-index shares `segment[t]`, `V_next[t]` equals the **raw** `critic_b[t]` (not the lagged
-registered bootstrap stream). The non-terminal factor is 1.
+index shares `segment[t]`, `V_next[t]` equals the **raw** `critic_b` at residency index
+`t* = max(segment_open(t), t - resid_lag)` with `resid_lag` defaulting to 0 (so `t* = t`).
+The non-terminal factor is 1. Do not read the lagged registered bootstrap stream for this path.
 
 Segment-edge / final index: when the next index is missing or belongs to another segment
 (including single-index segments), `V_next[t]` equals the **registered** bootstrap critic
@@ -27,7 +28,8 @@ Reverse-time recurrence:
   a truncated index is zero.
 - An index whose `V_next` used the segment-open freeze path also zeros reverse-time eligibility,
   even when the non-terminal factor is 1.
-- Otherwise (no truncation cut, no open-freeze cut, no scale-lag pad cut),
-  `eligibility_t` equals the successor non-terminal factor `next_nonterminal_t`.
 - An index that is inside a `scale_lag` pad (inherits previous-segment scale) also zeros
   reverse-time eligibility. This cut is independent of truncation and open-freeze cuts.
+- Otherwise (no truncation cut, no open-freeze cut, no scale-lag pad cut),
+  `eligibility_t` equals the successor non-terminal factor `next_nonterminal_t`.
+- The reverse-time lambda multiplier uses `gamma_lambda` (default `gamma`), not `gamma`.

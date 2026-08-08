@@ -1,0 +1,19 @@
+{
+  "pack": "g16",
+  "gamma": 0.99,
+  "lambda": 0.95,
+  "horizon": 10,
+  "lag_a": 0,
+  "lag_b": 1,
+  "init_a": 0.0,
+  "init_b": 0.1,
+  "segment_scales": [
+    1.0,
+    2.0
+  ],
+  "is_clip_low": 0.1,
+  "is_clip_high": 3.0,
+  "scale_lag": 2,
+  "resid_lag": 2,
+  "gamma_lambda": 0.85
+}

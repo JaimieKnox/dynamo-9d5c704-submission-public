@@ -1,0 +1,31 @@
+{
+  "pack": "g21",
+  "gamma": 0.95,
+  "gamma_lambda": 0.8,
+  "lambda": 0.9,
+  "horizon": 12,
+  "lag_a": 1,
+  "lag_b": 1,
+  "init_a": 0.0,
+  "init_b": 0.2,
+  "segment_scales": [
+    0.5,
+    2.0,
+    1.0
+  ],
+  "segment_lambdas": [
+    0.9,
+    0.4,
+    0.95
+  ],
+  "segment_gammas": [
+    0.95,
+    0.5,
+    0.99
+  ],
+  "is_clip_low": 0.2,
+  "is_clip_high": 2.0,
+  "is_power": 1.5,
+  "scale_lag": 1,
+  "resid_lag": 1
+}

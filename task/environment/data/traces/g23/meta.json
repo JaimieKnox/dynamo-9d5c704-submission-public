@@ -1,0 +1,27 @@
+{
+  "pack": "g23",
+  "gamma": 0.99,
+  "gamma_lambda": 0.99,
+  "lambda": 0.5,
+  "horizon": 8,
+  "lag_a": 0,
+  "lag_b": 1,
+  "init_a": 0.0,
+  "init_b": 0.0,
+  "segment_scales": [
+    2.0,
+    0.5,
+    2.0,
+    0.5
+  ],
+  "segment_gammas": [
+    0.2,
+    0.99,
+    0.2,
+    0.99
+  ],
+  "is_clip_low": 0.25,
+  "is_clip_high": 1.75,
+  "scale_lag": 0,
+  "resid_lag": 0
+}

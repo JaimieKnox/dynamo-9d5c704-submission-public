@@ -1,16 +1,19 @@
 # timeout-cut return ledger contract (normative)
 
 Rebuild timeout-aware lambda-returns for offline packs. Read every file under `/app/spec/`.
-No single file is a complete implementation recipe. Registration, successors, eligibility,
-scales, baselines, and mass each constrain a different slice of the ledger.
+Registration, successors, eligibility, scales, baselines, and mass each constrain a different
+slice. Do not treat any one file as a complete recipe.
 
-Flags: termination zeros successor channels. `bootstrapped` is true only for pure truncations.
+Termination zeros successor channels. `bootstrapped` is true only for pure truncations.
 
-After registration and successor resolution, walk `t` from the end. Form a TD residual with
-discount `gamma` against the registered state value, then a reverse-time accumulator whose
-discount is `gamma_lambda` (defaulting to `gamma`) and whose per-index lambda may come from
-`segment_lambdas` when that array is present. Eligibility cuts are not the same predicate as
-successor non-terminal factors; see segments.md and the shared eligibility helper contract.
+Walk `t` from the end after registration and successor resolution. Form a TD residual against
+the registered state value. The residual's discount may be segment-local when `segment_gammas`
+is present; otherwise it is pack `gamma`. The reverse-time accumulator always discounts with
+`gamma_lambda` (defaulting to pack `gamma`) and may use `segment_lambdas` for the lambda factor.
 
-Emitted per-index `advantage` is the reverse-time accumulator. Emitted per-index `return` adds
-a baseline that is not always the same stream used inside the TD residual; see report-schema.md.
+Successor magnitudes on some cut paths are not used raw in the residual; segments.md states
+when the effective reward scale also multiplies `V_next` before the residual is formed.
+
+Emitted `advantage` is the reverse-time accumulator. Emitted `return` adds the raw `critic_a`
+baseline (report-schema.md). Summary means follow weighting.md, including scale-scoring that
+applies only when computing `mean_advantage`.

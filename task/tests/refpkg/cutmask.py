@@ -12,10 +12,11 @@ def build_cut_masks(
     next_v = [0.0] * T
     next_nt = [0.0] * T
     seam_edge = [False] * T
+    scale_through = [False] * T
     for t in range(T):
         seam_edge[t] = (not terminated[t]) and is_seam_edge(t, T, segments)
-        next_v[t], next_nt[t] = resolve_successor(
+        next_v[t], next_nt[t], scale_through[t] = resolve_successor(
             t, T, terminated, truncated, boot_values, bootstrap_value, segments,
             seam_boots=seam_boots, raw_boot=raw_boot, resid_lag=resid_lag,
         )
-    return next_v, next_nt, seam_edge
+    return next_v, next_nt, seam_edge, scale_through

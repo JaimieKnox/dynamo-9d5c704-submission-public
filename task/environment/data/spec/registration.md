@@ -9,8 +9,7 @@ A registered stream of lag `L` and fill `init` must satisfy:
 `critic_a` uses (`lag_a`, `init_a`). `critic_b` uses (`lag_b`, `init_b`).
 
 The TD residual's state value is the registered `critic_a` stream. Indices where that register
-reads `init` (missing source or cross-seam source) are value-pad indices. Value pads cut
-reverse-time eligibility and both summary mass sets; see segments.md and weighting.md.
+reads `init` are value-pad indices and cut eligibility and both summary mass sets.
 
-Bootstrap reads: segment-edge freezes and interior `t+1` successors use the registered
-`critic_b` stream. Mid-segment truncation residency does not; see segments.md.
+Bootstrap reads: segment-edge freezes and interior `t+1` successors use registered `critic_b`.
+Mid-segment truncation residency uses raw `critic_b` as in segments.md.

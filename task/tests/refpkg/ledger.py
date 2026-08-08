@@ -5,7 +5,7 @@ from .gae import compute_gae
 from .mass import advantage_mass_indices, fallback_mass_indices, return_mass_indices
 from .pads import value_pad_mask
 from .register import registered_stream
-from .scale import scale_pad_mask
+from .scale import effective_scale, scale_pad_mask
 from .seam import segment_opens
 
 
@@ -48,19 +48,18 @@ def run_pack(pack_dir):
     resid_lag = int(meta.get("resid_lag", 0))
     gamma = float(meta["gamma"])
     gamma_lambda = float(meta["gamma_lambda"]) if "gamma_lambda" in meta else gamma
-    segment_lambdas = None
-    if "segment_lambdas" in meta:
-        segment_lambdas = [float(x) for x in meta["segment_lambdas"]]
-    next_v, next_nt, seam_edge = build_cut_masks(
+    segment_lambdas = [float(x) for x in meta["segment_lambdas"]] if "segment_lambdas" in meta else None
+    segment_gammas = [float(x) for x in meta["segment_gammas"]] if "segment_gammas" in meta else None
+    next_v, next_nt, seam_edge, scale_through = build_cut_masks(
         terminated, truncated, boot_values, float(meta.get("bootstrap_value", 0.0)),
         segments, raw_boot=critic_b, resid_lag=resid_lag,
     )
-    adv, _ = compute_gae(
+    adv = compute_gae(
         rewards, next_v, next_nt, values, gamma, float(meta["lambda"]),
         segments, scales, truncated, scale_lag, seam_edge, gamma_lambda=gamma_lambda,
-        lag_a=lag_a, segment_lambdas=segment_lambdas,
+        lag_a=lag_a, segment_lambdas=segment_lambdas, scale_through=scale_through,
+        segment_gammas=segment_gammas,
     )
-    # Jump: reported return uses raw critic_a baseline, not registered values.
     ret = [adv[t] + critic_a[t] for t in range(len(adv))]
     T = len(rewards)
     lo = float(meta["is_clip_low"])
@@ -79,13 +78,18 @@ def run_pack(pack_dir):
     if used_fallback:
         clipped = [1.0] * len(idxs)
         denom = float(len(idxs))
+        scored = [adv[i] for i in idxs]
     else:
         clipped = [w_snap[i] for i in idxs]
         denom = sum(clipped) or float(len(idxs))
         if denom <= 0:
             clipped = [1.0] * len(idxs)
             denom = float(len(idxs))
-    mean_adv = sum(clipped[j] * adv[idxs[j]] for j in range(len(idxs))) / denom
+        # Summary scores advantages by effective reward scale; steps stay raw.
+        scored = [
+            adv[i] * effective_scale(i, segments, scales, scale_lag) for i in idxs
+        ]
+    mean_adv = sum(clipped[j] * scored[j] for j in range(len(idxs))) / denom
     ret_idxs = return_mass_indices(terminated, pads, vpads)
     if not ret_idxs:
         ret_idxs = fallback_mass_indices(terminated, T)

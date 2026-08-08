@@ -26,7 +26,6 @@ def compute_gae(
             scale = float(segment_scales[seg]) if seg < len(segment_scales) else 1.0
         r = rewards[t] * scale
         delta = r + gamma * next_v[t] * next_nonterminal[t] - values[t]
-        # near-correct: truncation cut only; misses open-freeze seam-edge eligibility cut
         elig = 0.0 if truncated[t] else float(next_nonterminal[t])
         gae = delta + gamma * lam * elig * gae
         adv[t] = gae

@@ -45,7 +45,6 @@ def run_pack(pack_dir):
     )
     T = len(rewards)
     lo = float(meta["is_clip_low"]); hi = float(meta["is_clip_high"])
-    # near-correct mistakes: no is_power; exclude every seam_edge when lag_b>0 (private predicate);
     # apply IS mass to BOTH means
     w_snap = [_clip(weights[t], lo, hi) for t in range(T)]
     idxs = []

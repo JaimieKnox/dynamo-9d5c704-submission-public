@@ -15,7 +15,7 @@ artifacts = [
 
 [task]
 name = "dynamo/timeout-cut-returns"
-description = "Repair timeout-cut lambda returns under same-index timeout residency, eligibility cuts, and powered IS mass"
+description = "Repair timeout-cut lambda returns when segment-open freezes, seam-invalidated lags, and pre-draw IS mass interact"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -28,25 +28,22 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-Graded artifacts diverge when lagged asymmetric critics, mid-segment timeout residency on
-the same-index bootstrap critic, reverse-time eligibility cuts at timeouts, segment reward
-scales with accumulator resets, and power-then-clip-renormalize IS mass interact. Specs are
-split under /app/spec, so matching only one file still leaves packs wrong. Fixtures are
-synthetic packs generated for this task, not production logs. An RL training engineer hits
-this when validating advantage pipelines under environment timeouts and offline importance
-weights.
+Graded packs diverge only when lag-filled dual critics, segment-open bootstrap freezes,
+seam-invalidated lag pads, and pre-draw clip-renorm IS mass with seam exclusions interact
+on the same horizon. Specs under /app/spec intentionally split one contract across files,
+so patching a single module from a single doc section still leaves artifacts wrong. The
+seam-edge mask that cut-mask construction records must stay consistent with ledger mass
+exclusion; a private re-derived edge predicate is not enough.
+Fixtures are synthetic packs generated for this task, not production logs. An RL training
+engineer hits this when validating advantage pipelines under environment timeouts and
+offline importance weights.
 """
 solution_explanation = """
-Restore lagged dual-stream registration so critic_a/lag_a/init_a builds V_t and
-critic_b/lag_b/init_b builds the bootstrap stream. In successor resolution, zero only on
-terminated rows; mid-segment pure truncation bootstraps from registered critic_b at the
-same index t, while final/segment-edge truncation and non-truncated edges use
-meta.bootstrap_value. In the reverse-time core, reset the lambda accumulator on segment
-changes, scale rewards by segment_scales, and set eligibility to zero on truncated rows
-while still using the timeout bootstrap inside the TD residual. In the ledger, average
-non-terminated mass after raising is_weight to is_power, clipping, and renormalizing, and
-set bootstrapped only for truncated non-terminated indices. Install solution/fixed modules
-and run the CLI.
+Graded artifacts still disagree with /app/spec on mixed cut packs: summary means shift
+when seam-edge bootstraps and mass membership interact, and per-index advantages drift
+when lagged dual streams meet segment boundaries. Align the installed cutreturn package
+to every normative file under /app/spec, install the repaired modules, and run the CLI
+over /app/traces into /app/artifacts.
 """
 verification_explanation = """
 The verifier seals oracle reports into tests/inputs/sealed_expectations.json, then

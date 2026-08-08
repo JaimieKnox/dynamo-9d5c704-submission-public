@@ -1,18 +1,17 @@
 {
-  "pack": "g09",
+  "bootstrap_value": 0.418627,
   "gamma": 0.99,
-  "lambda": 0.95,
-  "bootstrap_value": 0.742652,
   "horizon": 16,
+  "init_a": -0.255846,
+  "init_b": 0.241154,
+  "is_clip_high": 2.0,
+  "is_clip_low": 0.5,
   "lag_a": 2,
-  "lag_b": 2,
-  "init_a": 0.22893,
-  "init_b": 0.32926,
+  "lag_b": 3,
+  "lambda": 0.95,
+  "pack": "g09",
   "segment_scales": [
-    1.339026,
-    0.825601
-  ],
-  "is_clip_low": 0.25,
-  "is_clip_high": 2.5,
-  "is_power": 1.6
+    0.846555,
+    1.11354
+  ]
 }

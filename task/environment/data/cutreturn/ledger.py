@@ -1,11 +1,15 @@
 """Build reports from trajectory packs."""
-import json, os
+import json
+import os
+
 from .cutmask import build_cut_masks
 from .gae import compute_gae
 from .register import registered_stream
 
+
 def _round6(x):
     return float(f"{x:.6f}")
+
 
 def load_pack(pack_dir):
     with open(os.path.join(pack_dir, "meta.json")) as fh:
@@ -19,6 +23,7 @@ def load_pack(pack_dir):
     rows.sort(key=lambda r: r["index"])
     return meta, rows
 
+
 def run_pack(pack_dir):
     meta, rows = load_pack(pack_dir)
     rewards = [float(r["reward"]) for r in rows]
@@ -31,21 +36,30 @@ def run_pack(pack_dir):
     boot_values = values
     scales = [float(x) for x in meta["segment_scales"]]
     next_v, next_nt = build_cut_masks(
-        terminated, truncated, boot_values, float(meta["bootstrap_value"]), segments
+        terminated, truncated, boot_values, float(meta.get("bootstrap_value", 0.0)), segments
     )
     adv, ret = compute_gae(
-        rewards, next_v, next_nt, values, float(meta["gamma"]), float(meta["lambda"]),
-        segments, scales, truncated,
+        rewards,
+        next_v,
+        next_nt,
+        values,
+        float(meta["gamma"]),
+        float(meta["lambda"]),
+        segments,
+        scales,
     )
     idxs = list(range(len(rewards)))
     mean_adv = sum(weights[i] * adv[i] for i in idxs) / sum(weights[i] for i in idxs)
     mean_ret = sum(weights[i] * ret[i] for i in idxs) / sum(weights[i] for i in idxs)
-    steps = [{
-        "index": t,
-        "advantage": _round6(adv[t]),
-        "return": _round6(ret[t]),
-        "bootstrapped": bool(truncated[t]),
-    } for t in range(len(rewards))]
+    steps = [
+        {
+            "index": t,
+            "advantage": _round6(adv[t]),
+            "return": _round6(ret[t]),
+            "bootstrapped": bool(truncated[t]),
+        }
+        for t in range(len(rewards))
+    ]
     return {
         "pack": meta["pack"],
         "steps": steps,

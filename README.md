@@ -1,7 +1,6 @@
-# Timeout-cut return ledger
+# timeout-cut returns
 
-Harbor task: repair `/app/cutreturn` so offline traces emit contract-faithful
-timeout-aware λ-return artifacts at `/app/artifacts/<trace>.json`.
+Repair `/app/cutreturn` so offline trajectory packs emit contract-true timeout-aware
+lambda-return reports under `/app/artifacts`.
 
-Category: Model Training and ML Infrastructure.
-Subcategory: Reinforcement learning.
+Normative rules live under `/app/spec/`. Trace packs live under `/app/traces/`.

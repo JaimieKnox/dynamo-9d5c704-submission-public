@@ -1,6 +1,15 @@
 """Resolve successors from the bootstrap critic stream."""
 
-def resolve_successor(t, horizon, terminated, truncated, boot_values, bootstrap_value, segments):
+def resolve_successor(
+    t,
+    horizon,
+    terminated,
+    truncated,
+    boot_values,
+    bootstrap_value,
+    segments,
+    seam_boots=None,
+):
     if terminated[t] or truncated[t]:
         return 0.0, 0.0
     if t + 1 < horizon:

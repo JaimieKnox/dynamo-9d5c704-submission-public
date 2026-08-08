@@ -55,7 +55,7 @@ Per-index advantage and return, plus summary mean_advantage and mean_return, use
 pytest.approx(..., abs=1e-6). That absolute band matches the instruction contract of
 six-decimal equality after both sides round with the shared _round6 helper, so
 floating noise below the last graded digit cannot flip the reward while a wrong
-asymmetric successor, lag, or clipped-mass patch still fails.
+seam freeze, lag invalidation, or mass exclusion still fails.
 Schema, bootstrapped flags, and summary counts are exact.
 """
 

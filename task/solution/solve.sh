@@ -1,5 +1,6 @@
 #!/bin/bash
 set -eu
+cp /solution/fixed/seam.py /app/cutreturn/seam.py
 cp /solution/fixed/register.py /app/cutreturn/register.py
 cp /solution/fixed/successor.py /app/cutreturn/successor.py
 cp /solution/fixed/cutmask.py /app/cutreturn/cutmask.py

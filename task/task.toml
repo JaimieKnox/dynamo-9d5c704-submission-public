@@ -15,6 +15,7 @@ artifacts = [
   "/app/artifacts/g11.json",
   "/app/artifacts/g12.json",
   "/app/artifacts/g13.json",
+  "/app/artifacts/g14.json",
 ]
 
 [task]

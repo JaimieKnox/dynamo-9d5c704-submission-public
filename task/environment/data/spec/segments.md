@@ -27,5 +27,7 @@ Reverse-time recurrence:
   a truncated index is zero.
 - An index whose `V_next` used the segment-open freeze path also zeros reverse-time eligibility,
   even when the non-terminal factor is 1.
+- Otherwise (no truncation cut, no open-freeze cut, no scale-lag pad cut),
+  `eligibility_t` equals the successor non-terminal factor `next_nonterminal_t`.
 - An index that is inside a `scale_lag` pad (inherits previous-segment scale) also zeros
   reverse-time eligibility. This cut is independent of truncation and open-freeze cuts.

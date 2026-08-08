@@ -1,16 +1,17 @@
 # Importance weights (normative)
 
-Summary means average over a mass set drawn from indices with `terminated=false`.
+Summary means are taken over a mass set of non-terminated indices.
 
-Before drawing the mass set, freeze
-`w_snap[t] = clip(is_weight[t] ** meta.is_power, meta.is_clip_low, meta.is_clip_high)`.
-If `is_power` is absent, treat it as `1`.
+Weight snapshot property: before membership is chosen,
+`w_snap[t] = clip(is_weight[t] ** is_power, is_clip_low, is_clip_high)` with `is_power`
+defaulting to 1.
 
-Honor the seam-edge mask from cut-mask construction: exclude any masked index whose
-segment-open freeze depended on a lag source that crossed a seam or required an init pad.
-Single-index segments are seam edges; they are excluded under the same open-freeze lag rule.
+Membership property: an index whose successor used an open-freeze path is excluded from the
+mass set when that freeze depended on a lag source that crossed a seam or required an init
+pad. This includes single-index segments. Do not invent a private edge predicate that
+disagrees with the successor open-freeze path.
 
-If the mass set is empty after exclusions, fall back to all non-terminated indices, then the
-full horizon. Fallback mass uses equal weights of one, not `w_snap`.
+Fallback property: if membership is empty, use all non-terminated indices, then the full
+horizon, with equal weights of one (not `w_snap`).
 
-Otherwise renormalize surviving `w_snap` values to sum to one and form the weighted mean.
+Otherwise the mean uses `w_snap` renormalized to sum to one on the surviving membership.

@@ -11,6 +11,7 @@
   "lag_b": 0,
   "lambda": 0.95,
   "pack": "s03",
+  "scale_lag": 0,
   "segment_scales": [
     1.0
   ]

@@ -1,19 +1,12 @@
 # timeout-cut return ledger contract (normative)
 
 Rebuild timeout-aware lambda-returns for offline packs. Read every file under `/app/spec/`.
-Stream registration, seam freezes, truncation residency, eligibility cuts, and mass algebra
-are split across the other spec files. No single file restates the full pipeline.
+The other files state invariants for registration, successors, eligibility, scales, and mass.
+Together they determine a unique ledger; no single file is a complete implementation recipe.
 
-## Flags
+Flags: termination zeros successor channels. `bootstrapped` is true only for pure truncations.
 
-- `terminated=true` zeros successor value and non-terminal multiplier.
-- Dual-flag rows prefer termination. `bootstrapped` is true only for pure truncations.
-
-## Recurrence
-
-After registration and successor resolution, walk `t` from the end of the horizon to the
-start. Clear the lambda accumulator on segment changes before updating index `t`. Let `r_t`
-be the scale-adjusted reward at `t`.
+Recurrence after registration and successor resolution, walking `t` from the end:
 
 `delta_t = r_t + gamma * V_next_t * next_nonterminal_t - V_t`
 
@@ -21,5 +14,4 @@ be the scale-adjusted reward at `t`.
 
 `R_t = A_t + V_t`
 
-`V_t` is the registered `critic_a` stream. `V_next_t` and `eligibility_t` follow the other
-spec files.
+where `r_t` is the effective scale-adjusted reward and `V_t` is registered `critic_a`.

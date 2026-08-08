@@ -1,24 +1,22 @@
 # Segments and cut bootstraps (normative)
 
-Each row has integer `segment`.
+Properties the successor value `V_next` and eligibility must satisfy for every index `t`:
 
-1. Reverse-time lambda accumulator resets to zero when `segment[t] != segment[t+1]` before
-   updating index `t`.
-2. At each segment open index, freeze the already-registered `critic_b` stream value for that
-   segment. A segment may contain only one index.
-3. For non-terminated rows, if `t` is final or `segment[t] != segment[t+1]`, successor value is
-   that segment's open freeze, with non-terminal multiplier one. This includes single-index
-   segments, which are open and edge at the same index.
-4. For non-terminated pure truncation that continues inside a multi-index segment
-   (`truncated=true`, next index exists, same segment), successor value is the registered
-   `critic_b` stream at the same index `t` (not `t+1`), with non-terminal multiplier one.
-5. For non-terminated rows continuing inside a segment without truncation, successor value is
-   the registered `critic_b` stream at `t+1`.
-6. `terminated=true` zeros successor value and non-terminal multiplier even when `truncated`
-   is also true.
-7. Before the TD residual, multiply `reward[t]` by `segment_scales[segment[t]]`.
-8. After the TD residual, reverse-time eligibility uses non-terminal multiplier zero on
-   truncated rows. The timeout bootstrap remains inside the residual; lambda eligibility does
-   not carry through the cut.
-9. Record a seam-edge mask bit for every non-terminated index that used rule (3). Summary mass
-   rules in `weighting.md` consume that mask.
+- If `terminated[t]` is true, both `V_next[t]` and the successor non-terminal factor are zero.
+  Termination dominates truncation when both flags are set.
+- Otherwise, if the row is a pure truncation that still continues inside the same segment,
+  `V_next[t]` equals the registered bootstrap critic at that same index `t`, and the
+  non-terminal factor is one.
+- Otherwise, if the row ends a segment (final index, or next index has a different segment,
+  including single-index segments), `V_next[t]` equals the registered bootstrap critic frozen
+  at that segment's open index, and the non-terminal factor is one.
+- Otherwise `V_next[t]` equals the registered bootstrap critic at `t+1`, non-terminal factor one.
+
+Reverse-time recurrence properties:
+- The lambda accumulator is zero immediately before updating an index that ends a segment.
+- The reward entering the TD residual is the raw reward multiplied by an effective segment
+  scale. With `scale_lag = K` (default 0), the first `K` indices of a segment use the previous
+  segment's scale; later indices use the current segment's scale. Segment 0 always uses its own
+  scale.
+- Truncation leaves the bootstrap inside the TD residual, but the reverse-time eligibility
+  factor for carrying the lambda state through a truncated index is zero.

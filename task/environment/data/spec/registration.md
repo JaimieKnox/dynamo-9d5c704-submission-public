@@ -1,11 +1,10 @@
 # Critic registration (normative)
 
-Each trajectory row stores two raw critic columns: `critic_a` and `critic_b`.
+Each row has raw `critic_a` and `critic_b`.
 
-Register a stream with lag `L` and fill `init` as:
-- For index `t`, let `src = t - L`.
-- If `src < 0`, registered[t] = init.
-- If `src >= 0` and `segment[src] != segment[t]`, registered[t] = init.
-- Otherwise registered[t] = raw[src].
+A registered stream of lag `L` and fill `init` must satisfy:
+- registered[t] equals raw[t - L] when that source index exists and shares `segment[t]`
+- registered[t] equals `init` when the source is missing or lies in a different segment
 
-Use `lag_a` / `init_a` for `critic_a` and `lag_b` / `init_b` for `critic_b`.
+`critic_a` uses (`lag_a`, `init_a`). `critic_b` uses (`lag_b`, `init_b`). The reverse-time
+state value is the registered `critic_a` stream. Bootstrap reads use registered `critic_b`.

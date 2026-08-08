@@ -2,14 +2,19 @@
 import json, os
 from .cutmask import build_cut_masks
 from .gae import compute_gae
+from .mass import advantage_mass_indices, fallback_mass_indices
 from .register import registered_stream
-from .seam import open_used_cross_lag, segment_opens
+from .scale import scale_pad_mask
+from .seam import segment_opens
+
 
 def _round6(x):
     return float(f"{x:.6f}")
 
+
 def _clip(w, lo, hi):
     return lo if w < lo else hi if w > hi else w
+
 
 def load_pack(pack_dir):
     with open(os.path.join(pack_dir, "meta.json")) as fh:
@@ -23,6 +28,7 @@ def load_pack(pack_dir):
     rows.sort(key=lambda r: r["index"])
     return meta, rows
 
+
 def run_pack(pack_dir):
     meta, rows = load_pack(pack_dir)
     rewards = [float(r["reward"]) for r in rows]
@@ -32,45 +38,45 @@ def run_pack(pack_dir):
     critic_b = [float(r["critic_b"]) for r in rows]
     segments = [int(r["segment"]) for r in rows]
     weights = [float(r["is_weight"]) for r in rows]
-    lag_a = int(meta["lag_a"]); lag_b = int(meta["lag_b"])
-    init_a = float(meta["init_a"]); init_b = float(meta["init_b"])
-    values = registered_stream(critic_a, lag_a, init_a, segments)
-    boot_values = registered_stream(critic_b, lag_b, init_b, segments)
+    lag_a = int(meta["lag_a"])
+    lag_b = int(meta["lag_b"])
+    values = registered_stream(critic_a, lag_a, float(meta["init_a"]), segments)
+    boot_values = registered_stream(critic_b, lag_b, float(meta["init_b"]), segments)
     scales = [float(x) for x in meta["segment_scales"]]
+    scale_lag = int(meta.get("scale_lag", 0))
     next_v, next_nt, seam_edge = build_cut_masks(
-        terminated, truncated, boot_values, float(meta.get("bootstrap_value", 0.0)), segments
+        terminated, truncated, boot_values, float(meta.get("bootstrap_value", 0.0)),
+        segments, raw_boot=critic_b,
     )
     adv, ret = compute_gae(
         rewards, next_v, next_nt, values, float(meta["gamma"]), float(meta["lambda"]),
-        segments, scales, truncated, int(meta.get("scale_lag", 0)), seam_edge,
+        segments, scales, truncated, scale_lag, seam_edge,
     )
     T = len(rewards)
-    lo = float(meta["is_clip_low"]); hi = float(meta["is_clip_high"])
+    lo = float(meta["is_clip_low"])
+    hi = float(meta["is_clip_high"])
     power = float(meta.get("is_power", 1.0))
-    w_snap = [_clip((weights[t] ** power), lo, hi) for t in range(T)]
     opens = segment_opens(segments)
-    idxs = []
-    for i in range(T):
-        if terminated[i]:
-            continue
-        if seam_edge[i] and open_used_cross_lag(opens[segments[i]], lag_b, segments):
-            continue
-        idxs.append(i)
+    # R5-2: freeze is_weight at segment open before power/clip and membership.
+    open_w = {}
+    for seg, t0 in opens.items():
+        open_w[seg] = float(weights[t0])
+    w_snap = [_clip((open_w[segments[t]] ** power), lo, hi) for t in range(T)]
+    pads = scale_pad_mask(segments, scale_lag)
+    idxs = advantage_mass_indices(terminated, seam_edge, pads, lag_b, segments)
     used_fallback = False
     if not idxs:
         used_fallback = True
-        idxs = [i for i in range(T) if not terminated[i]]
-    if not idxs:
-        used_fallback = True
-        idxs = list(range(T))
+        idxs = fallback_mass_indices(terminated, T)
     if used_fallback:
-        clipped = [1.0] * len(idxs); denom = float(len(idxs))
+        clipped = [1.0] * len(idxs)
+        denom = float(len(idxs))
     else:
         clipped = [w_snap[i] for i in idxs]
         denom = sum(clipped) or float(len(idxs))
         if denom <= 0:
-            clipped = [1.0] * len(idxs); denom = float(len(idxs))
-    # R4-2: mean_advantage uses IS mass; mean_return is unweighted over non-terminated
+            clipped = [1.0] * len(idxs)
+            denom = float(len(idxs))
     mean_adv = sum(clipped[j] * adv[idxs[j]] for j in range(len(idxs))) / denom
     live = [i for i in range(T) if not terminated[i]] or list(range(T))
     mean_ret = sum(ret[i] for i in live) / float(len(live))
@@ -80,10 +86,14 @@ def run_pack(pack_dir):
         "return": _round6(ret[t]),
         "bootstrapped": bool(truncated[t]) and not bool(terminated[t]),
     } for t in range(T)]
-    return {"pack": meta["pack"], "steps": steps, "summary": {
-        "horizon": int(meta["horizon"]),
-        "truncation_count": sum(1 for x in truncated if x),
-        "termination_count": sum(1 for x in terminated if x),
-        "mean_advantage": _round6(mean_adv),
-        "mean_return": _round6(mean_ret),
-    }}
+    return {
+        "pack": meta["pack"],
+        "steps": steps,
+        "summary": {
+            "horizon": int(meta["horizon"]),
+            "truncation_count": sum(1 for x in truncated if x),
+            "termination_count": sum(1 for x in terminated if x),
+            "mean_advantage": _round6(mean_adv),
+            "mean_return": _round6(mean_ret),
+        },
+    }

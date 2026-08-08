@@ -14,11 +14,12 @@ artifacts = [
   "/app/artifacts/g10.json",
   "/app/artifacts/g11.json",
   "/app/artifacts/g12.json",
+  "/app/artifacts/g13.json",
 ]
 
 [task]
 name = "dynamo/timeout-cut-returns"
-description = "Repair timeout-cut lambda returns under seam-edge eligibility cuts and split summary masses"
+description = "Repair timeout-cut lambda returns under raw trunc residency, open-frozen IS, and scale-pad mass"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -31,16 +32,16 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-Graded packs diverge when open-freeze seam-edge eligibility cuts, split advantage/return
-summary masses, powered IS membership, and scale_lag pads interact on one horizon. Specs
-scatter those invariants across segments, weighting, and report-schema so a one-file
+Graded packs diverge when mid-segment trunc residency, open-frozen IS weights,
+scale-lag pad eligibility, and seam-aware mass membership interact on one horizon.
+Normative constraints are split across helpers and spec files so a single-module
 transcription still leaves means or per-index advantages wrong. Fixtures are synthetic.
 An RL training engineer hits this validating advantage pipelines under timeouts.
 """
 solution_explanation = """
 Graded artifacts still disagree with /app/spec on mixed cut packs: summary means shift
-when advantage mass and return mass diverge, and per-index advantages drift when
-open-freeze eligibility cuts co-occur with residency and scale pads. Align cutreturn to
+when open-frozen weights and pad membership diverge, and per-index advantages drift when
+trunc residency and scale-pad eligibility co-occur with seam freezes. Align cutreturn to
 every normative file under /app/spec, install the repaired modules, and run the CLI.
 """
 verification_explanation = """

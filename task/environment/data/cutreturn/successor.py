@@ -1,7 +1,8 @@
-"""Resolve successors from the bootstrap critic stream."""
+"""Resolve successors from bootstrap critics under cut invariants."""
 
 def resolve_successor(
-    t, horizon, terminated, truncated, boot_values, bootstrap_value, segments, seam_boots=None,
+    t, horizon, terminated, truncated, boot_values, bootstrap_value, segments,
+    seam_boots=None, raw_boot=None,
 ):
     if terminated[t]:
         return 0.0, 0.0

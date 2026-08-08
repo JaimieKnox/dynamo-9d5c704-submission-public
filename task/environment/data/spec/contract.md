@@ -15,4 +15,5 @@ Recurrence after registration and successor resolution, walking `t` from the end
 `R_t = A_t + V_t`
 
 where `r_t` is the effective scale-adjusted reward and `V_t` is registered `critic_a`.
-Eligibility is defined with the successor and truncation invariants in segments.md.
+Eligibility, scale pads, and bootstrap source selection are constrained in segments.md.
+Advantage mass is constrained in weighting.md.

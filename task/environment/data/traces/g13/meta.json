@@ -1,0 +1,21 @@
+{
+  "pack": "g13",
+  "gamma": 0.97,
+  "lambda": 0.92,
+  "horizon": 16,
+  "lag_a": 1,
+  "lag_b": 2,
+  "init_a": 0.15,
+  "init_b": -0.35,
+  "segment_scales": [
+    0.85,
+    1.25,
+    0.7,
+    1.4
+  ],
+  "is_clip_low": 0.2,
+  "is_clip_high": 2.5,
+  "is_power": 1.5,
+  "scale_lag": 2,
+  "bootstrap_value": 99.0
+}

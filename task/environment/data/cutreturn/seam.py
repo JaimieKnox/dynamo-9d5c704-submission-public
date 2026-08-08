@@ -7,12 +7,15 @@ def segment_opens(segments):
             opens[seg] = t
     return opens
 
+
 def freeze_seam_bootstraps(boot_values, segments):
     opens = segment_opens(segments)
     return {seg: float(boot_values[t0]) for seg, t0 in opens.items()}
 
+
 def is_seam_edge(t, horizon, segments):
     return (t + 1 >= horizon) or (segments[t] != segments[t + 1])
+
 
 def open_used_cross_lag(t_open, lag_b, segments):
     if lag_b <= 0:

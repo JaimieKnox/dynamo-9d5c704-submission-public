@@ -1,4 +1,6 @@
-"""Reverse-time lambda returns with segment resets, open scale pads, and eligibility cuts."""
+"""Reverse-time lambda returns with segment resets, scale pads, and eligibility cuts."""
+from .scale import effective_scale, scale_pad_mask
+
 
 def compute_gae(
     rewards, next_v, next_nonterminal, values, gamma, lam, segments, segment_scales,
@@ -9,27 +11,17 @@ def compute_gae(
         truncated = [False] * T
     if seam_edge is None:
         seam_edge = [False] * T
-    opens = {}
-    for t, seg in enumerate(segments):
-        if seg not in opens:
-            opens[seg] = t
+    pads = scale_pad_mask(segments, scale_lag)
     adv = [0.0] * T
     ret = [0.0] * T
     gae = 0.0
     for t in reversed(range(T)):
         if t + 1 < T and segments[t] != segments[t + 1]:
             gae = 0.0
-        seg = segments[t]
-        t_open = opens[seg]
-        if scale_lag > 0 and (t - t_open) < scale_lag and t_open > 0:
-            prev_seg = segments[t_open - 1]
-            scale = float(segment_scales[prev_seg]) if prev_seg < len(segment_scales) else 1.0
-        else:
-            scale = float(segment_scales[seg]) if seg < len(segment_scales) else 1.0
+        scale = effective_scale(t, segments, segment_scales, scale_lag)
         r = rewards[t] * scale
         delta = r + gamma * next_v[t] * next_nonterminal[t] - values[t]
-        # R4-1: truncation OR open-freeze seam edge cuts reverse-time eligibility
-        if truncated[t] or seam_edge[t]:
+        if truncated[t] or seam_edge[t] or pads[t]:
             elig = 0.0
         else:
             elig = float(next_nonterminal[t])

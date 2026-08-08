@@ -9,4 +9,4 @@ COPY data/spec /app/spec
 COPY data/cutreturn /app/cutreturn
 COPY data/traces /app/traces
 RUN mkdir -p /app/artifacts
-# HARDNESS_BUST 2026-08-07 jumps8
+# HARDNESS_BUST 2026-08-08 round5 raw-trunc open-frozen scale-pad

@@ -1,25 +1,31 @@
 # Segments and cut bootstraps (normative)
 
-Properties the successor value `V_next` and eligibility must satisfy for every index `t`:
+Successor value `V_next` and reverse-time eligibility are constrained by the following
+invariants. Registration (registration.md) defines the lagged streams; this file states which
+bootstrap source each cut path may read.
 
-- If `terminated[t]` is true, both `V_next[t]` and the successor non-terminal factor are zero.
-  Termination dominates truncation when both flags are set.
-- Otherwise, if the row is a pure truncation that still continues inside the same segment,
-  `V_next[t]` equals the registered bootstrap critic at that same index `t`, and the
-  non-terminal factor is one.
-- Otherwise, if the row ends a segment (final index, or next index has a different segment,
-  including single-index segments), `V_next[t]` equals the registered bootstrap critic frozen
-  at that segment's open index, and the non-terminal factor is one.
-- Otherwise `V_next[t]` equals the registered bootstrap critic at `t+1`, non-terminal factor one.
+Termination: if `terminated[t]` then `V_next[t] = 0` and the successor non-terminal factor is 0.
+Termination dominates truncation.
 
-Reverse-time recurrence properties:
+Pure mid-segment truncation: when `truncated[t]` holds, the next index exists, and that next
+index shares `segment[t]`, `V_next[t]` equals the **raw** `critic_b[t]` (not the lagged
+registered bootstrap stream). The non-terminal factor is 1.
+
+Segment-edge / final index: when the next index is missing or belongs to another segment
+(including single-index segments), `V_next[t]` equals the **registered** bootstrap critic
+frozen at that segment's open index. The non-terminal factor is 1.
+
+Interior continuation: otherwise `V_next[t]` equals the registered bootstrap critic at `t+1`,
+non-terminal factor 1.
+
+Reverse-time recurrence:
 - The lambda accumulator is zero immediately before updating an index that ends a segment.
-- The reward entering the TD residual is the raw reward multiplied by an effective segment
-  scale. With `scale_lag = K` (default 0), the first `K` indices of a segment use the previous
-  segment's scale; later indices use the current segment's scale. Segment 0 always uses its own
-  scale.
-- Truncation leaves the bootstrap inside the TD residual, but the reverse-time eligibility
-  factor for carrying the lambda state through a truncated index is zero.
-- An index whose `V_next` was resolved by the segment-open freeze path also zeros that same
-  reverse-time eligibility factor. This cut is independent of the truncation cut and applies
-  even when the non-terminal factor is one.
+- Effective reward scale uses `scale_lag = K` (default 0): the first `K` indices of a segment
+  with a previous segment inherit that previous segment's scale; later indices use the current
+  segment's scale. Segment 0 always uses its own scale. See the shared scale helper contract.
+- Truncation leaves the bootstrap inside the TD residual, but reverse-time eligibility through
+  a truncated index is zero.
+- An index whose `V_next` used the segment-open freeze path also zeros reverse-time eligibility,
+  even when the non-terminal factor is 1.
+- An index that is inside a `scale_lag` pad (inherits previous-segment scale) also zeros
+  reverse-time eligibility. This cut is independent of truncation and open-freeze cuts.

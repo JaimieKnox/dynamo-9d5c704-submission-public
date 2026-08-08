@@ -1,11 +1,12 @@
 {
-  "bootstrap_value": 0.194765,
+  "bootstrap_value": -0.095241,
   "gamma": 0.99,
   "horizon": 8,
   "init_a": 0.0,
   "init_b": 0.0,
   "is_clip_high": 2.0,
   "is_clip_low": 0.5,
+  "is_power": 1.0,
   "lag_a": 0,
   "lag_b": 0,
   "lambda": 0.95,

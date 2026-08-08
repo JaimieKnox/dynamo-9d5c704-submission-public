@@ -11,11 +11,12 @@ artifacts = [
   "/app/artifacts/g07.json",
   "/app/artifacts/g08.json",
   "/app/artifacts/g09.json",
+  "/app/artifacts/g10.json",
 ]
 
 [task]
 name = "dynamo/timeout-cut-returns"
-description = "Repair timeout-cut lambda returns when segment-open freezes, seam-invalidated lags, and pre-draw IS mass interact"
+description = "Repair timeout-cut lambda returns under single-row seams, truncation residency, and powered IS fallback"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -28,31 +29,26 @@ task_objective = ["implement", "debug"]
 artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
-Graded packs diverge only when lag-filled dual critics, segment-open bootstrap freezes,
-seam-invalidated lag pads, and pre-draw clip-renorm IS mass with seam exclusions interact
-on the same horizon. Specs under /app/spec intentionally split one contract across files,
-so patching a single module from a single doc section still leaves artifacts wrong. The
-seam-edge mask that cut-mask construction records must stay consistent with ledger mass
-exclusion; a private re-derived edge predicate is not enough.
-Fixtures are synthetic packs generated for this task, not production logs. An RL training
-engineer hits this when validating advantage pipelines under environment timeouts and
-offline importance weights.
+Graded packs diverge when single-index segment freezes, mid-segment truncation residency,
+timeout eligibility cuts, powered clip-renorm mass, and empty-mass equal-weight fallback
+interact. Specs under /app/spec state constraints without a worked cookbook for every
+combination, so a single-pass transcription still leaves packs wrong. Fixtures are synthetic
+packs generated for this task, not production logs. An RL training engineer hits this when
+validating advantage pipelines under environment timeouts and offline importance weights.
 """
 solution_explanation = """
-Graded artifacts still disagree with /app/spec on mixed cut packs: summary means shift
-when seam-edge bootstraps and mass membership interact, and per-index advantages drift
-when lagged dual streams meet segment boundaries. Align the installed cutreturn package
-to every normative file under /app/spec, install the repaired modules, and run the CLI
-over /app/traces into /app/artifacts.
+Graded artifacts still disagree with /app/spec on mixed cut packs: summary means shift when
+mass membership collapses to fallback, and per-index advantages drift when truncation
+residency meets single-index seams and eligibility cuts. Align the installed cutreturn
+package to every normative file under /app/spec, install the repaired modules, and run the
+CLI over /app/traces into /app/artifacts.
 """
 verification_explanation = """
 The verifier seals oracle reports into tests/inputs/sealed_expectations.json, then
 compares each produced /app/artifacts/<trace>.json against that sealed baseline.
 Per-index advantage and return, plus summary mean_advantage and mean_return, use
 pytest.approx(..., abs=1e-6). That absolute band matches the instruction contract of
-six-decimal equality after both sides round with the shared _round6 helper, so
-floating noise below the last graded digit cannot flip the reward while a wrong
-seam freeze, lag invalidation, or mass exclusion still fails.
+six-decimal equality after both sides round with the shared _round6 helper.
 Schema, bootstrapped flags, and summary counts are exact.
 """
 

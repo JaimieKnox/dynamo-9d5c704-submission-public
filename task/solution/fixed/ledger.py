@@ -5,7 +5,7 @@ import os
 from .cutmask import build_cut_masks
 from .gae import compute_gae
 from .register import registered_stream
-from .seam import open_used_cross_lag, segment_opens
+from .seam import open_used_cross_lag, segment_opens, segment_lengths
 
 
 def _round6(x):
@@ -57,30 +57,42 @@ def run_pack(pack_dir):
         float(meta["lambda"]),
         segments,
         scales,
+        truncated,
     )
     T = len(rewards)
     lo = float(meta["is_clip_low"])
     hi = float(meta["is_clip_high"])
-    w_snap = [_clip(weights[t], lo, hi) for t in range(T)]
+    power = float(meta.get("is_power", 1.0))
+    w_snap = [_clip((weights[t] ** power), lo, hi) for t in range(T)]
     opens = segment_opens(segments)
+    lengths = segment_lengths(segments)
     idxs = []
     for i in range(T):
         if terminated[i]:
             continue
         if seam_edge[i]:
             t_open = opens[segments[i]]
+            # Single-row segments are always seam edges; exclusion still follows open freeze lag.
             if open_used_cross_lag(t_open, lag_b, segments):
                 continue
         idxs.append(i)
+    used_fallback = False
     if not idxs:
+        used_fallback = True
         idxs = [i for i in range(T) if not terminated[i]]
     if not idxs:
+        used_fallback = True
         idxs = list(range(T))
-    clipped = [w_snap[i] for i in idxs]
-    denom = sum(clipped)
-    if denom <= 0:
+    if used_fallback:
+        # Fallback mass uses equal weights, not the powered clip snapshot.
         clipped = [1.0] * len(idxs)
         denom = float(len(idxs))
+    else:
+        clipped = [w_snap[i] for i in idxs]
+        denom = sum(clipped)
+        if denom <= 0:
+            clipped = [1.0] * len(idxs)
+            denom = float(len(idxs))
     mean_adv = sum(clipped[j] * adv[idxs[j]] for j in range(len(idxs))) / denom
     mean_ret = sum(clipped[j] * ret[idxs[j]] for j in range(len(idxs))) / denom
     steps = [

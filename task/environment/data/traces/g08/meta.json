@@ -1,18 +1,20 @@
 {
-  "bootstrap_value": 0.177929,
+  "bootstrap_value": 0.001465,
   "gamma": 0.99,
-  "horizon": 20,
-  "init_a": 0.163877,
-  "init_b": 0.679199,
+  "horizon": 15,
+  "init_a": -0.047312,
+  "init_b": 0.539366,
   "is_clip_high": 2.0,
   "is_clip_low": 0.5,
+  "is_power": 1.5,
   "lag_a": 1,
   "lag_b": 2,
   "lambda": 0.95,
   "pack": "g08",
   "segment_scales": [
-    0.904177,
-    1.124911,
-    1.255131
+    0.867437,
+    1.168347,
+    0.733509,
+    1.1785
   ]
 }

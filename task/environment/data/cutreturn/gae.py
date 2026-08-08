@@ -1,6 +1,6 @@
 """Reverse-time lambda returns with segment resets and segment reward scales."""
 
-def compute_gae(rewards, next_v, next_nonterminal, values, gamma, lam, segments, segment_scales):
+def compute_gae(rewards, next_v, next_nonterminal, values, gamma, lam, segments, segment_scales, truncated=None):
     T = len(rewards)
     adv = [0.0] * T
     ret = [0.0] * T

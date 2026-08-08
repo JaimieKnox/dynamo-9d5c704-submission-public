@@ -1,0 +1,23 @@
+{
+  "pack": "g20",
+  "gamma": 0.8,
+  "lambda": 0.99,
+  "horizon": 10,
+  "lag_a": 1,
+  "lag_b": 0,
+  "init_a": 0.25,
+  "init_b": 0.0,
+  "segment_scales": [
+    1.0,
+    1.0
+  ],
+  "segment_lambdas": [
+    0.99,
+    0.05
+  ],
+  "is_clip_low": 0.1,
+  "is_clip_high": 3.0,
+  "is_power": 2.0,
+  "scale_lag": 0,
+  "resid_lag": 0
+}

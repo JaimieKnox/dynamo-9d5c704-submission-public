@@ -1,6 +1,8 @@
 #!/bin/bash
 set -eu
 cp /solution/fixed/scale.py /app/cutreturn/scale.py
+cp /solution/fixed/elig.py /app/cutreturn/elig.py
+cp /solution/fixed/pads.py /app/cutreturn/pads.py
 cp /solution/fixed/mass.py /app/cutreturn/mass.py
 cp /solution/fixed/seam.py /app/cutreturn/seam.py
 cp /solution/fixed/register.py /app/cutreturn/register.py

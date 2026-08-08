@@ -7,9 +7,12 @@ Top level keys: `pack` (string), `steps` (array), `summary` (object).
 Each `steps[]` object has `index` (int), `advantage` (number, 6 dp), `return` (number,
 6 dp), `bootstrapped` (bool, true iff the source index was truncated and not terminated).
 
+`advantage` is the reverse-time accumulator from contract.md.
+`return` equals that advantage plus the **raw** `critic_a` at the same index (not the
+registered state value used inside the TD residual).
+
 `summary` keys: `horizon`, `truncation_count`, `termination_count` (ints),
 `mean_advantage`, `mean_return` (numbers, 6 dp).
 
 `mean_advantage` follows the importance-mass rules in weighting.md.
-`mean_return` follows the return-mass rules in weighting.md (unweighted arithmetic mean over
-the return-mass index set). Importance `w_snap` does not apply to `mean_return`.
+`mean_return` follows the return-mass rules in weighting.md.

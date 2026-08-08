@@ -1,10 +1,11 @@
-"""Reverse-time lambda returns with dual discount, scale pads, and eligibility cuts."""
+"""Reverse-time lambda returns with dual discount and shared eligibility."""
 from .scale import effective_scale, scale_pad_mask
 
 
 def compute_gae(
     rewards, next_v, next_nonterminal, values, gamma, lam, segments, segment_scales,
-    truncated=None, scale_lag=0, seam_edge=None, gamma_lambda=None,
+    truncated=None, scale_lag=0, seam_edge=None, gamma_lambda=None, lag_a=0,
+    segment_lambdas=None,
 ):
     T = len(rewards)
     if truncated is None:
@@ -15,7 +16,7 @@ def compute_gae(
         gamma_lambda = gamma
     pads = scale_pad_mask(segments, scale_lag)
     adv = [0.0] * T
-    ret = [0.0] * T
+    ret_acc = [0.0] * T
     gae = 0.0
     for t in reversed(range(T)):
         if t + 1 < T and segments[t] != segments[t + 1]:
@@ -27,7 +28,7 @@ def compute_gae(
             elig = 0.0
         else:
             elig = float(next_nonterminal[t])
-        gae = delta + gamma * lam * elig * gae
+        gae = delta + gamma_lambda * lam * elig * gae
         adv[t] = gae
-        ret[t] = adv[t] + values[t]
-    return adv, ret
+        ret_acc[t] = gae
+    return adv, ret_acc

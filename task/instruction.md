@@ -1,6 +1,6 @@
 Repair `/app/cutreturn` so offline trajectory traces produce contract-true timeout-aware
 lambda-return reports. The installed tree finishes every trace, but graded artifacts still diverge
-from the normative specs under mixed cuts, dual discounts, and residency rules.
+from the normative specs under mixed cuts, dual discounts, residency rules, and split baselines.
 
 Read every file under `/app/spec/`. Trace directories live under `/app/traces`.
 

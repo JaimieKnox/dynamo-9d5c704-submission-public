@@ -1,0 +1,12 @@
+{"critic_a": 0.5, "critic_b": 0.2, "index": 0, "is_weight": 1.1, "reward": 0.15, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": 0.75, "critic_b": 0.4, "index": 1, "is_weight": 0.6, "reward": 0.18, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": 1.0, "critic_b": 0.6000000000000001, "index": 2, "is_weight": 0.6, "reward": 0.21, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": 1.25, "critic_b": 0.8, "index": 3, "is_weight": 1.1, "reward": 0.24, "segment": 0, "terminated": false, "truncated": false}
+{"critic_a": 1.5, "critic_b": 1.0, "index": 4, "is_weight": 0.6, "reward": 0.27, "segment": 1, "terminated": false, "truncated": true}
+{"critic_a": 1.75, "critic_b": 1.2, "index": 5, "is_weight": 0.6, "reward": 0.3, "segment": 1, "terminated": false, "truncated": false}
+{"critic_a": 2.0, "critic_b": 1.4000000000000001, "index": 6, "is_weight": 1.1, "reward": 0.32999999999999996, "segment": 1, "terminated": false, "truncated": false}
+{"critic_a": 2.25, "critic_b": 1.6, "index": 7, "is_weight": 0.6, "reward": 0.36, "segment": 1, "terminated": false, "truncated": false}
+{"critic_a": 2.5, "critic_b": 1.8, "index": 8, "is_weight": 0.6, "reward": 0.39, "segment": 2, "terminated": false, "truncated": false}
+{"critic_a": 2.75, "critic_b": 2.0, "index": 9, "is_weight": 1.1, "reward": 0.42000000000000004, "segment": 2, "terminated": false, "truncated": true}
+{"critic_a": 3.0, "critic_b": 2.2, "index": 10, "is_weight": 0.6, "reward": 0.44999999999999996, "segment": 2, "terminated": false, "truncated": false}
+{"critic_a": 3.25, "critic_b": 2.4000000000000004, "index": 11, "is_weight": 0.6, "reward": 0.48, "segment": 2, "terminated": false, "truncated": false}

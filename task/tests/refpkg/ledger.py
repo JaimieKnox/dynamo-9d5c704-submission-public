@@ -3,6 +3,7 @@ import json, os
 from .cutmask import build_cut_masks
 from .gae import compute_gae
 from .mass import advantage_mass_indices, fallback_mass_indices, return_mass_indices
+from .pads import value_pad_mask
 from .register import registered_stream
 from .scale import scale_pad_mask
 from .seam import segment_opens
@@ -47,14 +48,20 @@ def run_pack(pack_dir):
     resid_lag = int(meta.get("resid_lag", 0))
     gamma = float(meta["gamma"])
     gamma_lambda = float(meta["gamma_lambda"]) if "gamma_lambda" in meta else gamma
+    segment_lambdas = None
+    if "segment_lambdas" in meta:
+        segment_lambdas = [float(x) for x in meta["segment_lambdas"]]
     next_v, next_nt, seam_edge = build_cut_masks(
         terminated, truncated, boot_values, float(meta.get("bootstrap_value", 0.0)),
         segments, raw_boot=critic_b, resid_lag=resid_lag,
     )
-    adv, ret = compute_gae(
+    adv, _ = compute_gae(
         rewards, next_v, next_nt, values, gamma, float(meta["lambda"]),
         segments, scales, truncated, scale_lag, seam_edge, gamma_lambda=gamma_lambda,
+        lag_a=lag_a, segment_lambdas=segment_lambdas,
     )
+    # Jump: reported return uses raw critic_a baseline, not registered values.
+    ret = [adv[t] + critic_a[t] for t in range(len(adv))]
     T = len(rewards)
     lo = float(meta["is_clip_low"])
     hi = float(meta["is_clip_high"])
@@ -63,7 +70,8 @@ def run_pack(pack_dir):
     open_w = {seg: float(weights[t0]) for seg, t0 in opens.items()}
     w_snap = [_clip((open_w[segments[t]] ** power), lo, hi) for t in range(T)]
     pads = scale_pad_mask(segments, scale_lag)
-    idxs = advantage_mass_indices(terminated, seam_edge, pads, lag_b, segments)
+    vpads = value_pad_mask(segments, lag_a)
+    idxs = advantage_mass_indices(terminated, seam_edge, pads, lag_b, segments, vpads)
     used_fallback = False
     if not idxs:
         used_fallback = True
@@ -78,7 +86,7 @@ def run_pack(pack_dir):
             clipped = [1.0] * len(idxs)
             denom = float(len(idxs))
     mean_adv = sum(clipped[j] * adv[idxs[j]] for j in range(len(idxs))) / denom
-    ret_idxs = return_mass_indices(terminated, pads)
+    ret_idxs = return_mass_indices(terminated, pads, vpads)
     if not ret_idxs:
         ret_idxs = fallback_mass_indices(terminated, T)
     mean_ret = sum(ret[i] for i in ret_idxs) / float(len(ret_idxs))

@@ -17,13 +17,16 @@ artifacts = [
   "/app/artifacts/g13.json",
   "/app/artifacts/g14.json",
   "/app/artifacts/g17.json",
+  "/app/artifacts/g20.json",
+  "/app/artifacts/g19.json",
+  "/app/artifacts/g18.json",
   "/app/artifacts/g16.json",
   "/app/artifacts/g15.json",
 ]
 
 [task]
 name = "dynamo/timeout-cut-returns"
-description = "Repair timeout-cut lambda returns under dual discounts, trunc residency lags, and split return mass"
+description = "Repair timeout-cut lambda returns under split baselines, value-pad eligibility, and segment lambdas"
 
 [metadata]
 # Pre-seeded when this repo was created. DO NOT EDIT.
@@ -37,10 +40,9 @@ artifact_type = ["codebase", "generated_output_artifact"]
 expert_time_estimate_hours = 8
 difficulty_explanation = """
 Synthetic offline packs under /app/traces stress timeout-cut lambda returns for an RL
-training engineer validating advantage pipelines. Agents must assemble a multi-file ledger
-where TD and reverse-time discounts can diverge, truncation residency is not the live raw
-index, and summary means use distinct membership rules for advantages versus returns under
-scale pads and seams.
+training engineer validating advantage pipelines. The ledger splits the TD state stream from
+the emitted return baseline, couples registration init pads into eligibility and mass, and
+allows per-segment lambda overrides that disagree with the pack lambda.
 """
 solution_explanation = """
 Graded artifacts still disagree with /app/spec on mixed cut packs: summary means shift

@@ -11,7 +11,10 @@ def resolve_successor(
         open_t = t
         while open_t > 0 and segments[open_t - 1] == segments[t]:
             open_t -= 1
-        return float(src[t]), 1.0
+        src_t = t - int(resid_lag)
+        if src_t < open_t:
+            src_t = open_t
+        return float(src[src_t]), 1.0
     if t + 1 >= horizon or segments[t] != segments[t + 1]:
         if seam_boots is not None:
             return float(seam_boots[segments[t]]), 1.0

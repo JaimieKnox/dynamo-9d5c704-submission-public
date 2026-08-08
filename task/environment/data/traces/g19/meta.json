@@ -1,0 +1,25 @@
+{
+  "pack": "g19",
+  "gamma": 0.92,
+  "gamma_lambda": 0.92,
+  "lambda": 0.85,
+  "horizon": 9,
+  "lag_a": 3,
+  "lag_b": 2,
+  "init_a": 1.5,
+  "init_b": 0.0,
+  "segment_scales": [
+    2.0,
+    1.0,
+    0.25
+  ],
+  "segment_lambdas": [
+    0.1,
+    0.85,
+    0.5
+  ],
+  "is_clip_low": 0.15,
+  "is_clip_high": 1.5,
+  "scale_lag": 2,
+  "resid_lag": 2
+}
